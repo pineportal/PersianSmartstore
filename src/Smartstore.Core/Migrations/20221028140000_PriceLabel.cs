@@ -60,23 +60,49 @@ internal class PriceLabelInitial : Migration, ILocaleResourcesProvider, IDataSee
                 DisplayShortNameInLists = true
             };
 
-            regularPriceLabel = new PriceLabel
+                regularPriceLabel = new PriceLabel
+                {
+                    ShortName = "Regulär",
+                    Name = "Regulär",
+                    Description = "Es handelt sich um den mittleren Verkaufspreis, den Kunden für ein Produkt in unserem Shop zahlen, ausgenommen Aktionspreise."
+                };
+            }
+            else if(defaultLanguage.UniqueSeoCode == "fa")
             {
-                ShortName = "Regulär",
-                Name = "Regulär",
-                Description = "Es handelt sich um den mittleren Verkaufspreis, den Kunden für ein Produkt in unserem Shop zahlen, ausgenommen Aktionspreise."
-            };
-        }
-        else
-        {
-            msrpPriceLabel = new PriceLabel
+                msrpPriceLabel = new PriceLabel
+                {
+                    ShortName = "قیمت پیشنهادی",
+                    Name = "قیت پیشنهادی خرده فروشی",
+                    Description = "قیمت خرده فروشی پیشنهادی یک پیشنهاد یا پیشنهادی یک محصول است که توسط سازنده تنظیم شده و توسط سازنده، تامین کننده یا فروشنده ارائه می شود.",
+                    IsRetailPrice = true,
+                    DisplayShortNameInLists = true
+                };
+
+                lowestPriceLabel = new PriceLabel
+                {
+                    ShortName = "کمترین",
+                    Name = "کمترین قیمت اخیر",
+                    Description = "این کمترین قیمت محصول در 30 روز گذشته قبل از اعمال تخفیف است.",
+                    DisplayShortNameInLists = true
+                };
+
+                regularPriceLabel = new PriceLabel
+                {
+                    ShortName = "میانگین",
+                    Name = "میانگین قیمت",
+                    Description = "میانگین قیمت فروش است که توسط مشتریان برای یک محصول پرداخت می شود، به استثنای قیمت های تبلیغاتی"
+                };
+            }
+            else
             {
-                ShortName = "MSRP",
-                Name = "Suggested retail price",
-                Description = "The Suggested Retail Price (MSRP) is the suggested or recommended retail price of a product set by the manufacturer and provided by a manufacturer, supplier, or seller.",
-                IsRetailPrice = true,
-                DisplayShortNameInLists = true
-            };
+                msrpPriceLabel = new PriceLabel
+                {
+                    ShortName = "MSRP",
+                    Name = "Suggested retail price",
+                    Description = "The Suggested Retail Price (MSRP) is the suggested or recommended retail price of a product set by the manufacturer and provided by a manufacturer, supplier, or seller.",
+                    IsRetailPrice = true,
+                    DisplayShortNameInLists = true
+                };
 
             lowestPriceLabel = new PriceLabel
             {
