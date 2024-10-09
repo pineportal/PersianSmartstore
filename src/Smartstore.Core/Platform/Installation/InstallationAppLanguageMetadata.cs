@@ -1,9 +1,11 @@
-﻿namespace Smartstore.Core.Installation;
-
-public class InstallationAppLanguageMetadata
+﻿namespace Smartstore.Core.Installation
 {
-    public string Culture { get; set; }
-    public string Name { get; set; }
-    public string UniqueSeoCode { get; set; }
-    public string FlagImageFileName { get; set; }
+    public class InstallationAppLanguageMetadata
+    {
+        public string Culture { get; set; }
+        public string Name { get; set; }
+        public string UniqueSeoCode { get; set; }
+        public string FlagImageFileName { get; set; }
+        public bool Rtl { get; set; }
+    }
 }
