@@ -47,7 +47,6 @@ namespace Smartstore.Web.Infrastructure
                 lib + "jquery/jquery.unobtrusive-ajax.js",
                 lib + "jquery/jquery.validate.js",
                 lib + "jquery/jquery.validate.unobtrusive.js",
-                lib + "jquery/jquery.scrollTo.js",
                 lib + "jquery/jquery.serializeToJSON.min.js",
                 lib + "sortable/sortable.js",
                 lib + "sortable/jquery-sortable.js",
@@ -71,6 +70,7 @@ namespace Smartstore.Web.Infrastructure
                 js + "smartstore.globalization.js",
                 js + "jquery.validate.unobtrusive.custom.js",
                 js + "smartstore.viewport.js",
+                js + "smartstore.scrollto.js",
                 js + "smartstore.ajax.js",
                 js + "smartstore.eventbroker.js",
                 js + "smartstore.common.js",
@@ -113,15 +113,22 @@ namespace Smartstore.Web.Infrastructure
             -----------------------------------------------------*/
             var summernote = "/lib/editors/summernote/";
             bundles.Add(new ScriptBundle("/bundle/js/summernote.js").Include(
-                summernote + "summernote-bootstrap.min.js",
-                summernote + "plugins/smartstore.image.js",
-                summernote + "plugins/smartstore.link.js",
-                summernote + "plugins/smartstore.tablestyles.js",
-                summernote + "plugins/smartstore.cssclass.js",
+                summernote + "summernote-sm.js",
                 lib + "beautify/beautify.min.js",
                 lib + "beautify/beautify-css.min.js",
                 lib + "beautify/beautify-html.min.js",
                 summernote + "globalinit.js"));
+            //var summernote = "/lib/editors/summernote_old/";
+            //bundles.Add(new ScriptBundle("/bundle/js/summernote.js").Include(
+            //    summernote + "summernote-bootstrap.min.js",
+            //    summernote + "plugins/smartstore.image.js",
+            //    summernote + "plugins/smartstore.link.js",
+            //    summernote + "plugins/smartstore.tablestyles.js",
+            //    summernote + "plugins/smartstore.cssclass.js",
+            //    lib + "beautify/beautify.min.js",
+            //    lib + "beautify/beautify-css.min.js",
+            //    lib + "beautify/beautify-html.min.js",
+            //    summernote + "globalinit.js"));
 
 
             /* CodeMirror (V 5.3.3) --> /bundle/js/codemirror.js

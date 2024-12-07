@@ -127,7 +127,7 @@
         }
     };
 
-    window.displayNotification = function(message, type, sticky, delay) {
+    window.displayNotification = function (message, type, sticky, delay) {
         if (window.EventBroker === undefined || window._ === undefined)
             return;
 
@@ -365,11 +365,11 @@
 
             if (text) {
                 copyTextToClipboard(text)
-                    .then(() => btn.data('original-title', Res['Common.CopyToClipboard.Succeeded']).tooltip('show'))
-                    .catch(() => btn.data('original-title', Res['Common.CopyToClipboard.Failed']).tooltip('show'))
+                    .then(() => btn.attr('data-original-title', Res['Common.CopyToClipboard.Succeeded']).tooltip('show'))
+                    .catch(() => btn.attr('data-original-title', Res['Common.CopyToClipboard.Failed']).tooltip('show'))
                     .finally(() => {
                         setTimeout(() => {
-                            btn.data('original-title', Res['Common.CopyToClipboard']).tooltip('hide');
+                            btn.attr('data-original-title', Res['Common.CopyToClipboard']).tooltip('hide');
                         }, 2000);
                     });
             }
@@ -428,40 +428,50 @@
 
     window.rememberFormFields = function (contextId, storageId) {
         var context = document.getElementById(contextId);
-        var rememberFields = context.querySelectorAll('.form-control.remember, .form-check-input.remember');
+        var rememberFields = context.querySelectorAll('input.remember, select.remember, textarea.remember');
         var values = {};
 
         for (let el of rememberFields) {
-            values[el.id] = el.classList.contains('form-check-input') ? el.checked : el.value;
+            const isCheck = el.matches('input[type=checkbox], input[type=radio]');
+            values[el.id] = isCheck ? el.checked : el.value;
         }
 
         localStorage.setItem(storageId, JSON.stringify(values));
     };
 
-    window.restoreRememberedFormFields = function (storageId) {
+    window.restoreRememberedFormFields = function (storageId, fieldId = null) {
         var values = localStorage.getItem(storageId);
         if (values) {
             values = JSON.parse(values);
 
+            if (fieldId) {
+                restoreField(fieldId);
+                return;
+            }
+
             for (var key in values) {
-                var val = values[key];
+                restoreField(key);
+            }
 
+            function restoreField(key) {
+                const val = values[key];
                 if (val !== null && val !== undefined) {
-                    var el = document.getElementById(key);
+                    const el = document.getElementById(key);
 
-                    if (!el)
-                        continue;
+                    if (!el || !el.matches('input, select, textarea')) {
+                        return;
+                    }
 
-                    if (el.classList.contains('form-check-input')) {
+                    if (el.matches('input[type=checkbox], input[type=radio]')) {
                         el.checked = val;
                     }
                     else {
                         if (val === '' && el.matches('.remember-disallow-empty')) {
-                            continue;
+                            return;
                         }
 
                         el.value = val;
-                    }   
+                    }
 
                     el.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
                 }
