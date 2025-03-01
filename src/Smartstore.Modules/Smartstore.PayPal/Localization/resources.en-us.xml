@@ -267,6 +267,17 @@
                     Please confirm the total amount again with PayPal.
                 </Value>
             </LocaleResource>
+
+            <LocaleResource Name="GenericErrorMessage">
+                <Value>
+                    An error has occurred with the payment method. Please select another payment method.
+                </Value>
+            </LocaleResource>
+            <LocaleResource Name="PaymentSourceCouldNotBeVerified">
+                <Value>
+                    The payment was rejected by PayPal because the payment information could not be verified. Please check your details and try again.
+                </Value>
+            </LocaleResource>
             
             <LocaleResource Name="UseSandbox">
                 <Value>Use sandbox</Value>
@@ -392,6 +403,15 @@
             <LocaleResource Name="TransmitTrackingNumbers.Hint">
                 <Value>
                     Specifies whether tracking numbers should be sent to PayPal as soon as they have been entered or updated in the shipment.
+                    If this option is switched off, only the payment status of the order is set to ‘Pending’.
+                </Value>
+            </LocaleResource>
+            <LocaleResource Name="CancelOrdersForDeclinedPayments">
+                <Value>Cancel orders for declined credit card payments</Value>
+            </LocaleResource>
+            <LocaleResource Name="CancelOrdersForDeclinedPayments.Hint">
+                <Value>
+                    Defines whether orders for declined credit card payments should be cancelled.
                 </Value>
             </LocaleResource>
             <LocaleResource Name="Capture">

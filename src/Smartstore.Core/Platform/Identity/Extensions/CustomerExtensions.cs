@@ -26,12 +26,7 @@ namespace Smartstore
             {
                 var role = mapping.CustomerRole;
 
-                if (string.IsNullOrEmpty(role?.SystemName))
-                {
-                    continue;
-                }
-
-                if (!onlyActiveRoles || role.Active)
+                if (role != null && (!onlyActiveRoles || role.Active) && !string.IsNullOrEmpty(role.SystemName))
                 {
                     yield return role.SystemName;
                 }
@@ -51,8 +46,18 @@ namespace Smartstore
         public static bool IsInRole(this Customer customer, string roleSystemName, bool onlyActiveRoles = true)
         {
             Guard.NotEmpty(roleSystemName);
-            return GetRoleNames(customer, onlyActiveRoles)
-                .Any(x => x.Equals(roleSystemName, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var mapping in customer.CustomerRoleMappings)
+            {
+                var role = mapping.CustomerRole;
+
+                if (role != null && (!onlyActiveRoles || role.Active) && roleSystemName.Equals(role.SystemName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -66,8 +71,7 @@ namespace Smartstore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAdmin(this Customer customer, bool onlyActiveRoles = true)
         {
-            return GetRoleNames(customer, onlyActiveRoles)
-                .Any(x => x.Equals(SystemCustomerRoleNames.Administrators, StringComparison.OrdinalIgnoreCase));
+            return IsInRole(customer, SystemCustomerRoleNames.Administrators, onlyActiveRoles);
         }
 
         /// <summary>
@@ -81,8 +85,7 @@ namespace Smartstore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsSuperAdmin(this Customer customer, bool onlyActiveRoles = true)
         {
-            return GetRoleNames(customer, onlyActiveRoles)
-                .Any(x => x.Equals(SystemCustomerRoleNames.SuperAdministrators, StringComparison.OrdinalIgnoreCase));
+            return IsInRole(customer, SystemCustomerRoleNames.SuperAdministrators, onlyActiveRoles);
         }
 
         /// <summary>
@@ -96,8 +99,7 @@ namespace Smartstore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsRegistered(this Customer customer, bool onlyActiveRoles = true)
         {
-            return GetRoleNames(customer, onlyActiveRoles)
-                .Any(x => x.Equals(SystemCustomerRoleNames.Registered, StringComparison.OrdinalIgnoreCase));
+            return IsInRole(customer, SystemCustomerRoleNames.Registered, onlyActiveRoles);
         }
 
         /// <summary>
@@ -112,42 +114,29 @@ namespace Smartstore
         public static bool IsGuest(this Customer customer, bool onlyActiveRoles = true)
         {
             // Hot path code!
-            var roleNames = GetRoleNames(customer, onlyActiveRoles).ToArray();
+            var isGuest = false;
+            var isRegistered = false;
 
-            if (roleNames.Length == 0)
+            // A registered user is NOT a guest.
+            foreach (var roleName in GetRoleNames(customer, onlyActiveRoles))
             {
-                return false;
-            }
-            else if (roleNames.Length == 1)
-            {
-                return roleNames[0].Equals(SystemCustomerRoleNames.Guests, StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                var isGuest = false;
-                var isRegistered = false;
-                
-                // A registered user is NOT a guest.
-                for (var i = 0; i < roleNames.Length; i++)
+                if (!isGuest && string.Equals(roleName, SystemCustomerRoleNames.Guests, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!isGuest && roleNames[i].Equals(SystemCustomerRoleNames.Guests, StringComparison.OrdinalIgnoreCase))
-                    {
-                        isGuest = true;
-                    }
+                    isGuest = true;
+                }
                     
-                    if (!isRegistered && roleNames[i].Equals(SystemCustomerRoleNames.Registered, StringComparison.OrdinalIgnoreCase))
-                    {
-                        isRegistered = true;
-                    }
-
-                    if (isGuest && isRegistered)
-                    {
-                        break;
-                    }
+                if (!isRegistered && string.Equals(roleName, SystemCustomerRoleNames.Registered, StringComparison.OrdinalIgnoreCase))
+                {
+                    isRegistered = true;
                 }
 
-                return isGuest && !isRegistered;
+                if (isGuest && isRegistered)
+                {
+                    break;
+                }
             }
+
+            return isGuest && !isRegistered;
         }
 
         /// <summary>
@@ -157,12 +146,12 @@ namespace Smartstore
         {
             Guard.NotNull(customer);
 
-            if (!customer.IsSystemAccount || customer.SystemName.IsEmpty())
+            if (!customer.IsSystemAccount)
             {
                 return false;
             }
 
-            return customer.SystemName.EqualsNoCase(SystemCustomerNames.BackgroundTask);
+            return SystemCustomerNames.BackgroundTask.EqualsNoCase(customer.SystemName);
         }
 
         /// <summary>
@@ -172,12 +161,12 @@ namespace Smartstore
         {
             Guard.NotNull(customer);
 
-            if (!customer.IsSystemAccount || customer.SystemName.IsEmpty())
+            if (!customer.IsSystemAccount)
             {
                 return false;
             }
 
-            return customer.SystemName.EqualsNoCase(SystemCustomerNames.Bot);
+            return SystemCustomerNames.Bot.Equals(customer.SystemName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -187,12 +176,12 @@ namespace Smartstore
         {
             Guard.NotNull(customer);
 
-            if (!customer.IsSystemAccount || customer.SystemName.IsEmpty())
+            if (!customer.IsSystemAccount)
             {
                 return false;
             }
 
-            return customer.SystemName.EqualsNoCase(SystemCustomerNames.PdfConverter);
+            return SystemCustomerNames.PdfConverter.Equals(customer.SystemName, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

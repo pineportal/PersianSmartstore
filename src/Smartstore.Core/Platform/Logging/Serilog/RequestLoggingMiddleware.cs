@@ -40,12 +40,13 @@ namespace Smartstore.Core.Logging
                 () => !workContext.IsInitialized ? null : workContext.CurrentCustomer?.Id);
 
             var userNameEnricher = new DelegatingPropertyEnricher("UserName",
-                () => httpContext.User?.Identity?.Name);
+                () => !workContext.IsInitialized ? null : httpContext.User?.Identity?.Name);
 
             using (LogContext.PushProperty("Url", webHelper.GetCurrentPageUrl(true)))
             using (LogContext.PushProperty("Referrer", webHelper.GetUrlReferrer()?.OriginalString))
             using (LogContext.PushProperty("HttpMethod", httpContext.Request.Method))
             using (LogContext.PushProperty("Ip", webHelper.GetClientIpAddress().ToString()))
+            using (LogContext.PushProperty("UserAgent", httpContext.Request.UserAgent()))
             using (LogContext.Push(customerIdEnricher))
             using (LogContext.Push(userNameEnricher))
             {
@@ -105,15 +106,15 @@ namespace Smartstore.Core.Logging
                 {
                     collectedProperties = Array.Empty<LogEventProperty>();
                 }
-
+                
                 // Last-in (correctly) wins...
-                var properties = collectedProperties.Concat(new[]
-                {
+                var properties = collectedProperties.Concat(
+                [
                     new LogEventProperty("RequestPath", new ScalarValue(httpContext.Request.Path.Value)),
                     new LogEventProperty("StatusCode", new ScalarValue(statusCode)),
                     new LogEventProperty("Elapsed", new ScalarValue(elapsedMs)),
                     new LogEventProperty("HttpMethod", new ScalarValue(httpContext.Request.Method))
-                });
+                ]);
 
                 var evt = new LogEvent(DateTimeOffset.Now, level, ex, _messageTemplate, properties);
                 logger.Write(evt);

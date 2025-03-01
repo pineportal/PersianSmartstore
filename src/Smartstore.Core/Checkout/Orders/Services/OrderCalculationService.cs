@@ -848,8 +848,7 @@ namespace Smartstore.Core.Checkout.Orders
 
                     paymentFeeTax = _roundingHelper.RoundIfEnabledFor(tax.Amount);
 
-                    // In case of a payment fee the tax amount can be less zero!
-                    // That's why we do not use helper TaxRatesDictionary.Add here.
+                    // INFO: We do not use TaxRatesDictionary.Add here because the tax amount of a payment fee can be less than 0!
                     if (taxRate > 0m && paymentFeeTax != 0m)
                     {
                         if (taxRates.ContainsKey(taxRate))
@@ -864,13 +863,19 @@ namespace Smartstore.Core.Checkout.Orders
                 }
             }
 
-            // Add at least one tax rate (0%).
-            if (taxRates.Count == 0)
+            taxTotal = _roundingHelper.RoundIfEnabledFor(subtotalTax + shippingTax + paymentFeeTax);
+            if (taxTotal < 0)
             {
-                taxRates.Add(0m, 0m);
+                // Negative tax amounts from ancillary services (payment fee) reduce the positive total tax amount, but it must not become negative.
+                taxTotal = 0;
+                taxRates.Clear();
             }
 
-            taxTotal = _roundingHelper.RoundIfEnabledFor(Math.Max(subtotalTax + shippingTax + paymentFeeTax, 0m));
+            if (taxRates.Count == 0)
+            {
+                // Add at least one tax rate (0%).
+                taxRates.Add(0m, 0m);
+            }
 
             return (taxTotal, taxRates);
         }
@@ -1029,16 +1034,22 @@ namespace Smartstore.Core.Checkout.Orders
 
         protected virtual async Task<CartShipping> GetAdjustedShippingTotalAsync(ShoppingCart cart)
         {
+            var customer = cart.Customer;
             var shipping = new CartShipping
             {
-                Option = cart.Customer.GenericAttributes?.SelectedShippingOption
+                Option = customer.GenericAttributes?.SelectedShippingOption
             };
 
             if (shipping.Option == null)
             {
-                await _db.LoadReferenceAsync(cart.Customer, x => x.ShippingAddress);
+                await _db.LoadReferenceAsync(customer, x => x.ShippingAddress);
 
-                var response = await _shippingService.GetShippingOptionsAsync(cart, cart.Customer.ShippingAddress, null, cart.StoreId);
+                if (_shippingSettings.CalculateShippingAtCheckout && customer.ShippingAddress == null)
+                {
+                    return null;
+                }
+
+                var response = await _shippingService.GetShippingOptionsAsync(cart, customer.ShippingAddress, null, cart.StoreId);
                 if (response.Success && response.ShippingOptions.Count > 0)
                 {
                     shipping.Option = response.ShippingOptions[0];
@@ -1047,7 +1058,7 @@ namespace Smartstore.Core.Checkout.Orders
 
             if (shipping.Option != null)
             {
-                // INFO: it is not necessary to set "matchRules" to True here. This is already done by GetShippingOptionsAsync,
+                // INFO: it is not necessary to set "matchRules" to "True" here. This is already done by GetShippingOptionsAsync,
                 // i.e. only options of shipping methods that fulfill rules are taken into account.
                 var shippingMethods = await _shippingService.GetAllShippingMethodsAsync(cart.StoreId);
 

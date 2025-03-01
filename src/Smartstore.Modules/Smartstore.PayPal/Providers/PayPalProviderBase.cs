@@ -46,8 +46,6 @@ namespace Smartstore.PayPal.Providers
 
         public override bool SupportVoid => true;
 
-        public override RecurringPaymentType RecurringPaymentType => RecurringPaymentType.Automatic;
-
         public override PaymentMethodType PaymentMethodType => PaymentMethodType.StandardAndButton;
 
         public override async Task<ProcessPaymentResult> ProcessPaymentAsync(ProcessPaymentRequest request)
@@ -76,7 +74,8 @@ namespace Smartstore.PayPal.Providers
             // Shipping fee or discounts may have changed the total value of the order.
             var updateOrder = _checkoutStateAccessor.CheckoutState.CustomProperties.ContainsKey("UpdatePayPalOrder");
             var redirected = checkoutState.CustomProperties.ContainsKey("PayPalPayerActionRequired");
-            if (updateOrder && !redirected)
+            var payPalButtonUsed = checkoutState.CustomProperties.ContainsKey("PayPalButtonUsed");
+            if ((updateOrder || payPalButtonUsed) && !redirected)
             {
                 _ = await _client.UpdateOrderAsync(request, result);
             }
@@ -96,7 +95,7 @@ namespace Smartstore.PayPal.Providers
             }
             catch (Exception ex) 
             {
-                PayPalHelper.HandleException(ex);
+                PayPalHelper.HandleException(ex, T);
 
                 Logger.LogError(ex, "Authorization or capturing failed. User was redirected to payment selection.");
 

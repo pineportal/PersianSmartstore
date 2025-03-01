@@ -14,6 +14,10 @@ namespace Smartstore.Core.Bootstrapping
             builder.RegisterType<HoneypotProtector>().SingleInstance();
             builder.RegisterType<PermissionService>().As<IPermissionService>().InstancePerLifetimeScope();
             builder.RegisterType<AclService>().As<IAclService>().InstancePerLifetimeScope();
+
+            // Resiliency
+            builder.RegisterType<OverloadProtector>().As<IOverloadProtector>().SingleInstance();
+            builder.RegisterType<TrafficRateLimiters>().AsSelf().SingleInstance();
         }
     }
 }

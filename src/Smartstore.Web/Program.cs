@@ -240,6 +240,7 @@ Logger SetupSerilog(IConfiguration configuration)
                 .Enrich.FromLogContext()
                 // Do not allow system/3rdParty noise less than WRN level
                 .Filter.ByIncludingOnly(IsDbSource)
+                .Filter.ByExcluding(IsFileSource)
                 .Filter.ByExcluding(IsApiQueryWarning)
                 .WriteTo.DbContext(period: TimeSpan.FromSeconds(5), batchSize: 50, eagerlyEmitFirstEvent: false, queueLimit: 1000);
         }, restrictedToMinimumLevel: dbMinLevel, levelSwitch: null);
@@ -256,7 +257,7 @@ bool IsDbSource(LogEvent e)
 bool IsFileSource(LogEvent e)
 {
     var source = e.GetSourceContext();
-    return source != null && (source.Equals("File", StringComparison.OrdinalIgnoreCase) || source.StartsWith("File/", StringComparison.OrdinalIgnoreCase));
+    return source != null && (source.EqualsNoCase("File") || source.StartsWithNoCase("File/"));
 }
 
 bool IsApiQueryWarning(LogEvent e)
