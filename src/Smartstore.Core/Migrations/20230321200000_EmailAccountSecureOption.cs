@@ -5,83 +5,91 @@ using Smartstore.Core.Messaging;
 using Smartstore.Data.Migrations;
 using Smartstore.Net.Mail;
 
-namespace Smartstore.Core.Migrations;
-
-[MigrationVersion("2023-03-21 20:00:00", "Core: EmailAccountSecureOption")]
-internal class EmailAccountSecureOption : Migration, ILocaleResourcesProvider, IDataSeeder<SmartDbContext>
+namespace Smartstore.Core.Migrations
 {
-    const string EmailAccountTable = nameof(EmailAccount);
-    const string SecureOptionColumn = nameof(EmailAccount.SecureOption);
-
-    public DataSeederStage Stage => DataSeederStage.Early;
-    public bool AbortOnFailure => false;
-
-    public override void Up()
+    [MigrationVersion("2023-03-21 20:00:00", "Core: EmailAccountSecureOption")]
+    internal class EmailAccountSecureOption : Migration, ILocaleResourcesProvider, IDataSeeder<SmartDbContext>
     {
-        if (!Schema.Table(EmailAccountTable).Column(SecureOptionColumn).Exists())
+        const string EmailAccountTable = nameof(EmailAccount);
+        const string SecureOptionColumn = nameof(EmailAccount.SecureOption);
+
+        public DataSeederStage Stage => DataSeederStage.Early;
+        public bool AbortOnFailure => false;
+
+        public override void Up()
         {
-            Create.Column(SecureOptionColumn)
-                .OnTable(EmailAccountTable)
-                .AsInt32()
-                .NotNullable()
-                .WithDefaultValue((int)MailSecureOption.Auto);
+            if (!Schema.Table(EmailAccountTable).Column(SecureOptionColumn).Exists())
+            {
+                Create.Column(SecureOptionColumn)
+                    .OnTable(EmailAccountTable)
+                    .AsInt32()
+                    .NotNullable()
+                    .WithDefaultValue((int)MailSecureOption.Auto);
+            }
+
+            Alter.Table(EmailAccountTable).AlterColumn(nameof(EmailAccount.Username)).AsString(255).Nullable();
+            Alter.Table(EmailAccountTable).AlterColumn(nameof(EmailAccount.Password)).AsString(255).Nullable();
         }
 
-        Alter.Table(EmailAccountTable).AlterColumn(nameof(EmailAccount.Username)).AsString(255).Nullable();
-        Alter.Table(EmailAccountTable).AlterColumn(nameof(EmailAccount.Password)).AsString(255).Nullable();
-    }
-
-    public override void Down()
-    {
-        if (Schema.Table(EmailAccountTable).Column(SecureOptionColumn).Exists())
+        public override void Down()
         {
-            Delete.Column(SecureOptionColumn).FromTable(EmailAccountTable);
+            if (Schema.Table(EmailAccountTable).Column(SecureOptionColumn).Exists())
+            {
+                Delete.Column(SecureOptionColumn).FromTable(EmailAccountTable);
+            }
         }
-    }
 
-    public async Task SeedAsync(SmartDbContext context, CancellationToken cancelToken = default)
-    {
-        var emailAccounts = await context.EmailAccounts.ToListAsync(cancelToken);
+        public async Task SeedAsync(SmartDbContext context, CancellationToken cancelToken = default)
+        {
+            var emailAccounts = await context.EmailAccounts.ToListAsync(cancelToken);
 
 #pragma warning disable 612, 618
-        emailAccounts.Each(x => x.MailSecureOption = x.EnableSsl ? MailSecureOption.SslOnConnect : MailSecureOption.StartTlsWhenAvailable);
+            emailAccounts.Each(x => x.MailSecureOption = x.EnableSsl ? MailSecureOption.SslOnConnect : MailSecureOption.StartTlsWhenAvailable);
 #pragma warning restore 612, 618 
 
-        await context.SaveChangesAsync(cancelToken);
+            await context.SaveChangesAsync(cancelToken);
 
-        await context.MigrateLocaleResourcesAsync(MigrateLocaleResources);
-    }
+            await context.MigrateLocaleResourcesAsync(MigrateLocaleResources);
+        }
 
-    public void MigrateLocaleResources(LocaleResourcesBuilder builder)
-    {
-        builder.AddOrUpdate("Admin.Configuration.EmailAccounts.Fields.MailSecureOption",
-            "Encryption",
-            "Verschlüsselung",
-            "Specifies the encryption for the SMTP connection.",
-            "Legt die Verschlüsselung für die SMTP-Verbindung fest.");
+        public void MigrateLocaleResources(LocaleResourcesBuilder builder)
+        {
+            builder.AddOrUpdate("Admin.Configuration.EmailAccounts.Fields.MailSecureOption",
+       "Encryption",
+       "Verschlüsselung",
+       "رمزنگاری",
+       "Specifies the encryption for the SMTP connection.",
+       "Legt die Verschlüsselung für die SMTP-Verbindung fest.",
+       "رمزنگاری برای اتصال SMTP را مشخص می‌کند.");
 
-        builder.AddOrUpdate("Enums.MailSecureOption.None",
-            "No encryption",
-            "Keine Verschlüsselung");
+            builder.AddOrUpdate("Enums.MailSecureOption.None",
+                "No encryption",
+                "Keine Verschlüsselung",
+                "بدون رمزنگاری");
 
-        builder.AddOrUpdate("Enums.MailSecureOption.Auto",
-            "Automatic (SSL or TLS if available, otherwise no encryption)",
-            "Automatisch (SSL oder TLS, falls verfügbar, sonst nicht verschlüsseln)");
+            builder.AddOrUpdate("Enums.MailSecureOption.Auto",
+                "Automatic (SSL or TLS if available, otherwise no encryption)",
+                "Automatisch (SSL oder TLS, falls verfügbar, sonst nicht verschlüsseln)",
+                "خودکار (SSL یا TLS در صورت موجود بودن، در غیر این صورت بدون رمزنگاری)");
 
-        builder.AddOrUpdate("Enums.MailSecureOption.SslOnConnect",
-            "Immediately (encrypt connection immediately with SSL or TLS)",
-            "Sofort (Verbindung sofort mit SSL oder TLS verschlüsseln)");
+            builder.AddOrUpdate("Enums.MailSecureOption.SslOnConnect",
+                "Immediately (encrypt connection immediately with SSL or TLS)",
+                "Sofort (Verbindung sofort mit SSL oder TLS verschlüsseln)",
+                "فوری (اتصال را فوراً با SSL یا TLS رمزنگاری کن)");
 
-        builder.AddOrUpdate("Enums.MailSecureOption.StartTls",
-            "StartTLS (always encrypt with TLS after greeting)",
-            "StartTLS (immer nach Begrüßung mit TLS verschlüsseln)");
+            builder.AddOrUpdate("Enums.MailSecureOption.StartTls",
+                "StartTLS (always encrypt with TLS after greeting)",
+                "StartTLS (immer nach Begrüßung mit TLS verschlüsseln)",
+                "StartTLS (همیشه پس از خوشامدگویی با TLS رمزنگاری کن)");
 
-        builder.AddOrUpdate("Enums.MailSecureOption.StartTlsWhenAvailable",
-            "StartTLS optional (encrypt with TLS after greeting, if available)",
-            "StartTLS optional (nach Begrüßung mit TLS verschlüsseln, falls verfügbar)");
+            builder.AddOrUpdate("Enums.MailSecureOption.StartTlsWhenAvailable",
+                "StartTLS optional (encrypt with TLS after greeting, if available)",
+                "StartTLS optional (nach Begrüßung mit TLS verschlüsseln, falls verfügbar)",
+                "StartTLS اختیاری (در صورت موجود بودن، پس از خوشامدگویی با TLS رمزنگاری کن)");
 
-        builder.Delete(
-            "Admin.Configuration.EmailAccounts.Fields.EnableSsl",
-            "Admin.Configuration.EmailAccounts.Fields.EnableSsl.Hint");
+            builder.Delete(
+                "Admin.Configuration.EmailAccounts.Fields.EnableSsl",
+                "Admin.Configuration.EmailAccounts.Fields.EnableSsl.Hint");
+        }
     }
 }
