@@ -4,80 +4,83 @@ using Smartstore.Core.Data;
 using Smartstore.Core.Data.Migrations;
 using Smartstore.Data.Migrations;
 
-namespace Smartstore.Core.Migrations;
-
-[MigrationVersion("2023-07-28 12:00:00", "Core: attribute combination hash code")]
-internal class AttributeCombinationHashCode : Migration, ILocaleResourcesProvider, IDataSeeder<SmartDbContext>
+namespace Smartstore.Core.Migrations
 {
-    const string AttributeCombinationTable = nameof(ProductVariantAttributeCombination);
-    const string HashCodeColumn = nameof(ProductVariantAttributeCombination.HashCode);
-    const string HashCodeIndex = "IX_HashCode";
-
-    private readonly SmartDbContext _db;
-    private readonly ILogger _logger;
-
-    public AttributeCombinationHashCode(SmartDbContext db, ILogger logger)
+    [MigrationVersion("2023-07-28 12:00:00", "Core: attribute combination hash code")]
+    internal class AttributeCombinationHashCode : Migration, ILocaleResourcesProvider, IDataSeeder<SmartDbContext>
     {
-        _db = db;
-        _logger = logger;
-    }
+        const string AttributeCombinationTable = nameof(ProductVariantAttributeCombination);
+        const string HashCodeColumn = nameof(ProductVariantAttributeCombination.HashCode);
+        const string HashCodeIndex = "IX_HashCode";
 
-    public override void Up()
-    {
-        if (!Schema.Table(AttributeCombinationTable).Column(HashCodeColumn).Exists())
+        private readonly SmartDbContext _db;
+        private readonly ILogger _logger;
+
+        public AttributeCombinationHashCode(SmartDbContext db, ILogger logger)
         {
-            Create.Column(HashCodeColumn).OnTable(AttributeCombinationTable)
-                .AsInt32()
-                .NotNullable()
-                .WithDefaultValue(0)
-                .Indexed(HashCodeIndex);
-        }
-    }
-
-    public override void Down()
-    {
-        var attributeCombinations = Schema.Table(AttributeCombinationTable);
-
-        if (attributeCombinations.Index(HashCodeIndex).Exists())
-        {
-            Delete.Index(HashCodeIndex).OnTable(AttributeCombinationTable);
+            _db = db;
+            _logger = logger;
         }
 
-        if (attributeCombinations.Column(HashCodeColumn).Exists())
+        public override void Up()
         {
-            Delete.Column(HashCodeColumn).FromTable(AttributeCombinationTable);
+            if (!Schema.Table(AttributeCombinationTable).Column(HashCodeColumn).Exists())
+            {
+                Create.Column(HashCodeColumn).OnTable(AttributeCombinationTable)
+                    .AsInt32()
+                    .NotNullable()
+                    .WithDefaultValue(0)
+                    .Indexed(HashCodeIndex);
+            }
         }
-    }
 
-    public DataSeederStage Stage => DataSeederStage.Late;
-    public bool AbortOnFailure => false;
-
-    public async Task SeedAsync(SmartDbContext context, CancellationToken cancelToken = default)
-    {
-        await context.MigrateLocaleResourcesAsync(MigrateLocaleResources);
-
-        try
+        public override void Down()
         {
-            var migrator = new AttributesMigrator(_db, _logger);
-            var numUpdated = await migrator.CreateAttributeCombinationHashCodesAsync(false, cancelToken);
+            var attributeCombinations = Schema.Table(AttributeCombinationTable);
 
-            _logger.Debug($"Created hash codes for {numUpdated} attribute combinations.");
+            if (attributeCombinations.Index(HashCodeIndex).Exists())
+            {
+                Delete.Index(HashCodeIndex).OnTable(AttributeCombinationTable);
+            }
+
+            if (attributeCombinations.Column(HashCodeColumn).Exists())
+            {
+                Delete.Column(HashCodeColumn).FromTable(AttributeCombinationTable);
+            }
         }
-        catch (Exception ex)
+
+        public DataSeederStage Stage => DataSeederStage.Late;
+        public bool AbortOnFailure => false;
+
+        public async Task SeedAsync(SmartDbContext context, CancellationToken cancelToken = default)
         {
-            // Do not break any other data seeding. Hash code creation can be restarted on maintenance page.
-            _logger.Error(ex);
+            await context.MigrateLocaleResourcesAsync(MigrateLocaleResources);
+
+            try
+            {
+                var migrator = new AttributesMigrator(_db, _logger);
+                var numUpdated = await migrator.CreateAttributeCombinationHashCodesAsync(false, cancelToken);
+
+                _logger.Debug($"Created hash codes for {numUpdated} attribute combinations.");
+            }
+            catch (Exception ex)
+            {
+                // Do not break any other data seeding. Hash code creation can be restarted on maintenance page.
+                _logger.Error(ex);
+            }
         }
-    }
 
-    public void MigrateLocaleResources(LocaleResourcesBuilder builder)
-    {
-        builder.AddOrUpdate("Admin.System.Warnings.AttributeCombinationHashCodes.OK",
-            "All hash codes of attribute combinations have been set.",
-            "Alle Hash-Codes von Attribut-Kombinationen wurden festgelegt.");
+        public void MigrateLocaleResources(LocaleResourcesBuilder builder)
+        {
+            builder.AddOrUpdate("Admin.System.Warnings.AttributeCombinationHashCodes.OK",
+     "All hash codes of attribute combinations have been set.",
+     "Alle Hash-Codes von Attribut-Kombinationen wurden festgelegt.",
+     "همه کدهای هش ترکیب‌های ویژگی تنظیم شده‌اند.");
 
-        builder.AddOrUpdate("Admin.System.Warnings.AttributeCombinationHashCodes.Missing",
-            "The hash code is missing for {0} attribute combination(s). <a href=\"{1}\">Fix now.</a>",
-            "Bei {0} Attribut-Kombination(en) fehlt der Hash-Code. <a href=\"{1}\">Jetzt beheben.</a>");
+            builder.AddOrUpdate("Admin.System.Warnings.AttributeCombinationHashCodes.Missing",
+                "The hash code is missing for {0} attribute combination(s). <a href=\"{1}\">Fix now.</a>",
+                "Bei {0} Attribut-Kombination(en) fehlt der Hash-Code. <a href=\"{1}\">Jetzt beheben.</a>",
+                "کد هش برای {0} ترکیب(های) ویژگی وجود ندارد. <a href=\"{1}\">اکنون رفع کنید.</a>");
+        }
     }
 }
