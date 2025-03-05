@@ -9,55 +9,55 @@
 </h3>
 <h1 align="center"><strong>Persian SmartStore</strong></h1>
 <h2 align="center"><strong>نسخه فارسی فروشگاه ساز رایگان اسمارت استور</strong></h2>
-<h3 align="center"><strong>Ready. Sell. Grow.</strong></h3>
-<p align="center">
-    A modular, scalable and ultra-fast open-source all-in-one eCommerce platform built on ASP.NET Core 7.
-</p>
-<p align="center">
-	<a href="#try-it-online">Try Online</a> ∙ 
-	<a href="http://community.smartstore.com">Forum</a> ∙ 
-	<a href="http://community.smartstore.com/marketplace">Marketplace</a> ∙ 
-	<a href="http://translate.smartstore.com/">Translations</a>
-</p>
+**فروش. توسعه. رشد.**
+
+یک پلتفرم تجارت الکترونیک متن‌باز، ماژولار، مقیاس‌پذیر و فوق‌العاده سریع که به‌صورت همه‌جانبه بر پایه ASP.NET Core 7 توسعه یافته است.
+
+**[آزمایش آنلاین](http://www.smartstore.com) | [انجمن](http://community.smartstore.com) | [بازار](http://community.smartstore.com/marketplace) | [ترجمه‌ها](http://translate.smartstore.com/)**
+
 <br/>
+## دموی فروشگاه اسمارت‌استور
 <p align="center">
   <img src="assets/sm5-devices.png" alt="Smartstore Demoshop" />
 </p>
 
-Smartstore is a cross-platform, modular, scalable and ultra-fast open source all-in-one eCommerce platform based on ASP.NET Core 7, Entity Framework, Vue.js, Sass, Bootstrap and more.
 
-**Smartstore includes all the essential features to create multi-language, multi-store, multi-currency shops** targeting desktop or mobile devices and enables SEO-optimised, rich product catalogs with support for unlimited number of products and categories, variants, bundles, datasheets, ESD, discounts, coupons and much more.
+اسمارت‌استور یک پلتفرم تجارت الکترونیک متن‌باز، ماژولار، مقیاس‌پذیر و فوق‌العاده سریع است که بر پایه ASP.NET Core 7، Entity Framework، Vue.js، Sass، Bootstrap و سایر فناوری‌ها توسعه یافته و برای تمامی پلتفرم‌ها قابل استفاده است.
 
-A comprehensive set of tools for CRM & CMS, Sales, Marketing, Payment & Shipping Handling etc. makes Smartstore a powerful all-in-one solution that meets all your needs.
+این پلتفرم شامل تمام قابلیت‌های ضروری برای ایجاد فروشگاه‌های چندزبانه، چندفروشگاهی و چندارزی است که برای دستگاه‌های دسکتاپ و موبایل طراحی شده‌اند. اسمارت‌استور امکان ایجاد کاتالوگ‌های محصولی غنی و بهینه‌شده برای سئو را با پشتیبانی از تعداد نامحدود محصولات، دسته‌بندی‌ها، انواع محصول، بسته‌ها، برگه‌های داده، محصولات دیجیتال (ESD)، تخفیف‌ها، کوپن‌ها و بسیاری امکانات دیگر فراهم می‌کند.
 
-**Smartstore delivers a beautiful and configurable shop frontend out-of-the-box**, built with a high level design approach, including components like `Sass`, `Bootstrap` and others. The included *Flex* theme is modern, clean and fully responsive, giving shoppers the best possible shopping experience on any device.
+مجموعه‌ای جامع از ابزارها برای مدیریت ارتباط با مشتری (CRM)، مدیریت محتوا (CMS)، فروش، بازاریابی، پرداخت و حمل‌ونقل، اسمارت‌استور را به یک راه‌حل همه‌جانبه قدرتمند تبدیل کرده که تمامی نیازهای شما را برآورده می‌کند.
 
-The state-of-the-art architecture of Smartstore - with `ASP.NET Core 7`, `Entity Framework Core 7` and Domain Driven Design approach - makes it easy to extend, extremely flexible and basically fun to work with ;-)
+اسمارت‌استور به‌صورت پیش‌فرض یک رابط کاربری زیبا و قابل تنظیم برای فروشگاه ارائه می‌دهد که با رویکرد طراحی سطح بالا و استفاده از اجزایی مانند Sass، Bootstrap و غیره ساخته شده است. تم Flex که همراه این پلتفرم ارائه می‌شود، مدرن، تمیز و کاملاً پاسخ‌گو (Responsive) است و تجربه خرید بهینه‌ای را در هر دستگاهی برای کاربران فراهم می‌کند.
 
-* :house: **Website:** [http://www.smartstore.com](http://www.smartstore.com)
-* :speech_balloon: **Forum:** [http://community.smartstore.com](http://community.smartstore.com)
-* :mega: **Marketplace:** [http://community.smartstore.com/marketplace](http://community.smartstore.com/marketplace)
-* :earth_americas: **Translations:** [http://translate.smartstore.com/](http://translate.smartstore.com/)
-* :blue_book: **Documentation:** [Smartstore Documentation in English](https://smartstore.atlassian.net/wiki/spaces/SMNET60/pages/2511044691/Getting+Started)
-* ▶️ **Azure Marketplace:** [https://azuremarketplace.microsoft.com](https://azuremarketplace.microsoft.com/marketplace/apps/smartstore-ag.smartstorenet?tab=Overview)
-<p>&nbsp;</p>
+معماری پیشرفته اسمارت‌استور - مبتنی بر ASP.NET Core 7، Entity Framework Core 7 و رویکرد طراحی مبتنی بر دامنه (Domain-Driven Design) - توسعه و گسترش آن را آسان، انعطاف‌پذیر و لذت‌بخش می‌کند.
 
-## Technology & Design
+-   **وب‌سایت:** [www.smartstore.com](http://www.smartstore.com)
+-   **انجمن:** [community.smartstore.com](http://community.smartstore.com)
+-   **بازار:** [community.smartstore.com/marketplace](http://community.smartstore.com/marketplace)
+-   **ترجمه‌ها:** [translate.smartstore.com](http://translate.smartstore.com/)
+-   **مستندات:** [مستندات اسمارت‌استور به زبان انگلیسی](http://docs.smartstore.com)
+-   **بازار Azure:** [azuremarketplace.microsoft.com](https://azuremarketplace.microsoft.com)
 
-* State-of-the-art architecture with `ASP.NET Core 7`, `Entity Framework Core 7` and domain-driven design
-* Cross-platform: run it on Windows, Linux, or Mac
-* Supports `Docker` out of the box for easy deployment
-* Composable, extensible and highly flexible due to modular design
-* Highly scalable with full page caching and web farm support 
-* Powerful theme engine allows you to create or customise themes & skins with minimal effort thanks to theme inheritance
-* Point&Click theme configuration
-* Liquid template engine: highly flexible templating for emails and campaigns with auto-completion and syntax highlighting
-* Html to PDF converter: creates PDF documents from regular HTML templates, radically simplifying the customisation of PDF output
-* Consistent and sophisticated use of modern components such as `Vue.js`, `Sass`, `Bootstrap` & more in the front and back end.
-* Easy shop management thanks to modern and clean UI
-<p>&nbsp;</p>
+----------
 
-## Key Features
+## فناوری و طراحی
+
+-   معماری پیشرفته با ASP.NET Core 7، Entity Framework Core 7 و طراحی مبتنی بر دامنه
+-   چندپلتفرمی: قابل اجرا بر روی ویندوز، لینوکس و مک
+-   پشتیبانی پیش‌فرض از داکر برای استقرار آسان
+-   ماژولار، قابل گسترش و بسیار انعطاف‌پذیر به لطف طراحی ماژولار
+-   مقیاس‌پذیری بالا با پشتیبانی از کش کامل صفحات و وب‌فارم
+-   موتور تم قدرتمند با امکان ایجاد یا سفارشی‌سازی تم‌ها با کمترین تلاش به لطف وراثت تم
+-   تنظیمات تم با رابط کاربری ساده (Point & Click)
+-   موتور قالب Liquid: قالب‌سازی انعطاف‌پذیر برای ایمیل‌ها و کمپین‌ها با تکمیل خودکار و برجسته‌سازی نحو
+-   تبدیل HTML به PDF: تولید اسناد PDF از قالب‌های HTML معمولی، که سفارشی‌سازی خروجی PDF را ساده‌تر می‌کند
+-   استفاده منسجم و حرفه‌ای از اجزای مدرن مانند Vue.js، Sass، Bootstrap و غیره در رابط کاربری و بخش مدیریت
+-   مدیریت آسان فروشگاه به لطف رابط کاربری مدرن و تمیز
+
+----------
+
+## ویژگی‌های کلیدی
 
 
 
@@ -66,138 +66,110 @@ The state-of-the-art architecture of Smartstore - with `ASP.NET Core 7`, `Entity
 </p>
 
 
-* Multi-store support
-* Multi-language and full RTL (Right-to-Left) and Bidi(rectional) support
-* Multi-currency support
-* Product bundles, variants, attributes, ESD, tier pricing, cross-selling and more
-* Sophisticated marketing & promotion capabilities (gift cards, reward points, discounts of any kind, and more)
-* Reviews & Ratings
-* Media Manager: powerful and lightning fast media file explorer
-* Rule Builder: powerful rule system for visual business rule creation with dozens of predefined rules out-of-the-box
-* Search framework with faceted search support. Ultra-fast search results, even with millions of items!
-* Extremely scalable through output caching, REDIS & Microsoft Azure support
-* Tree-based permission management (ACL) with inheritance support
-* Sophisticated import/export framework (profiles, filters, mapping, projections, scheduling, deployment... basically everything!)
-* CMS Page Builder: Create compelling content that drives sales. No coding required thanks to a powerful WYSIWYG editor using the revolutionary CSS grid system
-* Blog, forum, polls, custom pages & HTML content etc.
-* CMS Menu Builder: visual manager for all kinds of menus. Modify existing menus or create your own and place them anywhere you want.
-* Modern, clean, SEO-optimized and fully responsive `Bootstrap`-based theme
-* Support for hierarchical SEO slugs, e.g.: *samsung/galaxy/s22/32gb/white*
-* *Trusted Shops* pre-certification and full EU-GDPR compliance
-* 100% compliant with German law
-* Sales-, Customer- & Inventory Management
-* Comprehensive CRM features
-* Powerful layered shop navigation
-* Numerous payment and shipping providers and options
-* Wallet: allows full or partial payment of orders via credit account
-* TinyImage: achieves ultra-high image compression rates (up to 80%!) and enables WebP support
-* Preview Mode: virtually test themes and stores more easily
-* RESTful WebApi (coming soon)
-<p>&nbsp;</p>
+-   پشتیبانی از چندفروشگاهی
+-   پشتیبانی چندزبانه با قابلیت کامل RTL (راست به چپ) و دوجهته (Bidi)
+-   پشتیبانی از چندارز
+-   بسته‌های محصولی، انواع محصول، ویژگی‌ها، محصولات دیجیتال (ESD)، قیمت‌گذاری لایه‌ای، فروش متقاطع و غیره
+-   قابلیت‌های پیشرفته بازاریابی و تبلیغات (کارت هدیه، امتیاز پاداش، انواع تخفیف و غیره)
+-   نظرات و امتیازدهی
+-   مدیر رسانه: کاوشگر فایل رسانه‌ای قدرتمند و سریع
+-   سازنده قوانین: سیستم قدرتمند برای ایجاد قوانین تجاری بصری با ده‌ها قانون از پیش تعریف‌شده
+-   چارچوب جستجو با پشتیبانی از جستجوی فیلتردار (Faceted Search)؛ نتایج جستجوی فوق سریع حتی با میلیون‌ها آیتم
+-   مقیاس‌پذیری بالا با پشتیبانی از کش خروجی، REDIS و Microsoft Azure
+-   مدیریت مجوز مبتنی بر درخت (ACL) با پشتیبانی از وراثت
+-   چارچوب پیشرفته import/export (پروفایل‌ها، فیلترها، نگاشت‌ها، زمان‌بندی، استقرار و غیره)
+-   سازنده صفحات CMS: ایجاد محتوای جذاب برای افزایش فروش بدون نیاز به کدنویسی با ویرایشگر WYSIWYG قدرتمند و سیستم گرید CSS
+-   وبلاگ، انجمن، نظرسنجی، صفحات سفارشی و محتوای HTML
+-   سازنده منوهای CMS: مدیریت بصری انواع منوها با امکان ویرایش یا ایجاد منوهای جدید و قرار دادن آن‌ها در هر مکان
+-   تم مدرن، تمیز، بهینه‌شده برای سئو و کاملاً پاسخ‌گو مبتنی بر Bootstrap
+-   پشتیبانی از آدرس‌های سئو سلسله‌مراتبی، به عنوان مثال: samsung/galaxy/s22/32gb/white
+-   پیش‌تأیید Trusted Shops و انطباق کامل با GDPR اتحادیه اروپا
+-   انطباق 100٪ با قوانین آلمان
+-   مدیریت فروش، مشتریان و موجودی
+-   ویژگی‌های جامع CRM
+-   ناوبری لایه‌ای قدرتمند فروشگاه
+-   ارائه‌دهندگان متعدد پرداخت و حمل‌ونقل
+-   کیف پول: امکان پرداخت کامل یا جزئی سفارش‌ها از طریق حساب اعتباری
+-   TinyImage: فشرده‌سازی فوق‌العاده تصاویر (تا 80٪) و پشتیبانی از WebP
+-   حالت پیش‌نمایش: آزمایش آسان‌تر تم‌ها و فروشگاه‌ها به‌صورت مجازی
+-   RESTful WebApi (به‌زودی)
 
-## Getting Started
+----------
 
-### System requirements
+## شروع کار
 
-#### Supported operating systems
+### پیش‌نیازهای سیستم
 
-* Windows 10 (or higher) / Windows Server 2012 R2 (or higher)
-* Ubuntu 14.04+
-* Debian 11+
-* Mac OS X 10.11+
+**سیستم‌عامل‌های پشتیبانی‌شده:**
 
-#### Supported database systems
+-   ویندوز 10 (یا بالاتر) / ویندوز سرور 2012 R2 (یا بالاتر)
+-   اوبونتو 14.04 یا بالاتر
+-   دبیان 11 یا بالاتر
+-   مک OS X 10.11 یا بالاتر
 
-- Microsoft SQL Server 2008 Express (or higher)
-- MySQL 8.0+
-- PostgreSQL 11+
-- SQLite 3.31+
+**سیستم‌های پایگاه داده پشتیبانی‌شده:**
 
-### Upgrade from Smartstore.NET 4.2
+-   Microsoft SQL Server 2008 Express (یا بالاتر)
+-   MySQL 8.0 یا بالاتر
+-   PostgreSQL 11 یا بالاتر
+-   SQLite 3.31 یا بالاتر
 
-Smartstore 5 is a port of [Smartstore.NET 4](https://github.com/smartstore/SmartStoreNET) - based on the classic .NET Framework 4.7.2 – to the new `ASP.NET Core 7` platform. Smartstore instances based on classic `ASP.NET MVC` can be upgraded seamlessly. To [upgrade](https://smartstore.atlassian.net/wiki/spaces/SMNET50/pages/1956118609/Updating+from+Previous+Versions), all you need to do is replace the application files on your server - except for the `App_Data` directory - and **all your data will automatically be transferred to the new system**. [See the documentation for detailed information on installing or upgrading your store](https://smartstore.atlassian.net/wiki/spaces/SMNET50/pages/1956118822/Installing+Smartstore).
+### ارتقا از Smartstore.NET 4.2
 
- :information_source: Upgrading from versions older than 4.2 is not possible. Therefore, you should migrate Smartstore.NET to version 4.2 first and then upgrade to Smartstore 5.
+اسمارت‌استور 5 نسخه‌ای از Smartstore.NET 4 (مبتنی بر .NET Framework 4.7.2) است که به پلتفرم جدید ASP.NET Core 7 منتقل شده است. فروشگاه‌های مبتنی بر ASP.NET MVC کلاسیک می‌توانند به‌صورت یکپارچه ارتقا یابند. برای ارتقا، کافی است فایل‌های برنامه را روی سرور خود جایگزین کنید (به‌جز پوشه App_Data) تا تمام داده‌های شما به‌طور خودکار به سیستم جدید منتقل شوند. برای اطلاعات دقیق‌تر به مستندات مراجعه کنید.
 
-### Visual Studio
+ℹ️ ارتقا از نسخه‌های قدیمی‌تر از 4.2 ممکن نیست. بنابراین، ابتدا باید Smartstore.NET را به نسخه 4.2 ارتقا دهید و سپس به اسمارت‌استور 5 مهاجرت کنید.
 
-- Clone the repository using the command `git clone https://github.com/smartstore/Smartstore.git` and checkout the `main` branch.
-- Download Visual Studio 2022 (any edition) from https://www.visualstudio.com/downloads/
-- Open `Smartstore.sln` and wait for Visual Studio to restore all NuGet packages
-- Make sure `Smartstore.Web` is the startup project and run it
+### کار با Visual Studio
 
-### Repository Structure
+1.  مخزن را با دستور git clone https://github.com/smartstore/Smartstore.git کلون کرده و شاخه اصلی (main) را انتخاب کنید.
+2.  Visual Studio 2022 (هر نسخه) را از [visualstudio.com/downloads/](https://www.visualstudio.com/downloads/) دانلود کنید.
+3.  فایل Smartstore.sln را باز کنید و منتظر بمانید تا Visual Studio تمامی بسته‌های NuGet را بازیابی کند.
+4.  مطمئن شوید که پروژه Smartstore.Web به‌عنوان پروژه راه‌انداز تنظیم شده است و آن را اجرا کنید.
 
-- [`Smartstore`](https://github.com/smartstore/Smartstore/tree/main/src/Smartstore) contains common low-level application-agnostic stuff like bootstrapper, modularity engine, caching, pub/sub, imaging, type conversion, IO, templating, scheduling, various utilities, common extension methods etc.
-- [`Smartstore.Data`](https://github.com/smartstore/Smartstore/tree/main/src/Smartstore.Data) contains database providers
-- [`Smartstore.Core`](https://github.com/smartstore/Smartstore/tree/main/src/Smartstore.Core) contains application specific modules like catalog, checkout, identity, security, localization, logging, messaging, rules engine, search engine, theme engine, migrations etc.
-- [`Smartstore.Web.Common`](https://github.com/smartstore/Smartstore/tree/main/src/Smartstore.Web.Common) contains common web features like custom MVC infrastructure, bundling, TagHelpers, HtmlHelpers etc.
-- [`Smartstore.Modules`](https://github.com/smartstore/Smartstore/tree/main/src/Smartstore.Modules) contains all module/plugin projects
-- [`Smartstore.Web`](https://github.com/smartstore/Smartstore/tree/main/src/Smartstore.Web) is the entry host project that contains controllers, model classes, themes, static assets etc.
+----------
 
-<p>&nbsp;</p>
+## ساختار مخزن
 
-## Build Smartstore
+-   **Smartstore:** شامل موارد سطح پایین و مستقل از برنامه مانند بوت‌استرپر، موتور ماژولاریتی، کش، pub/sub، پردازش تصویر، تبدیل نوع، IO، قالب‌سازی، زمان‌بندی، ابزارهای کاربردی و متدهای توسعه‌یافته عمومی
+-   **Smartstore.Data:** شامل ارائه‌دهندگان پایگاه داده
+-   **Smartstore.Core:** شامل ماژول‌های خاص برنامه مانند کاتالوگ، پرداخت، هویت، امنیت، محلی‌سازی، لاگ‌گیری، پیام‌رسانی، موتور قوانین، موتور جستجو، موتور تم و مهاجرت‌ها
+-   **Smartstore.Web.Common:** شامل قابلیت‌های وب عمومی مانند زیرساخت سفارشی MVC، باندلینگ، TagHelpers، HtmlHelpers و غیره
+-   **Smartstore.Modules:** شامل تمام پروژه‌های ماژول/پلاگین
+-   **Smartstore.Web:** پروژه میزبان ورودی که شامل کنترلرها، مدل‌ها، تم‌ها، منابع استاتیک و غیره است
 
-### Option 1 - by publishing the entry host project
+----------
 
-1. Open the Smartstore solution in Visual Studio 2022
-2. Use **Release** configuration
-3. (Re)build the solution
-4. Publish host project **Smartstore.Web**
+## ساخت اسمارت‌استور
 
-### Option 2 - by running a build script
+### گزینه 1 - انتشار پروژه میزبان
 
-Run the build script corresponding to your target platform in the **build** directory: `build.{Platform}.cmd`. The resulting build will be placed in the `build/artifacts/Community.{Version}.{Platform}` directory. A zip archive in **build/artifacts/** is created automatically.
+1.  راه‌حل اسمارت‌استور را در Visual Studio 2022 باز کنید.
+2.  از تنظیمات Release استفاده کنید.
+3.  راه‌حل را بازسازی کنید.
+4.  پروژه میزبان Smartstore.Web را منتشر کنید.
 
-By default, the build script produces a platform-specific, self-contained application that includes the ASP.NET runtime and libraries, the Smartstore application and its dependencies. You can run it on any machine that doesn't have the .NET runtime installed.
+### گزینه 2 - اجرای اسکریپت ساخت
 
-Smartstore uses Nuke (https://nuke.build/) as its build automation solution, which makes it easy to customize the build process by editing `src/Smartstore.Build/Smartstore.Build/Build.cs`.
+اسکریپت ساخت مربوط به پلتفرم هدف خود را در پوشه build اجرا کنید: build.{Platform}.cmd. نتیجه ساخت در پوشه build/artifacts/Community.{Version}.{Platform} قرار می‌گیرد. یک فایل زیپ نیز به‌صورت خودکار در build/artifacts/ ایجاد می‌شود.
 
-### About the "src/Smartstore.Web/Modules" directory
+به‌صورت پیش‌فرض، اسکریپت ساخت یک برنامه خودکفا (Self-Contained) مختص پلتفرم تولید می‌کند که شامل runtime ASP.NET، کتابخانه‌ها، برنامه اسمارت‌استور و وابستگی‌های آن است. این برنامه را می‌توان روی هر ماشینی بدون نیاز به نصب runtime .NET اجرا کرد.
 
-While building the solution, all modules in `src/Smartstore.Modules/` are detected, compiled and placed in the `src/Smartstore.Web/Modules/` directory. The application runtime uses this directory as a source from which modules are 
-loaded dynamically. During development, however, the "Modules" directory is irrelevant. You can safely delete it at any time.
+اسمارت‌استور از Nuke ([nuke.build](https://nuke.build/)) به‌عنوان راه‌حل خودکارسازی ساخت استفاده می‌کند که با ویرایش فایل src/Smartstore.Build/Smartstore.Build/Build.cs امکان سفارشی‌سازی فرآیند ساخت را فراهم می‌کند.
 
-### Creating Docker images
+----------
 
-To create a Docker image, run `build/dockerize.{Platform}[.nobuild].sh`.
+## آزمایش آنلاین
 
-##### dockerize.linux.sh
+ما یک دموی آنلاین زنده راه‌اندازی کرده‌ایم تا بتوانید اسمارت‌استور را بدون نیاز به نصب محلی آزمایش کنید. اولین برداشت خود را دریافت کنید و تمام قابلیت‌های موجود در رابط کاربری و بخش مدیریت را تست کنید. لطفاً توجه داشته باشید که دموی بخش مدیریت به‌صورت اشتراکی است و سایر آزمایش‌کنندگان ممکن است همزمان داده‌ها را تغییر دهند.
 
-Creates a Debian Linux base image including the complete ASP.NET runtime, builds the solution and publishes a framework-dependent application inside the Linux container. It also installs the native **wkhtmltopdf** library needed to generate PDF files.
+-   **رابط کاربری (Frontend):** کاربر: demo، رمز: 1234
+-   **بخش مدیریت (Backend):** کاربر: demo، رمز: 1234
 
-##### dockerize.linux.nobuild.sh
+----------
 
-Much faster, but requires that the application has already been built and is located in `build/artifacts/Community.{Version}.linux-x64`. Creates a Debian Linux base image with only the ASP.NET runtime dependencies and copies the build artifact. It also installs the native **wkhtmltopdf** library needed to generate PDF files.
+## مجوز
 
-##### dockerize.windows.nobuild.sh
+نسخه جامعه اسمارت‌استور تحت مجوز AGPL منتشر شده است.
 
-Creates a Windows Nano Server base image with only the ASP.NET runtime dependencies and copies the build artifact. Requires that the application has already been built and is located in `build/artifacts/Community.{Version}.win-x64`. It also requires that the Docker engine is running a Windows image.
-
-### Creating Docker containers
-
-To create a ready-to-run Docker container with a database server run `compose.{DbSystem}.sh`. 
-
-##### compose.mysql.sh
-
-Creates a composite Docker container containing the **smartstore** application image and the latest **MySql** image.
-
-##### compose.sqlserver.sh
-
-Creates a composite Docker container containing the **smartstore** application image and the latest **MS SQL Server** image.
-<p>&nbsp;</p>
-
-## Try it online
-
-We have set up a live online demo for you to test Smartstore without a local installation. Get a first impression and test all available features in the frontend and backend. Please note that the backend demo is shared and other testers can modify data at the same time.
-
-* [**Frontend**](https://core.smartstore.com/frontend/en) (User: demo, PWD: 1234)
-* [**Backend**](https://core.smartstore.com/backend/admin/) (User: demo, PWD: 1234)
-<p>&nbsp;</p>
-
-## License
-
-Smartstore Community Edition is released under the [AGPL license](https://www.gnu.org/licenses/agpl-3.0.de.html).
-
-**Add a star to our repository** to stay up-to-date, get involved or just watch how we're doing. Learn about the latest developments, actively participate and don't miss out on new releases.
+به مخزن ما ستاره دهید تا به‌روز بمانید، مشارکت کنید یا پیشرفت ما را دنبال کنید. از آخرین تحولات مطلع شوید، به‌صورت فعال مشارکت کنید و انتشار نسخه‌های جدید را از دست ندهید.
