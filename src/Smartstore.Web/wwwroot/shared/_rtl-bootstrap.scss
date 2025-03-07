@@ -4,25 +4,27 @@
 // ==============================================================
 
 [dir=rtl] {
+    // Custom controls
+    // ----------------------------------------------
 
-	// Custom controls
-	// ----------------------------------------------
+    .custom-select {
+        &[multiple],
+        &[size]:not([size="1"]) {
+            padding-left: $custom-select-padding-x;
+            padding-right: 0;
+        }
+    }
 
-	.custom-select {
-	  &[multiple],
-	  &[size]:not([size="1"]) {
-		padding-left: $custom-select-padding-x;
-		padding-right: 0;
-	  }
-	}
-	
-	.custom-file-label { 
-	  &::after {
-		left: 0;
-		right: initial;
-	
-		border-right: $custom-file-border-width solid $custom-file-border-color;
-		border-left: none;
-	  }
-	}
+    .custom-file-label {
+        &::after {
+            left: 0;
+            right: initial;
+            border-right: $custom-file-border-width solid $custom-file-border-color;
+            border-left: none;
+        }
+    }
+
+    .form-check .form-check-input {
+        float: right;
+    }
 }
