@@ -8550,7 +8550,7 @@
     <Value>تنظیمات با موفقیت به‌روزرسانی شدند.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.ContentManagement">
-    <Value>سیستم مدیریت محتوا</Value>
+    <Value>مدیریت محتوا</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.ContentManagement.AddMenu">
     <Value>افزودن منو</Value>
