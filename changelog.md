@@ -2,12 +2,111 @@
 
 ## Smartstore 6.0.1
 
+### New Features
+
+- Updated to **.NET 9**
+  - Increased overall performance
+- #1258 Added **DeepSeek** AI provider.
+- #1142 Implemented configurable Content-Security-Policy (CSP) HTTP header.
+- #990 Added a weight field to attribute combinations.
+- Added a setting to control whether shipping costs are displayed on the cart page as long as the customer has not yet entered a shipping address.
+- Shipping by total: Added a setting to let the shipping origin determine the shipping cost if the shipping address is missing.
+- #501 New category option for ignoring a category in menus.
+- #1259 AI: Implemented setting for keywords to generally avoid.
+- #248 Catalog search: Added an option for featured product sort order.
+- #1281 Added shipping setting: Apply free shipping over 'X' only for specific shipping countries.
+- MegaSearch:
+  - ~20% performance increase
+  - Added setting to indicate whether to split compound words.
+  - Added setting to include/exclude the meta keywords of products in the search index.
+  - #1275 Import of product keywords (import file column `MegaSearch.Product.Keywords`).
+- #1225 Added settings to sort search filters of facet groups: category, brand, and delivery time.
+- Added PDF setting for the maximum number of objects to print.
+- Fixed number of attachments always being 0 in queued email list.
+- EmailReminder: Added task to send bonus points reminders.
+- Added setting to round the amount of reward points for a purchase.
+- #1150 Added a setting to hide orders in *My Account*.
+- #1242 Rule Builder: Added a cart rule fulfilled when the cart contains a product with a specific SKU.
+- #509 Added payment status setting for offline payments.
+- #1010 Allowed the admin to align a blog or news image within its element box.
+- #1261 Blogs and news: Added a setting indicating whether to allow users to leave comments if they have never purchased before.
+- #1263 Allowed the admin to mark an order as *paid* even if the payment was previously voided.
+- PayPal:
+	- Added option for admin to decide how to handle orders declined by payment.
+	- Removed Giropay provider.
+	- Added Trustly provider.
+
+### Improvements
+
+- Quick-Checkout: Allowed all payment methods to be specified as the preferred payment method.
+- #1266 Refreshed browser URL when a product variant changes so that it points to the current variant.
+- #1226 Enhanced `ResetPasswordAsync` to detect and repair accidental guest role assignments.
+- #214 Added backend menu entry for each Rule Builder scope.
+- Added new bot detection patterns to `useragent.yml`.
+- Updated `dbip-country-lite.mmdb`.
+- Logging: Added client UserAgent string to log entries.
+- Improved processing of recurring payments.
+- ChatGPT:
+  - #1262 Added OpenAI `o1` and `03-mini` to supported models.
+  - Added a setting for the maximum number of completion tokens.
+
 ### Bugfixes
 
-- The bootstrap-icons.svg path resolution is missing the base path.
+- Fixed occasional incorrect shipping costs applied based on shipping address.
+- #1229 Fixed HTTP client timeout when sending an *order placed* message with PDF attached.
+- #1235 Fixed products remaining published when stock equals the minimum stock quantity, and low stock activity is set to *unpublish*.
+- Fixed incorrect discounted price on product detail page due to missing cache invalidation.
+- Fixed checkout shipping link not opening the shipping information dialog.
+- Logging: Excluded file source from DB logging.
+- Fixed missing base path resolution for bootstrap-icons.svg.
+- Ignored surrogate characters (emojis) when building URL slugs.
+- #1269 Redirected entity slugs to the default language slugs after disabling a language.
+- ChatGPT:
+  - Fixed `NullReferenceException` and deprecated model error when creating image metadata.
+  - #1241 Added setting for token limit (`max_completion_tokens`), processing responses in chunks.
+  - Fixed unintentional truncation of suggestions.
+- AI: Respected text direction of selected language in rich text dialog.
 - Summernote HTML editor:
-  - Code sync adds a line break after caret position (caused by outdated beautify library).
-  - AI: HTMLeditor does not record undo after answer is applied.
+  - Toolbar is now sticky when editor has focus.
+  - Fixed unwanted line break after caret position due to outdated beautify library.
+  - Fixed various focus handling and popover issues.
+  - Fixed various code synchronization issues.
+  - AI: HTML editor no longer records undo after applying an answer.
+  - Fixed incorrect application of target attribute in LinkDialog.
+  - Fixed anchor update issue in LinkDialog after resetting settings.
+  - Fixed various dialog layout issues.
+- Fixed duplicate key violation (`IX_UrlRecord_Slug`) when copying a product with identical localized names.
+- Prevented negative total tax amounts resulting from negative payment method fees.
+- #1238 Fixed `NullReferenceException` when manually triggering recurring payments.
+- GPSR:
+  - Fixed `NullReferenceException` when multiple product rules assigned to text blocks.
+  - Fixed rare cases of missing manufacturer information display.
+- Prevented `InvalidOperationException` due to entity already attached when processing order completion notifications.
+- MegaMenu now clears the output cache when settings change.
+- MegaSearch: Fixed unpublished product tags not being indexed.
+- Fixed `InvalidOperationException` related to missing Content-Type header in GDPR consent filter.
+- Fixed cookie migration issue.
+- #1233 Forum: Displayed posts marked as deleted.
+- PayPal:
+	- Fixed order status updates on webhook notifications with direct capture settings.
+	- Fixed credit card payment issue with activated QuickCheckout.
+	- Fixed PayPal buttons displaying incorrectly after quantity control usage on shopping cart.
+- Excluded inactive items during shopping cart validation for recurring/non-recurring products.
+- Excluded Web API endpoint URLs from applying `TrailingSlashRule` (avoids HTTP 401 error).
+- #1245 Fixed missing image preview after drag-and-drop in product detail configuration.
+- Fixed delivery time display issue for products out of stock based on `DeliveryTimeIdForEmptyStock`.
+- #1249 Logged activity when deleting entities from the data grid.
+- Fixed AmazonPay Logout button displayed incorrectly on checkout completion page.
+- Fixed missing error notification for unpaid order completion attempts.
+- Fixed scrolling to selected section in manufacturer navigation.
+- Billiger & Guenstiger: Fixed cookie information displaying when tracking disabled.
+- MegaMenu: Fixed initialization issue with input controls.
+- Fixed rare cases of the log list not loading.
+- Fixed checkout bug when address country is null.
+- Fixed bug preventing shopping cart migration after external login.
+
+
+
 
 ## Smartstore 6.0.0
 

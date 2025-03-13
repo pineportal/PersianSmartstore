@@ -56,7 +56,7 @@ namespace Smartstore.Core.Logging
         /// <summary>
         /// Gets or sets the full exception
         /// </summary>
-        [MaxLength]
+        [MaxLength, NonSummary]
         public string FullMessage { get; set; }
 
         /// <summary>
@@ -73,14 +73,20 @@ namespace Smartstore.Core.Logging
         /// <summary>
         /// Gets or sets the page URL
         /// </summary>
-        [StringLength(1500)]
+        [StringLength(1500), NonSummary]
         public string PageUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the referrer URL
         /// </summary>
-        [StringLength(1500)]
+        [StringLength(1500), NonSummary]
         public string ReferrerUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client user agent string.
+        /// </summary>
+        [StringLength(450)]
+        public string UserAgent { get; set; }
 
         /// <summary>
         /// Gets or sets the date and time of instance creation

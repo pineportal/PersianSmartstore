@@ -29,8 +29,8 @@ namespace Smartstore.Admin.Infrastructure.Menus
                 Id = Name
             };
 
-            root.AppendRange(new[] 
-            {
+            root.AppendRange(
+            [
                 new MenuItem
                 {
                     Id = "general",
@@ -153,6 +153,16 @@ namespace Smartstore.Admin.Infrastructure.Menus
                 },
                 new MenuItem
                 {
+                    Id = "performance",
+                    Text = T("Admin.Configuration.Settings.Performance"),
+                    IconLibrary = "bi",
+                    Icon = "speedometer2",
+                    PermissionNames = perm,
+                    ControllerName = "Setting",
+                    ActionName = "Performance"
+                },
+                new MenuItem
+                {
                     IsGroupHeader = true,
                     Id = "all",
                     Text = T("Admin.Configuration.Settings.AllSettings"),
@@ -162,7 +172,7 @@ namespace Smartstore.Admin.Infrastructure.Menus
                     ControllerName = "Setting",
                     ActionName = "AllSettings"
                 }
-            });
+            ]);
 
             // Add area = "Admin" to all items in one go.
             foreach (var item in root.Children)

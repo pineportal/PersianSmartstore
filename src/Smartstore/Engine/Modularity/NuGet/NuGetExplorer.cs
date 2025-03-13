@@ -13,7 +13,7 @@ namespace Smartstore.Engine.Modularity.NuGet
 {
     internal class NuGetExplorer : Disposable
     {
-        private readonly static object _lock = new();
+        private readonly static Lock _lock = new();
 
         private readonly IApplicationContext _appContext;
         private readonly SourceCacheContext _sourceCacheContext;
@@ -221,8 +221,7 @@ namespace Smartstore.Engine.Modularity.NuGet
                         .Equals(UserAgent.UserAgentString, StringComparison.Ordinal))
                 {
                     // Set the user agent string if it was not already set.
-                    var userAgent = new UserAgentStringBuilder($"Smartstore {SmartstoreVersion.CurrentFullVersion}")
-                        .WithOSDescription(_appContext.RuntimeInfo.OSDescription);
+                    var userAgent = new UserAgentStringBuilder($"Smartstore {SmartstoreVersion.CurrentFullVersion}");
                     UserAgent.SetUserAgentString(userAgent);
                 }
             }

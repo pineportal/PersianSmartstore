@@ -22,11 +22,14 @@
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalPayLater" AppendRootKey="false">
         <Value>PayPal Pay Later</Value>
     </LocaleResource>
+    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalGooglePay" AppendRootKey="false">
+        <Value>Google Pay</Value>
+    </LocaleResource>
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalCreditCard" AppendRootKey="false">
         <Value>PayPal Creditcard</Value>
     </LocaleResource>
-    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalGiroPay" AppendRootKey="false">
-        <Value>Giropay</Value>
+    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalTrustly" AppendRootKey="false">
+        <Value>Trustly</Value>
     </LocaleResource>
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalBancontact" AppendRootKey="false">
         <Value>Bancontact</Value>
@@ -77,6 +80,13 @@
             ]]>
         </Value>
     </LocaleResource>
+    <LocaleResource Name="Plugins.Description.Payments.PayPalGooglePay" AppendRootKey="false">
+        <Value>
+            <![CDATA[
+			    Provides a secure payment process that seamlessly integrates with Google Pay.
+            ]]>
+        </Value>
+    </LocaleResource>
     <LocaleResource Name="Plugins.Description.Payments.PayPalCreditCard" AppendRootKey="false">
         <Value>
             <![CDATA[
@@ -86,10 +96,10 @@
             ]]>
         </Value>
     </LocaleResource>
-    <LocaleResource Name="Plugins.Description.Payments.PayPalGiroPay" AppendRootKey="false">
+    <LocaleResource Name="Plugins.Description.Payments.PayPalTrustly" AppendRootKey="false">
         <Value>
             <![CDATA[
-                After completing the order, the customer is redirected directly to GiroPay to complete the payment process.
+                After completing the order, the customer is redirected directly to Trustly to complete the payment process.
             ]]>
         </Value>
     </LocaleResource>
@@ -171,6 +181,13 @@
                       ]]>
                 </Value>
             </LocaleResource>
+            <LocaleResource Name="PayPalGooglePay" AppendRootKey="false">
+                <Value>
+                    <![CDATA[
+				        Pay directly with Google Pay in a secure environment.
+                      ]]>
+                </Value>
+            </LocaleResource>
             <LocaleResource Name="PayPalCreditCard" AppendRootKey="false">
                 <Value>
                     <![CDATA[
@@ -178,10 +195,10 @@
                       ]]>
                 </Value>
             </LocaleResource>
-            <LocaleResource Name="PayPalGiroPay" AppendRootKey="false">
+            <LocaleResource Name="PayPalTrustly" AppendRootKey="false">
                 <Value>
                     <![CDATA[
-                        You will be redirected to the Giropay website to complete the payment.
+                        You will be redirected to the Trustly website to complete the payment.
                       ]]>
                 </Value>
             </LocaleResource>
@@ -265,6 +282,17 @@
                 <Value>
                     The total amount of the order could not be updated after calculating the shipping costs at PayPal.
                     Please confirm the total amount again with PayPal.
+                </Value>
+            </LocaleResource>
+
+            <LocaleResource Name="GenericErrorMessage">
+                <Value>
+                    An error has occurred with the payment method. Please select another payment method.
+                </Value>
+            </LocaleResource>
+            <LocaleResource Name="PaymentSourceCouldNotBeVerified">
+                <Value>
+                    The payment was rejected by PayPal because the payment information could not be verified. Please check your details and try again.
                 </Value>
             </LocaleResource>
             
@@ -391,7 +419,16 @@
             </LocaleResource>
             <LocaleResource Name="TransmitTrackingNumbers.Hint">
                 <Value>
-                    Specifies whether tracking numbers should be sent to PayPal as soon as they have been entered or updated in the shipment.
+                    Specifies whether tracking numbers should be sent to PayPal as soon as they are entered or updated in the shipment.
+                </Value>
+            </LocaleResource>
+            <LocaleResource Name="CancelOrdersForDeclinedPayments">
+                <Value>Cancel orders for declined payments</Value>
+            </LocaleResource>
+            <LocaleResource Name="CancelOrdersForDeclinedPayments.Hint">
+                <Value>
+                    Defines whether orders for declined payments should be cancelled.
+                    If this option is disabled, only the payment status of the order will be set to 'Pending'.
                 </Value>
             </LocaleResource>
             <LocaleResource Name="Capture">
@@ -463,6 +500,9 @@
             <LocaleResource Name="Error.Refund.NoTransactionId">
                 <Value>No transaction ID was stored for this order. Please check the connection of your webhook.</Value>
             </LocaleResource>
+            <LocaleResource Name="Error.CannotBeZeroOrNegative">
+                <Value>As there are no payable products in the shopping cart, no payment is required. Please check your shopping cart.</Value>
+            </LocaleResource>
             <LocaleResource Name="HasCredentials.True">
                 <Value>Credentials have been stored.</Value>
             </LocaleResource>
@@ -525,6 +565,9 @@
             </LocaleResource>
             <LocaleResource Name="Error.3DSecure">
                 <Value>An error has occurred when confirming your card with your card provider.</Value>
+            </LocaleResource>
+            <LocaleResource Name="Error.GooglePayTranactionError">
+                <Value>This transaction has failed.</Value>
             </LocaleResource>
             <LocaleResource Name="CartHasChanged">
                 <Value>Your shopping cart has changed after login. Please confirm your current shopping cart with PayPal.</Value>

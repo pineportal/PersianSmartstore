@@ -368,12 +368,14 @@ namespace Smartstore.Core.Checkout.Orders
         {
             Guard.NotNull(cart);
 
-            if (cart.Customer != null)
+            var customer = cart.Customer;
+
+            if (customer != null)
             {
                 // Check whether customer is in a customer role with free shipping applied.
-                await _db.LoadCollectionAsync(cart.Customer, x => x.CustomerRoleMappings, false, x => x.Include(y => y.CustomerRole));
+                await _db.LoadCollectionAsync(customer, x => x.CustomerRoleMappings, false, x => x.Include(y => y.CustomerRole));
 
-                var customerRoles = cart.Customer.CustomerRoleMappings
+                var customerRoles = customer.CustomerRoleMappings
                     .Select(x => x.CustomerRole)
                     .Where(x => x.Active);
 
@@ -397,8 +399,18 @@ namespace Smartstore.Core.Checkout.Orders
             // Check if the subtotal is large enough for free shipping.
             if (_shippingSettings.FreeShippingOverXEnabled)
             {
-                var subtotal = await GetCartSubtotalAsync(cart, _shippingSettings.FreeShippingOverXIncludingTax);
+                if (!_shippingSettings.FreeShippingCountryIds.IsNullOrEmpty())
+                {
+                    await _db.LoadReferenceAsync(customer, x => x.ShippingAddress);
 
+                    var countryId = customer.ShippingAddress?.CountryId ?? 0;
+                    if (countryId == 0 || !_shippingSettings.FreeShippingCountryIds.Contains(countryId))
+                    {
+                        return false;
+                    }
+                }
+
+                var subtotal = await GetCartSubtotalAsync(cart, _shippingSettings.FreeShippingOverXIncludingTax);
                 if (subtotal.SubtotalWithDiscount > _shippingSettings.FreeShippingOverXValue)
                 {
                     return true;
@@ -547,21 +559,26 @@ namespace Smartstore.Core.Checkout.Orders
 
         public virtual int GetRewardPointsForPurchase(decimal amount, bool toDecreasePointsBalanceHistory = false)
         {
-            if (amount != 0m
-                && _rewardPointsSettings.PointsForPurchases_Amount > 0
-                && _rewardPointsSettings.PointsForPurchases_Points != 0)
-            {
-                var rewardAmount = amount / _rewardPointsSettings.PointsForPurchases_Amount * _rewardPointsSettings.PointsForPurchases_Points;
+            var amountForPurchase = _rewardPointsSettings.PointsForPurchases_Amount;
+            var pointsForPurchase = _rewardPointsSettings.PointsForPurchases_Points;
 
+            if (amount != 0 && amountForPurchase > 0 && pointsForPurchase != 0)
+            {
+                if (_rewardPointsSettings.RoundDownPointsForPurchasedAmount)
+                {
+                    return (int)Math.Truncate(amount / amountForPurchase) * pointsForPurchase;
+                }
+
+                var rewardPoints = amount / amountForPurchase * pointsForPurchase;
                 if (toDecreasePointsBalanceHistory)
                 {
                     // We use IRoundingHelper here because "Truncate" increases the risk of inaccuracy of rounding.
-                    return (int)_roundingHelper.Round(rewardAmount, 0, _primaryCurrency.MidpointRounding);
+                    return (int)_roundingHelper.Round(rewardPoints, 0, _primaryCurrency.MidpointRounding);
                 }
                 else
                 {
                     // INFO: "Truncate" returns the same as "Floor" for positive amounts.
-                    return (int)Math.Truncate(rewardAmount);
+                    return (int)Math.Truncate(rewardPoints);
                 }
             }
 
@@ -848,8 +865,7 @@ namespace Smartstore.Core.Checkout.Orders
 
                     paymentFeeTax = _roundingHelper.RoundIfEnabledFor(tax.Amount);
 
-                    // In case of a payment fee the tax amount can be less zero!
-                    // That's why we do not use helper TaxRatesDictionary.Add here.
+                    // INFO: We do not use TaxRatesDictionary.Add here because the tax amount of a payment fee can be less than 0!
                     if (taxRate > 0m && paymentFeeTax != 0m)
                     {
                         if (taxRates.ContainsKey(taxRate))
@@ -864,13 +880,19 @@ namespace Smartstore.Core.Checkout.Orders
                 }
             }
 
-            // Add at least one tax rate (0%).
-            if (taxRates.Count == 0)
+            taxTotal = _roundingHelper.RoundIfEnabledFor(subtotalTax + shippingTax + paymentFeeTax);
+            if (taxTotal < 0)
             {
-                taxRates.Add(0m, 0m);
+                // Negative tax amounts from ancillary services (payment fee) reduce the positive total tax amount, but it must not become negative.
+                taxTotal = 0;
+                taxRates.Clear();
             }
 
-            taxTotal = _roundingHelper.RoundIfEnabledFor(Math.Max(subtotalTax + shippingTax + paymentFeeTax, 0m));
+            if (taxRates.Count == 0)
+            {
+                // Add at least one tax rate (0%).
+                taxRates.Add(0m, 0m);
+            }
 
             return (taxTotal, taxRates);
         }
@@ -1029,16 +1051,22 @@ namespace Smartstore.Core.Checkout.Orders
 
         protected virtual async Task<CartShipping> GetAdjustedShippingTotalAsync(ShoppingCart cart)
         {
+            var customer = cart.Customer;
             var shipping = new CartShipping
             {
-                Option = cart.Customer.GenericAttributes?.SelectedShippingOption
+                Option = customer.GenericAttributes?.SelectedShippingOption
             };
 
             if (shipping.Option == null)
             {
-                await _db.LoadReferenceAsync(cart.Customer, x => x.ShippingAddress);
+                await _db.LoadReferenceAsync(customer, x => x.ShippingAddress);
 
-                var response = await _shippingService.GetShippingOptionsAsync(cart, cart.Customer.ShippingAddress, null, cart.StoreId);
+                if (_shippingSettings.CalculateShippingAtCheckout && customer.ShippingAddress == null)
+                {
+                    return null;
+                }
+
+                var response = await _shippingService.GetShippingOptionsAsync(cart, customer.ShippingAddress, null, cart.StoreId);
                 if (response.Success && response.ShippingOptions.Count > 0)
                 {
                     shipping.Option = response.ShippingOptions[0];
@@ -1047,7 +1075,7 @@ namespace Smartstore.Core.Checkout.Orders
 
             if (shipping.Option != null)
             {
-                // INFO: it is not necessary to set "matchRules" to True here. This is already done by GetShippingOptionsAsync,
+                // INFO: it is not necessary to set "matchRules" to "True" here. This is already done by GetShippingOptionsAsync,
                 // i.e. only options of shipping methods that fulfill rules are taken into account.
                 var shippingMethods = await _shippingService.GetAllShippingMethodsAsync(cart.StoreId);
 

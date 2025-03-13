@@ -36,13 +36,15 @@
         public string Logger { get; set; }
 
         [LocalizedDisplay("*Logger")]
-        public string LoggerShort { get; set; }
+        public string ShortLoggerName { get; set; }
 
         [LocalizedDisplay("*HttpMethod")]
         public string HttpMethod { get; set; }
 
         [LocalizedDisplay("*UserName")]
         public string UserName { get; set; }
+
+        public string UserAgent { get; set; }
 
         public string ViewUrl { get; set; }
     }

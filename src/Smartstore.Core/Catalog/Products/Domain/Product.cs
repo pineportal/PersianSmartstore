@@ -101,6 +101,7 @@ namespace Smartstore.Core.Catalog.Products
     [Index(nameof(SystemName), nameof(IsSystemProduct), Name = "IX_Product_SystemName_IsSystemProduct")]
     [Index(nameof(Published), nameof(Id), nameof(Visibility), nameof(Deleted), nameof(IsSystemProduct), nameof(AvailableStartDateTimeUtc), nameof(AvailableEndDateTimeUtc), Name = "IX_SeekExport1")]
     [Index(nameof(Visibility), Name = "IX_Visibility")]
+    [Index(nameof(DisplayOrder), Name = "IX_Product_DisplayOrder")]
     [LocalizedEntity("Published and !Deleted")]
     [DebuggerDisplay("{Id} - {Name}")]
     public partial class Product : EntityWithDiscounts, IAuditable, ISoftDeletable, ILocalizedEntity, ISlugSupported, IAclRestricted, IStoreRestricted, IMergedData
@@ -724,10 +725,16 @@ namespace Smartstore.Core.Catalog.Products
         /// </summary>
         public AttributeChoiceBehaviour AttributeChoiceBehaviour { get; set; }
 
+        private decimal _weight;
         /// <summary>
         /// Gets or sets the weight.
         /// </summary>
-        public decimal Weight { get; set; }
+        public decimal Weight
+        {
+            [DebuggerStepThrough]
+            get => this.GetMergedDataValue(nameof(Weight), _weight);
+            set => _weight = value;
+        }
 
         private decimal _length;
         /// <summary>

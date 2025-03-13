@@ -65,7 +65,7 @@ namespace Smartstore.Core.Localization
                     }
                 }
             }
-            else // No culture present
+            else if (!policy.Culture.IsModified) // No culture present
             {
                 // Keep default language prefixless (if desired)
                 if (!((int)defaultBehavior > 0 && workContext.WorkingLanguage.UniqueSeoCode == policy.DefaultCultureCode))

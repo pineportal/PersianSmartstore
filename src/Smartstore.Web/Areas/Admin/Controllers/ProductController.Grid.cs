@@ -3,7 +3,7 @@ using Smartstore.Admin.Models.Catalog;
 using Smartstore.Collections;
 using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Catalog.Search;
-using Smartstore.Core.Rules.Filters;
+using Smartstore.Core.Logging;
 using Smartstore.Core.Security;
 using Smartstore.Web.Models.DataGrid;
 
@@ -31,6 +31,10 @@ namespace Smartstore.Admin.Controllers
 
                 products = await query.ToPagedList(command).LoadAsync();
             }
+
+            TempData["OriginalStockQuantities"] = products
+                .Select(x => new { x.Id, x.StockQuantity })
+                .ToDictionary(x => x.Id, x => x.StockQuantity);
 
             var rows = await products.MapAsync(Services.MediaService);
 
@@ -133,38 +137,45 @@ namespace Smartstore.Admin.Controllers
         [Permission(Permissions.Catalog.Product.Delete)]
         public async Task<IActionResult> ProductDelete(GridSelection selection)
         {
-            var ids = selection.GetEntityIds();
-            var numDeleted = 0;
-
-            if (ids.Any())
+            var entities = await _db.Products.GetManyAsync(selection.GetEntityIds(), true);
+            if (entities.Count > 0)
             {
-                var toDelete = await _db.Products
-                    .AsQueryable()
-                    .Where(x => ids.Contains(x.Id))
-                    .ToListAsync();
-
-                numDeleted = toDelete.Count;
-
-                _db.Products.RemoveRange(toDelete);
+                _db.Products.RemoveRange(entities);
                 await _db.SaveChangesAsync();
+
+                Services.ActivityLogger.LogActivity(
+                    KnownActivityLogTypes.DeleteProduct, 
+                    T("ActivityLog.DeleteProduct"),
+                    string.Join(", ", entities.Select(x => x.Name)));
             }
 
-            return Json(new { Success = true, Count = numDeleted });
+            return Json(new { Success = true, entities.Count });
         }
 
         [HttpPost]
         [Permission(Permissions.Catalog.Product.Update)]
         public async Task<IActionResult> ProductUpdate(ProductOverviewModel model)
         {
+            var product = await _db.Products.FindByIdAsync(model.Id);
+            if (product == null)
+            {
+                NotifyError(T("Admin.Common.ResourceNotFound"));
+                return Json(new { success = false });
+            }
+
             try
             {
-                var product = await _db.Products.FindByIdAsync(model.Id);
-                var stockQuantityInDatabase = product.StockQuantity;
+                // INFO: SmartTempDataSerializer already handles proper deserialization. No need for conversion here.
+                if (TempData.TryGetValueAs<Dictionary<int, int>>("OriginalStockQuantities", out var originalStockQuantities)
+                    && originalStockQuantities.TryGetValue(product.Id, out var originalStockQuantity)
+                    && CheckStockQuantityUpdate(product, originalStockQuantity, model.StockQuantity))
+                {
+                    product.StockQuantity = model.StockQuantity;
+                }
 
                 product.Name = model.Name;
                 product.Sku = model.Sku;
                 product.Price = model.Price;
-                product.StockQuantity = model.StockQuantity;
                 product.Published = model.Published;
                 product.ManufacturerPartNumber = model.ManufacturerPartNumber;
                 product.Gtin = model.Gtin;
@@ -173,6 +184,7 @@ namespace Smartstore.Admin.Controllers
                 product.AvailableStartDateTimeUtc = model.AvailableStartDateTimeUtc;
                 product.AvailableEndDateTimeUtc = model.AvailableEndDateTimeUtc;
                 product.DeliveryTimeId = model.DeliveryTimeId;
+                product.DisplayOrder = model.DisplayOrder;
 
                 await _db.SaveChangesAsync();
 

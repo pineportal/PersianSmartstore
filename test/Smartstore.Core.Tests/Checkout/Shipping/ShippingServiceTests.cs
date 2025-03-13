@@ -26,6 +26,7 @@ namespace Smartstore.Core.Tests.Shipping
         IShippingService _shippingService;
         IProductAttributeMaterializer _productAttributeMaterializer;
         IStoreContext _storeContext;
+        IRequestCache _requestCache;
 
         [OneTimeSetUp]
         public new void SetUp()
@@ -38,6 +39,8 @@ namespace Smartstore.Core.Tests.Shipping
                 }
             };
 
+            _requestCache = new NullRequestCache();
+
             var downloadService = new Mock<IDownloadService>();
             
             _productAttributeMaterializer = new ProductAttributeMaterializer(
@@ -46,7 +49,6 @@ namespace Smartstore.Core.Tests.Shipping
                 NullRequestCache.Instance,
                 null,
                 new Lazy<IDownloadService>(() => downloadService.Object),
-                new Lazy<CatalogSettings>(),
                 null);
 
             var storeContextMock = new Mock<IStoreContext>();
@@ -68,6 +70,7 @@ namespace Smartstore.Core.Tests.Shipping
                 _shippingSettings,
                 ProviderManager,
                 null,
+                _requestCache,
                 null,
                 _storeContext,
                 DbContext);

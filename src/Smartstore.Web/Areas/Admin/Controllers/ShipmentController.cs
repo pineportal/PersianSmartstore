@@ -362,7 +362,7 @@ namespace Smartstore.Admin.Controllers
         public async Task<IActionResult> PdfPackagingSlips(string selectedIds, bool all)
         {
             var ids = selectedIds.ToIntArray();
-            if (!all && !ids.Any())
+            if (!all && ids.IsNullOrEmpty())
             {
                 NotifyInfo(T("Admin.Common.ExportNoData"));
                 return RedirectToReferrer();
@@ -374,13 +374,10 @@ namespace Smartstore.Admin.Controllers
                 .Include(x => x.Order.ShippingAddress.StateProvince)
                 .AsQueryable();
 
-            var expectedShipments = all
-                ? await query.CountAsync()
-                : ids.Length;
-
-            if (expectedShipments > 500)
+            var expectedShipments = all ? await query.CountAsync() : ids.Length;
+            if (expectedShipments > _pdfSettings.MaxItemsToPrint)
             {
-                NotifyWarning(T("Admin.Common.ExportToPdf.TooManyItems"));
+                NotifyWarning(T("Admin.Common.ExportToPdf.TooManyItems", _pdfSettings.MaxItemsToPrint.ToString("N0"), expectedShipments.ToString("N0")));
                 return RedirectToReferrer();
             }
 
@@ -442,29 +439,26 @@ namespace Smartstore.Admin.Controllers
 
         private async Task PrepareShipmentModel(ShipmentModel model, Shipment shipment, bool forEdit)
         {
-            // Requires: Shipment.Order
-            // Requires for edit: Shipment.Order, Shipment.Order.ShippingAddress, Shipment.ShipmentItems
-            await MapperFactory.MapAsync(shipment, model);
+            var dtHelper = Services.DateTimeHelper;
+            var order = Guard.NotNull(shipment.Order);
 
-            var order = shipment.Order;
-            var baseWeight = await _db.MeasureWeights.FindByIdAsync(_measureSettings.BaseWeightId, false);
+            await MapperFactory.MapAsync(shipment, model);
 
             model.StoreId = order.StoreId;
             model.LanguageId = order.CustomerLanguageId;
             model.OrderNumber = order.GetOrderNumber();
             model.PurchaseOrderNumber = order.PurchaseOrderNumber;
             model.ShippingMethod = order.ShippingMethod;
-            model.BaseWeight = baseWeight?.GetLocalized(x => x.Name) ?? string.Empty;
-            model.CreatedOn = Services.DateTimeHelper.ConvertToUserTime(shipment.CreatedOnUtc, DateTimeKind.Utc);
+            model.CreatedOn = dtHelper.ConvertToUserTime(shipment.CreatedOnUtc, DateTimeKind.Utc);
             model.Carrier = shipment.GenericAttributes.Get<string>("Carrier");
 
             model.CanShip = !shipment.ShippedDateUtc.HasValue;
             model.CanDeliver = shipment.ShippedDateUtc.HasValue && !shipment.DeliveryDateUtc.HasValue;
             model.ShippedDate = shipment.ShippedDateUtc.HasValue
-                ? Services.DateTimeHelper.ConvertToUserTime(shipment.ShippedDateUtc.Value, DateTimeKind.Utc)
+                ? dtHelper.ConvertToUserTime(shipment.ShippedDateUtc.Value, DateTimeKind.Utc)
                 : null;
             model.DeliveryDate = shipment.DeliveryDateUtc.HasValue
-                ? Services.DateTimeHelper.ConvertToUserTime(shipment.DeliveryDateUtc.Value, DateTimeKind.Utc)
+                ? dtHelper.ConvertToUserTime(shipment.DeliveryDateUtc.Value, DateTimeKind.Utc)
                 : null;
 
             model.EditUrl = Url.Action(nameof(Edit), "Shipment", new { id = shipment.Id, area = "Admin" });
@@ -472,7 +466,10 @@ namespace Smartstore.Admin.Controllers
 
             if (forEdit)
             {
+                // Edit requires: Shipment.Order, Shipment.Order.ShippingAddress, Shipment.ShipmentItems
                 var store = Services.StoreContext.GetStoreById(order.StoreId) ?? Services.StoreContext.CurrentStore;
+                var baseWeight = await _db.MeasureWeights.FindByIdAsync(_measureSettings.BaseWeightId, false);
+                model.BaseWeight = baseWeight?.GetLocalized(x => x.Name) ?? string.Empty;
 
                 model.MerchantCompanyInfo = await Services.SettingFactory.LoadSettingsAsync<CompanyInformationSettings>(store.Id);
                 model.FormattedMerchantAddress = await _addressService.FormatAddressAsync(model.MerchantCompanyInfo, true);

@@ -459,7 +459,10 @@ namespace Smartstore.Core.Catalog.Categories
             }
         }
 
-        public async Task<TreeNode<ICategoryNode>> GetCategoryTreeAsync(int rootCategoryId = 0, bool includeHidden = false, int storeId = 0)
+        public async Task<TreeNode<ICategoryNode>> GetCategoryTreeAsync(
+            int rootCategoryId = 0, 
+            bool includeHidden = false, 
+            int storeId = 0)
         {
             var rolesIds = _workContext.CurrentCustomer.GetRoleIds();
             var storeToken = _db.QuerySettings.IgnoreMultiStore ? "0" : storeId.ToString();
@@ -470,11 +473,9 @@ namespace Smartstore.Core.Catalog.Categories
             {
                 o.ExpiresIn(CategoryTreeCacheDuration);
 
-                var categoryQuery = _db.Categories
-                    .ApplyStandardFilter(includeHidden, includeHidden ? null : rolesIds, includeHidden ? 0 : storeId);
-
                 // (Perf) don't fetch every field from db.
-                var query = categoryQuery
+                var categories = await _db.Categories
+                    .ApplyStandardFilter(includeHidden, includeHidden ? null : rolesIds, includeHidden ? 0 : storeId)
                     .Select(x => new
                     {
                         x.Id,
@@ -489,26 +490,33 @@ namespace Smartstore.Core.Catalog.Categories
                         x.BadgeText,
                         x.BadgeStyle,
                         x.LimitedToStores,
-                        x.SubjectToAcl
-                    });
+                        x.SubjectToAcl,
+                        x.IgnoreInMenus
+                    })
+                    .ToListAsync();
 
-                var categories = await query.ToListAsync();
-                var unsortedNodes = categories.Select(x => new CategoryNode
+                if (!includeHidden)
                 {
-                    Id = x.Id,
-                    ParentId = x.ParentId,
-                    Name = x.Name,
-                    ExternalLink = x.ExternalLink,
-                    Alias = x.Alias,
-                    MediaFileId = x.MediaFileId,
-                    Published = x.Published,
-                    DisplayOrder = x.DisplayOrder,
-                    UpdatedOnUtc = x.UpdatedOnUtc,
-                    BadgeText = x.BadgeText,
-                    BadgeStyle = x.BadgeStyle,
-                    LimitedToStores = x.LimitedToStores,
-                    SubjectToAcl = x.SubjectToAcl
-                });
+                    categories = categories.Where(x => !x.IgnoreInMenus).ToList();
+                }
+
+                var unsortedNodes = categories
+                    .Select(x => new CategoryNode
+                    {
+                        Id = x.Id,
+                        ParentId = x.ParentId,
+                        Name = x.Name,
+                        ExternalLink = x.ExternalLink,
+                        Alias = x.Alias,
+                        MediaFileId = x.MediaFileId,
+                        Published = x.Published,
+                        DisplayOrder = x.DisplayOrder,
+                        UpdatedOnUtc = x.UpdatedOnUtc,
+                        BadgeText = x.BadgeText,
+                        BadgeStyle = x.BadgeStyle,
+                        LimitedToStores = x.LimitedToStores,
+                        SubjectToAcl = x.SubjectToAcl
+                    });
 
                 var nodeMap = unsortedNodes.ToMultimap(x => x.ParentId.GetValueOrDefault(), x => x);
                 var curParent = new TreeNode<ICategoryNode>(new CategoryNode { Name = "Home" });

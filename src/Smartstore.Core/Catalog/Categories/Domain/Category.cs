@@ -245,6 +245,11 @@ namespace Smartstore.Core.Catalog.Categories
         public bool Published { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to ignore the category in menus.
+        /// </summary>
+        public bool IgnoreInMenus { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the entity has been deleted.
         /// </summary>
         [IgnoreDataMember]

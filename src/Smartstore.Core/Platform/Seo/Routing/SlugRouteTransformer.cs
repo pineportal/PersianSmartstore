@@ -137,8 +137,8 @@ namespace Smartstore.Core.Seo.Routing
                 return null;
             }
 
-            var slug = policy.Path.ToString().TrimEnd('/');
-            if (slug.IsEmpty())
+            var currentSlug = policy.Path.ToString().TrimEnd('/');
+            if (currentSlug.IsEmpty())
             {
                 return null;
             }
@@ -157,26 +157,28 @@ namespace Smartstore.Core.Seo.Routing
             }
 
 
-            if (_routeHelper.IsReservedPath(slug))
+            if (_routeHelper.IsReservedPath(currentSlug))
             {
                 // Don't attemp to transform reserved system slugs provided by action routes.
                 return null;
             }
 
-            if (TryResolveUrlPrefix(slug, out var urlPrefix, out var actualSlug, out var entityNames))
+            if (TryResolveUrlPrefix(currentSlug, out var urlPrefix, out var actualSlug, out var entityNames))
             {
-                slug = actualSlug;
+                currentSlug = actualSlug;
             }
 
             var urlRecord = await _db.UrlRecords
                 .AsNoTracking()
-                .ApplySlugFilter(slug, true)
+                .ApplySlugFilter(currentSlug, true)
                 .FirstOrDefaultAsync();
 
             if (urlRecord == null)
             {
                 return null;
             }
+
+            var defaultCulture = policy.DefaultCultureCode;
 
             // INFO: The inline GetSlugCulture() method needs this
             string _slugCulture = null;
@@ -197,7 +199,6 @@ namespace Smartstore.Core.Seo.Routing
 
             if (_localizationSettings.SeoFriendlyUrlsForLanguagesEnabled)
             {
-                var defaultCulture = policy.DefaultCultureCode;
                 var requestCulture = (string)policy.Culture;
                 var ambientCulture = requestCulture ?? defaultCulture;
                 var slugCulture = await GetSlugCulture();
@@ -206,36 +207,27 @@ namespace Smartstore.Core.Seo.Routing
                 {
                     // table > en/table
                     policy.Culture.Modify(defaultCulture);
-                    policy.Path.Modify(UrlPolicy.CombineSegments(urlPrefix, slug));
+                    policy.Path.Modify(UrlPolicy.CombineSegments(urlPrefix, currentSlug));
                     return null;
                 }
                 else if (ambientCulture != slugCulture && _languageService.IsPublishedLanguage(ambientCulture))
                 {
-                    // Current slug language differs from requested languages. This can happen if a language switch was performed.
+                    // Current slug's language differs from the requested language. This can happen if a language switch was performed.
                     // We have to determine the request language...
-                    var ambientLanguage = await _db.Languages.FirstOrDefaultAsync(x => x.UniqueSeoCode == ambientCulture);
-                    // ...then determine the active slug for the request language.
-                    var ambientSlug = await _urlService.GetActiveSlugAsync(urlRecord.EntityId, urlRecord.EntityName, ambientLanguage.Id);
 
-                    if (ambientSlug.HasValue() && ambientSlug != slug)
+                    if (await ProcessAmbientSlugAsync(ambientCulture))
                     {
-                        // ...now check if request language is default
-                        if (ambientCulture.EqualsNoCase(defaultCulture) && _localizationSettings.DefaultLanguageRedirectBehaviour == DefaultLanguageRedirectBehaviour.StripSeoCode)
-                        {
-                            // ...and culture code should be stripped off URLs when default language
-                            policy.Culture.Strip();
-                        }
-                        else
-                        {
-                            // Now request the direction to the new location:
-                            // tisch > en/table
-                            // en/table > tisch
-                            // en/table > tr/masa
-                            // etc.
-                            policy.Culture.Modify(ambientCulture);
-                        }
+                        return null;
+                    }
+                }
+                else if (requestCulture.HasValue() && !_languageService.IsPublishedLanguage(requestCulture))
+                {
+                    // Requested language is not published anymore. Redirect to default language (or LocalizationSettings.RedirectFallbackLanguageCode)
+                    // after obtaining the active slug for the target language.
 
-                        policy.Path.Modify(UrlPolicy.CombineSegments(urlPrefix, ambientSlug));
+                    var fallbackCulture = _localizationSettings.RedirectFallbackLanguageCode.NullEmpty() ?? defaultCulture;
+                    if (await ProcessAmbientSlugAsync(fallbackCulture))
+                    {
                         return null;
                     }
                 }
@@ -254,7 +246,7 @@ namespace Smartstore.Core.Seo.Routing
                 return null;
             }
 
-            transformedValues[SlugRouteKey] = slug;
+            transformedValues[SlugRouteKey] = currentSlug;
             transformedValues[UrlRecordRouteKey] = urlRecord;
 
             return transformedValues;
@@ -263,6 +255,49 @@ namespace Smartstore.Core.Seo.Routing
             {
                 return (_slugCulture ??= (await _db.Languages.FindByIdAsync(urlRecord.LanguageId, false))?.GetTwoLetterISOLanguageName().EmptyNull()).NullEmpty();
             }
+
+            async Task<bool> ProcessAmbientSlugAsync(string culture)
+            {
+                // Get language for given culture
+                var language = await _db.Languages.FirstOrDefaultAsync(x => x.UniqueSeoCode == culture);
+                // ...then determine the active slug for the determined language.
+                var slug = await GetActiveSlugAsync(urlRecord, language.Id);
+
+                if (slug.HasValue() && slug != currentSlug)
+                {
+                    // ...now check if target language is default
+                    if (culture.EqualsNoCase(defaultCulture) && _localizationSettings.DefaultLanguageRedirectBehaviour == DefaultLanguageRedirectBehaviour.StripSeoCode)
+                    {
+                        // ...and culture code should be stripped off URLs when default language
+                        policy.Culture.Strip();
+                    }
+                    else
+                    {
+                        // Now request the direction to the new location:
+                        // tisch > en/table
+                        // en/table > tisch
+                        // en/table > tr/masa
+                        // etc.
+                        policy.Culture.Modify(culture);
+                    }
+
+                    policy.Path.Modify(UrlPolicy.CombineSegments(urlPrefix, slug));
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        private async Task<string> GetActiveSlugAsync(UrlRecord urlRecord, int languageId)
+        {
+            var slug = await _urlService.GetActiveSlugAsync(urlRecord.EntityId, urlRecord.EntityName, languageId);
+            if (slug.IsEmpty())
+            {
+                slug = await _urlService.GetActiveSlugAsync(urlRecord.EntityId, urlRecord.EntityName, 0);
+            }
+
+            return slug;
         }
     }
 }

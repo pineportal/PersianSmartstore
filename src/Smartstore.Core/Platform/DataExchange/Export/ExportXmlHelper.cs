@@ -426,6 +426,7 @@ namespace Smartstore.Core.DataExchange.Export
                 _writer.WriteElementString(nameof(Category.ShowOnHomePage), entity.ShowOnHomePage.ToString());
                 _writer.WriteElementString(nameof(Category.HasDiscountsApplied), entity.HasDiscountsApplied.ToString());
                 _writer.WriteElementString(nameof(Category.Published), entity.Published.ToString());
+                _writer.WriteElementString(nameof(Category.IgnoreInMenus), entity.IgnoreInMenus.ToString());
                 _writer.WriteElementString(nameof(Category.Deleted), entity.Deleted.ToString());
                 _writer.WriteElementString(nameof(Category.DisplayOrder), entity.DisplayOrder.ToString());
                 _writer.WriteElementString(nameof(Category.CreatedOnUtc), entity.CreatedOnUtc.ToString(_culture));
@@ -1026,7 +1027,7 @@ namespace Smartstore.Core.DataExchange.Export
                     _writer.WriteElementString(nameof(ProductVariantAttributeCombination.ManufacturerPartNumber), entityPvac.ManufacturerPartNumber);
 
                     _writer.WriteElementString(nameof(ProductVariantAttributeCombination.Price), entityPvac.Price?.ToString(_culture) ?? string.Empty);
-                    _writer.WriteElementString(nameof(ProductVariantAttributeCombination.Price), entityPvac.Price?.ToString(_culture) ?? string.Empty);
+                    _writer.WriteElementString(nameof(ProductVariantAttributeCombination.Weight), entityPvac.Weight?.ToString(_culture) ?? string.Empty);
                     _writer.WriteElementString(nameof(ProductVariantAttributeCombination.Length), entityPvac.Length?.ToString(_culture) ?? string.Empty);
                     _writer.WriteElementString(nameof(ProductVariantAttributeCombination.Width), entityPvac.Width?.ToString(_culture) ?? string.Empty);
                     _writer.WriteElementString(nameof(ProductVariantAttributeCombination.Height), entityPvac.Height?.ToString(_culture) ?? string.Empty);

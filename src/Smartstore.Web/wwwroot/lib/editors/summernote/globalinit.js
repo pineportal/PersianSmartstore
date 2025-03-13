@@ -33,7 +33,8 @@ let summernote_image_upload_url;
         popatmouse: true,
         hideArrow: false,
         recordEveryKeystroke: false,
-        followingToolbar: false,
+        followingToolbar: true,
+        linkTargetBlank: false,
         // TODO: Turn on spellCheck again
         spellCheck: false,
         colorButton: {
@@ -74,16 +75,15 @@ let summernote_image_upload_url;
             }
         },
         icons: {
-            'ai': ai_icon_svg || 'fa fa-wand-magic-sparkles',
+            'ai': window.ai_icon_svg || 'fa fa-wand-magic-sparkles',
         },
         toolbar: [
             ['edit', ['undo', 'redo']],
             ['text', ['bold', 'italic', 'underline', 'color', 'moreFontStyles']],
             //['color', ['forecolor', 'backcolor']],
-            //['font', ['fontname', 'x-color', 'fontsize']],
+            //['font', ['fontname', 'fontsize']],
             ['para', ['ai', 'style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear', 'cleaner']],
             ['insert', ['link', 'image', 'video', 'table', 'hr']],
-            //['ai', ['ai']],
             ['view', ['codeview', 'fullscreen', 'help']]
         ],
         popover: {

@@ -8,6 +8,7 @@ using Smartstore.Core.Catalog.Search;
 using Smartstore.Core.Content.Menus;
 using Smartstore.Core.Localization;
 using Smartstore.Core.OutputCache;
+using Smartstore.Core.Search;
 using Smartstore.Core.Security;
 using Smartstore.Core.Seo;
 using Smartstore.Data;
@@ -42,7 +43,8 @@ namespace Smartstore.Web.Controllers
                 model.CurrentSortOrder = query?.CustomData.Get("CurrentSortOrder").Convert<int?>();
 
                 if (query.Origin.EqualsNoCase(CatalogSearchQuery.KnownOrigins.Category) ||
-                    query.Origin.EqualsNoCase(CatalogSearchQuery.KnownOrigins.Manufacturer))
+                    query.Origin.EqualsNoCase(CatalogSearchQuery.KnownOrigins.Manufacturer) ||
+                    (_searchSettings.UseFeaturedSorting && query.IsSearchPage()))
                 {
                     model.RelevanceSortOrderName = T("Products.Sorting.Featured");
 
@@ -516,10 +518,20 @@ namespace Smartstore.Web.Controllers
 
             item.MinPriceProductId = contextProduct.Id;
             item.Sku = contextProduct.Sku;
-            item.LegalInfo = product.IsTaxExempt ? ctx.TaxExemptLegalInfo : ctx.LegalInfo;
             item.RatingSum = product.ApprovedRatingSum;
             item.TotalReviews = product.ApprovedTotalReviews;
             item.IsShippingEnabled = contextProduct.IsShippingEnabled;
+
+            if (!product.IsShippingEnabled || product.IsFreeShipping)
+            {
+                item.LegalInfo += product.IsTaxExempt
+                    ? T("Common.FreeShipping")
+                    : T("Tax.LegalInfoShort3", T(options.TaxInclusive ? "Tax.InclVAT" : "Tax.ExclVAT"), T("Common.FreeShipping"));
+            }
+            else
+            {
+                item.LegalInfo = product.IsTaxExempt ? ctx.TaxExemptLegalInfo : ctx.LegalInfo;
+            }
 
             // INFO: we cannot include ManageInventoryMethod.ManageStockByAttributes here because it's only functional with MergeWithCombination.
             item.DeliveryTime = await PrepareDeliveryTimeModel(product, settings, product.ManageInventoryMethod == ManageInventoryMethod.ManageStock);

@@ -6,20 +6,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Smartstore.Core.Catalog.Attributes;
+using Smartstore.Core.Catalog.Pricing;
+using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Checkout.Cart;
 using Smartstore.Core.Checkout.Orders;
 using Smartstore.Core.Checkout.Payment;
+using Smartstore.Core.Checkout.Tax;
 using Smartstore.Core.Common;
 using Smartstore.Core.Common.Services;
 using Smartstore.Core.Data;
 using Smartstore.Core.Identity;
 using Smartstore.Core.Stores;
-using Smartstore.Http;
 using Smartstore.PayPal.Client;
 using Smartstore.PayPal.Client.Messages;
 using Smartstore.PayPal.Services;
 using Smartstore.Utilities.Html;
 using Smartstore.Web.Controllers;
+using Smartstore.Web.Models.Cart;
 
 namespace Smartstore.PayPal.Controllers
 {
@@ -34,6 +37,11 @@ namespace Smartstore.PayPal.Controllers
         private readonly PayPalHttpClient _client;
         private readonly PayPalSettings _settings;
         private readonly Currency _primaryCurrency;
+        private readonly IPriceCalculationService _priceCalculationService;
+        private readonly IProductService _productService;
+        private readonly ICurrencyService _currencyService;
+        private readonly ITaxService _taxService;
+        private readonly IOrderCalculationService _orderCalculationService;
 
         public PayPalController(
             SmartDbContext db,
@@ -44,7 +52,11 @@ namespace Smartstore.PayPal.Controllers
             IRoundingHelper roundingHelper,
             PayPalHttpClient client,
             PayPalSettings settings,
-            ICurrencyService currencyService)
+            ICurrencyService currencyService,
+            IPriceCalculationService priceCalculationService,
+            IProductService productService,
+            ITaxService taxService,
+            IOrderCalculationService orderCalculationService)
         {
             _db = db;
             _checkoutStateAccessor = checkoutStateAccessor;
@@ -54,6 +66,11 @@ namespace Smartstore.PayPal.Controllers
             _roundingHelper = roundingHelper;
             _client = client;
             _settings = settings;
+            _priceCalculationService = priceCalculationService;
+            _productService = productService;
+            _currencyService = currencyService;
+            _taxService = taxService;
+            _orderCalculationService = orderCalculationService;
 
             // INFO: Services wasn't resolved anymore in ctor.
             //_primaryCurrency = Services.CurrencyService.PrimaryCurrency;
@@ -106,7 +123,19 @@ namespace Smartstore.PayPal.Controllers
             processPaymentRequest.PaymentMethodSystemName = customer.GenericAttributes.SelectedPaymentMethod;
 
             session.TrySetObject("OrderPaymentInfo", processPaymentRequest);
-            await AddShippingAddressAsync(orderId);
+
+            if (customer.BillingAddress == null)
+            {
+                // If adding shipping address fails, just log it and continue.
+                try
+                {
+                    await AddAddressesAsync(orderId);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Info("Adding of shipping address has failed.", ex);
+                }
+            }
 
             // Get redirect URL if quick checkout is active.
             var redirectUrl = string.Empty;
@@ -123,6 +152,19 @@ namespace Smartstore.PayPal.Controllers
             return Json(new { success, message, redirectUrl });
         }
 
+        /// <summary>
+        /// AJAX
+        /// Creates a PayPal order VIA API Request and returns the order id.
+        /// </summary>
+        /// <param name="query">
+        /// Needed to validate and thus save the cart before the order is created. 
+        /// If this wouldn't have been done the cart value might change 
+        /// because the current user data entered (checkout attrs, reward points, etc.) on cart page might not have been saved.
+        /// </param>
+        /// <param name="useRewardPoints">Needed to validate and thus save the cart before the order is created. </param>
+        /// <param name="paymentSource">The current payment source.</param>
+        /// <param name="routeIdent">The current route identifier.</param>
+        /// <returns>The PayPal order object.</returns>
         [HttpPost]
         public async Task<IActionResult> CreateOrder(ProductVariantQuery query, bool? useRewardPoints, string paymentSource, string routeIdent = "")
         {
@@ -158,17 +200,20 @@ namespace Smartstore.PayPal.Controllers
             switch (paymentSource)
             {
                 case "paypal-creditcard-hosted-fields-container":
-                    selectedPaymentMethod = "Payments.PayPalCreditCard";
+                    selectedPaymentMethod = PayPalConstants.CreditCard;
                     break;
                 case "paypal-sepa-button-container":
-                    selectedPaymentMethod = "Payments.PayPalSepa";
+                    selectedPaymentMethod = PayPalConstants.Sepa;
                     break;
                 case "paypal-paylater-button-container":
-                    selectedPaymentMethod = "Payments.PayPalPayLater";
+                    selectedPaymentMethod = PayPalConstants.PayLater;
+                    break;
+                case "paypal-google-pay-container":
+                    selectedPaymentMethod = PayPalConstants.GooglePay;
                     break;
                 case "paypal-button-container":
                 default:
-                    selectedPaymentMethod = "Payments.PayPalStandard";
+                    selectedPaymentMethod = PayPalConstants.Standard;
                     break;
             }
 
@@ -177,19 +222,39 @@ namespace Smartstore.PayPal.Controllers
 
             var orderMessage = await _client.GetOrderForStandardProviderAsync(processPaymentRequest.OrderGuid.ToString(), isExpressCheckout: true);
 
+            if (orderMessage.PurchaseUnits[0].Amount.Value.Convert<decimal>() <= 0)
+            {
+                return Json(new { success = false, message = T("Plugins.Smartstore.PayPal.Error.CannotBeZeroOrNegative") });
+            }
+
             orderMessage.AppContext.ReturnUrl = store.GetAbsoluteUrl(Url.Action(nameof(RedirectionSuccess), "PayPal"));
             orderMessage.AppContext.CancelUrl = store.GetAbsoluteUrl(Url.Action(nameof(RedirectionCancel), "PayPal"));
 
-            var psw = new PaymentSourceWallet
-            {
-                ReturnUrl = orderMessage.AppContext.ReturnUrl,
-                CancelUrl = orderMessage.AppContext.CancelUrl
-            };
+            var orderMessagePaymentSource = new PaymentSource();
 
-            orderMessage.PaymentSource = new PaymentSource
+            if (selectedPaymentMethod == PayPalConstants.GooglePay)
             {
-                PaymentSourceWallet = psw
-            };
+                orderMessagePaymentSource.PaymentSourceGooglePay = new PaymentSourceGooglePay
+                {
+                    Attributes = new PayPalAttributes
+                    {
+                        Verification = new VerificationAttribute
+                        {
+                            Method = "SCA_ALWAYS"
+                        }
+                    }
+                };
+            }
+            else
+            {
+                orderMessagePaymentSource.PaymentSourceWallet = new PaymentSourceWallet
+                {
+                    ReturnUrl = orderMessage.AppContext.ReturnUrl,
+                    CancelUrl = orderMessage.AppContext.CancelUrl
+                };
+            }
+
+            orderMessage.PaymentSource = orderMessagePaymentSource;
 
             var response = await _client.CreateOrderAsync(orderMessage);
             var rawResponse = response.Body<object>().ToString();
@@ -198,7 +263,7 @@ namespace Smartstore.PayPal.Controllers
             return Json(new { success = true, data = jResponse });
         }
 
-        private async Task AddShippingAddressAsync(string payPalOrderId) 
+        private async Task AddAddressesAsync(string payPalOrderId) 
         {
             var getOrderResponse = await _client.GetOrderAsync(payPalOrderId);
             var order = getOrderResponse.Body<OrderMessage>();
@@ -211,7 +276,7 @@ namespace Smartstore.PayPal.Controllers
             var customer = Services.WorkContext.CurrentCustomer;
 
             var preferredBillingAddressFirstname = order.Payer.Name.GivenName;
-            var preferredBillingAddressLastname = order.Payer.Name.SurName;
+            var preferredBillingAddressLastname = order.Payer.Name.Surname;
 
             var nameParts = SplitFullName(shippingName);
 
@@ -329,7 +394,7 @@ namespace Smartstore.PayPal.Controllers
                     } 
                     catch (PayPalException ex)
                     {
-                        PayPalHelper.HandleException(ex);
+                        PayPalHelper.HandleException(ex, T);
                     }
                     
                     paymentRequest.PaymentMethodSystemName = state.ApmProviderSystemName;
@@ -417,8 +482,8 @@ namespace Smartstore.PayPal.Controllers
 
             switch (checkoutState.ApmProviderSystemName)
             {
-                case PayPalConstants.Giropay:
-                    paymentSource.PaymentSourceGiroPay = apmPaymentSource;
+                case PayPalConstants.Trustly:
+                    paymentSource.PaymentSourceTrustly = apmPaymentSource;
                     break;
                 case PayPalConstants.Bancontact:
                     paymentSource.PaymentSourceBancontact = apmPaymentSource;
@@ -473,6 +538,129 @@ namespace Smartstore.PayPal.Controllers
 
             return RedirectToAction(nameof(CheckoutController.PaymentMethod), "Checkout");
         }
+
+        #region Google Pay
+
+        /// <summary>
+        /// AJAX
+        /// Gets the <see cref="GoogleTransactionInfo"> for Google Pay.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> GetGooglePayTransactionInfo(ProductVariantQuery query, bool? useRewardPoints, string paymentSource, string routeIdent = "")
+        {
+            // TODO: (mh) What is this huge code for? Seems repetitive. Urgently TBD with MC!
+            var store = Services.StoreContext.CurrentStore;
+            var customer = Services.WorkContext.CurrentCustomer;
+            var cart = await _shoppingCartService.GetCartAsync(customer, ShoppingCartType.ShoppingCart, store.Id);
+
+            // Only save cart data when we're on shopping cart page.
+            if (routeIdent == "ShoppingCart.Cart")
+            {
+                var warnings = new List<string>();    
+                var isCartValid = await _shoppingCartService.SaveCartDataAsync(cart, warnings, query, useRewardPoints, false);
+
+                if (!isCartValid)
+                {
+                    return Json(new { success = false, message = string.Join(Environment.NewLine, warnings) });
+                }
+            }
+
+            var transactionInfo = new GoogleTransactionInfo
+            {
+                CurrencyCode = Services.WorkContext.WorkingCurrency.CurrencyCode,
+                //TransactionId = Guid.NewGuid().ToString(),    // We'll skip this for now.
+                TotalPriceStatus = "ESTIMATED"                  // INFO: Estimated because it is called from basket. Even on payment page a customer could change the shipping method and thus alter the final price.
+            };
+
+            var isVatExempt = await _taxService.IsVatExemptAsync(customer);
+            var cartSubTotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart, !isVatExempt);
+            var subTotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.SubtotalWithDiscount.Amount, _primaryCurrency);
+
+            foreach (var lineItem in cartSubTotal.LineItems)
+            {
+                var item = lineItem.Item.Item;
+                var amountInclTax = _roundingHelper.Round(lineItem.Subtotal.Tax.Value.PriceGross);
+                var amountExclTax = _roundingHelper.Round(lineItem.Subtotal.Tax.Value.PriceNet);
+                var convertedUnitPrice = _currencyService.ConvertToWorkingCurrency(isVatExempt ? amountInclTax : amountExclTax);
+                
+                var displayItem = new DisplayItem
+                {
+                    Label = item.Product.GetLocalized(x => x.Name),
+                    Price = convertedUnitPrice.Amount.ToStringInvariant("F"),
+                    Status = GooglePayItemStatus.Final,
+                    Type = GooglePayItemType.LineItem
+                };
+
+                transactionInfo.DisplayItems = [.. transactionInfo.DisplayItems, displayItem];
+            }
+
+            // Display subtotal
+            var subtotalDisplayItem = new DisplayItem
+            {
+                Label = T("Order.SubTotal"),
+                Price = subTotalConverted.Amount.ToStringInvariant("F"),
+                Status = GooglePayItemStatus.Final,
+                Type = GooglePayItemType.Subtotal
+            };
+
+            // Display tax
+            (Money tax, _) = await _orderCalculationService.GetShoppingCartTaxTotalAsync(cart);
+            var cartTax = _currencyService.ConvertFromPrimaryCurrency(tax.Amount, _primaryCurrency);
+            var taxDisplayItem = new DisplayItem
+            {
+                Label = T("Order.Tax"),
+                Price = cartTax.Amount.ToStringInvariant("F"),
+                Status = GooglePayItemStatus.Final,
+                Type = GooglePayItemType.Tax
+            };
+
+            // Display shipping
+            var shippingTotal = await _orderCalculationService.GetShoppingCartShippingTotalAsync(cart, !isVatExempt);
+            var shippingTotalAmount = _currencyService.ConvertFromPrimaryCurrency(
+                shippingTotal.ShippingTotal != null ?_roundingHelper.Round(shippingTotal.ShippingTotal.Value.Amount) : 0, _primaryCurrency);
+
+            // Only Price=0 and Status=PENDING when were on cart page.
+            var shippingDisplayItem = new DisplayItem
+            {
+                Label = T("Order.Shipping"),
+                Price = shippingTotalAmount.Amount.ToStringInvariant("F"),
+                Status = shippingTotalAmount.Amount > 0 ? GooglePayItemStatus.Final : GooglePayItemStatus.Pending,
+                Type = GooglePayItemType.LineItem
+            };
+
+            // Discounts
+            var cartTotal = await _orderCalculationService.GetShoppingCartTotalAsync(cart);
+            var cartTotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartTotal.Total != null ? cartTotal.Total.Value.Amount : 0, _primaryCurrency);
+            Money orderTotalDiscountAmount = default;
+            if (cartTotal.DiscountAmount > decimal.Zero)
+            {
+                orderTotalDiscountAmount = _currencyService.ConvertFromPrimaryCurrency(cartTotal.DiscountAmount.Amount, _primaryCurrency);
+            }
+
+            Money subTotalDiscountAmount = default;
+            if (cartSubTotal.DiscountAmount > decimal.Zero)
+            {
+                subTotalDiscountAmount = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.DiscountAmount.Amount, _primaryCurrency);
+            }
+
+            decimal discountAmount = _roundingHelper.Round(orderTotalDiscountAmount.Amount + subTotalDiscountAmount.Amount);
+
+            var discountDisplayItem = new DisplayItem
+            {
+                Label = T("Order.TotalDiscount"),          
+                Price = (discountAmount * -1).ToStringInvariant("F"),
+                Status = GooglePayItemStatus.Final,
+                Type = GooglePayItemType.LineItem
+            };
+
+            transactionInfo.DisplayItems = [.. transactionInfo.DisplayItems, subtotalDisplayItem, taxDisplayItem, shippingDisplayItem, discountDisplayItem];
+            transactionInfo.TotalPriceLabel = T("ShoppingCart.ItemTotal");
+            transactionInfo.TotalPrice = (cartTotal.Total != null ? cartTotalConverted.Amount : subTotalConverted.Amount).ToStringInvariant("F");
+
+            return Json(transactionInfo);
+        }
+
+        #endregion
 
         [HttpPost]
         [Route("paypal/webhookhandler"), WebhookEndpoint]
@@ -617,10 +805,29 @@ namespace Smartstore.PayPal.Controllers
                     break;
 
                 case "declined":
-                    if (order.CanVoidOffline())
+                    var settings = await Services.SettingFactory.LoadSettingsAsync<PayPalSettings>(order.StoreId);
+                    order.CaptureTransactionResult = status;
+                    if (settings.Intent == PayPalTransactionType.Authorize)
                     {
-                        order.CaptureTransactionResult = status;
-                        await _orderProcessingService.VoidOfflineAsync(order);
+                        if (order.CanVoidOffline())
+                        {
+                            await _orderProcessingService.VoidOfflineAsync(order);
+                        }
+                    }
+                    else
+                    {   
+                        if (settings.CancelOrdersForDeclinedPayments)
+                        {
+                            order.PaymentStatus = PaymentStatus.Voided;
+                            await _orderProcessingService.CancelOrderAsync(order, true);
+                        }
+                        else
+                        {
+                            order.PaymentStatus = PaymentStatus.Pending;
+                            order.OrderStatus = OrderStatus.Pending;
+                        }
+
+                        order.PaidDateUtc = null;
                     }
                     break;
 
@@ -662,7 +869,7 @@ namespace Smartstore.PayPal.Controllers
             switch (status)
             {
                 case "completed":
-                    var refundIds = order.GenericAttributes.Get<List<string>>("Payments.PayPalStandard.RefundId") ?? new List<string>();
+                    var refundIds = order.GenericAttributes.Get<List<string>>("Payments.PayPalStandard.RefundId") ?? [];
                     if (!refundIds.Contains(resource.Id)
                         && decimal.TryParse(resource.Amount?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var refundedAmount)
                         && order.CanPartiallyRefundOffline(refundedAmount))
@@ -678,17 +885,16 @@ namespace Smartstore.PayPal.Controllers
 
         async Task<PayPalResponse> VerifyWebhookRequest(HttpRequest request, WebhookEvent<WebhookResource> webhookEvent)
         {
-            var verifyRequest = new WebhookVerifySignatureRequest<WebhookResource>()
-                .WithBody(new VerifyWebhookSignature<WebhookResource>
-                {
-                    AuthAlgo = request.Headers["PAYPAL-AUTH-ALGO"],
-                    CertUrl = request.Headers["PAYPAL-CERT-URL"],
-                    TransmissionId = request.Headers["PAYPAL-TRANSMISSION-ID"],
-                    TransmissionSig = request.Headers["PAYPAL-TRANSMISSION-SIG"],
-                    TransmissionTime = request.Headers["PAYPAL-TRANSMISSION-TIME"],
-                    WebhookId = _settings.WebhookId,
-                    WebhookEvent = webhookEvent
-                });
+            var verifyRequest = _client.RequestFactory.WebhookVerifySignature(new VerifyWebhookSignature<WebhookResource>
+            {
+                AuthAlgo = request.Headers["PAYPAL-AUTH-ALGO"],
+                CertUrl = request.Headers["PAYPAL-CERT-URL"],
+                TransmissionId = request.Headers["PAYPAL-TRANSMISSION-ID"],
+                TransmissionSig = request.Headers["PAYPAL-TRANSMISSION-SIG"],
+                TransmissionTime = request.Headers["PAYPAL-TRANSMISSION-TIME"],
+                WebhookId = _settings.WebhookId,
+                WebhookEvent = webhookEvent
+            });
 
             var response = await _client.ExecuteRequestAsync(verifyRequest);
 

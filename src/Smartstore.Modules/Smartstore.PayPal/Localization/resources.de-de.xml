@@ -22,11 +22,14 @@
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalPayLater" AppendRootKey="false">
         <Value>PayPal später zahlen</Value>
     </LocaleResource>
+    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalGooglePay" AppendRootKey="false">
+        <Value>Google Pay</Value>
+    </LocaleResource>
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalCreditCard" AppendRootKey="false">
         <Value>PayPal Kreditkarte</Value>
     </LocaleResource>
-    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalGiroPay" AppendRootKey="false">
-        <Value>Giropay</Value>
+    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalTrustly" AppendRootKey="false">
+        <Value>Trustly</Value>
     </LocaleResource>
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalBancontact" AppendRootKey="false">
         <Value>Bancontact</Value>
@@ -78,6 +81,13 @@
             ]]>
         </Value>
     </LocaleResource>
+    <LocaleResource Name="Plugins.Description.Payments.PayPalGooglePay" AppendRootKey="false">
+        <Value>
+            <![CDATA[
+			    Bietet einen sicheren Zahlungsprozess, der nahtlos über Google Pay abgewickelt wird.
+            ]]>
+        </Value>
+    </LocaleResource>
     <LocaleResource Name="Plugins.Description.Payments.PayPalCreditCard" AppendRootKey="false">
         <Value>
             <![CDATA[
@@ -87,10 +97,10 @@
             ]]>
         </Value>
     </LocaleResource>
-    <LocaleResource Name="Plugins.Description.Payments.PayPalGiroPay" AppendRootKey="false">
+    <LocaleResource Name="Plugins.Description.Payments.PayPalTrustly" AppendRootKey="false">
         <Value>
             <![CDATA[
-			    Nach Abschluss der Bestellung wird der Kunde direkt zu GiroPay weitergeleitet, um den Bezahlvorgang abzuschließen.
+			    Nach Abschluss der Bestellung wird der Kunde direkt zu Trustly weitergeleitet, um den Bezahlvorgang abzuschließen.
             ]]>
         </Value>
     </LocaleResource>
@@ -171,6 +181,13 @@
                       ]]>
                 </Value>
             </LocaleResource>
+            <LocaleResource Name="PayPalGooglePay" AppendRootKey="false">
+                <Value>
+                    <![CDATA[
+				        Bezahlen Sie direkt über Google Pay in einer sicheren Umgebung.
+                      ]]>
+                </Value>
+            </LocaleResource>
             <LocaleResource Name="PayPalCreditCard" AppendRootKey="false">
                 <Value>
                     <![CDATA[
@@ -178,10 +195,10 @@
                       ]]>
                 </Value>
             </LocaleResource>
-            <LocaleResource Name="PayPalGiroPay" AppendRootKey="false">
+            <LocaleResource Name="PayPalTrustly" AppendRootKey="false">
                 <Value>
                     <![CDATA[
-                        Sie werden auf die Website von Giropay weitergeleitet, um die Zahlung abzuschließen.
+                        Sie werden auf die Website von Trustly weitergeleitet, um die Zahlung abzuschließen.
                       ]]>
                 </Value>
             </LocaleResource>
@@ -266,6 +283,17 @@
                 <Value>
                     Der Gesamtbetrag der Bestellung konnte nach Berechnung der Versandkosten bei PayPal nicht aktualisiert werden.
                     Bitte bestätigen Sie den Gesamtbetrag erneut bei PayPal.
+                </Value>
+            </LocaleResource>
+
+            <LocaleResource Name="GenericErrorMessage">
+                <Value>
+                    Bei der Zahlart ist ein Fehler aufgetreten. Bitte wählen Sie eine andere Zahlart.
+                </Value>
+            </LocaleResource>
+            <LocaleResource Name="PaymentSourceCouldNotBeVerified">
+                <Value>
+                    Die Zahlung wurde von PayPal abgelehnt, weil die Zahlungsinformationen nicht verifiziert werden konnten. Bitte prüfen Sie Ihre Angaben und versuchen Sie es erneut.
                 </Value>
             </LocaleResource>
 
@@ -376,7 +404,18 @@
                     Legt fest, ob Tracking-Nummern an PayPal gesendet werden sollen, sobald sie in der Sendung eingegeben oder aktualisiert wurden.
                 </Value>
             </LocaleResource>
+
+            <LocaleResource Name="CancelOrdersForDeclinedPayments">
+                <Value>Bestellungen für abgelehnte Zahlungen stornieren</Value>
+            </LocaleResource>
+            <LocaleResource Name="CancelOrdersForDeclinedPayments.Hint">
+                <Value>
+                    Legt fest, ob Bestellungen für abgelehnte Zahlungen storniert werden sollen.
+                    Ist diese Option ausgeschaltet, wird lediglich der Zahlungsstatus der Bestellung auf 'Ausstehend' gesetzt.
+                </Value>
+            </LocaleResource>
             
+
             <LocaleResource Name="Capture">
                 <Value>Sofort abbuchen</Value>
             </LocaleResource>
@@ -445,6 +484,9 @@
             <LocaleResource Name="Error.Refund.NoTransactionId">
                 <Value>Für diese Bestellung wurde keine Transaktions-ID hinterlegt. Bitte prüfen Sie die Anbindung Ihres Webhooks.</Value>
             </LocaleResource>
+            <LocaleResource Name="Error.CannotBeZeroOrNegative">
+                <Value>Da sich keine kostenpflichtigen Produkte im Warenkorb befinden, ist keine Zahlung erforderlich. Bitte überprüfen Sie Ihren Warenkorb.</Value>
+            </LocaleResource>
             <LocaleResource Name="HasCredentials.True">
                 <Value>Die Zugangsdaten wurden hinterlegt.</Value>
             </LocaleResource>
@@ -507,6 +549,9 @@
             </LocaleResource>
             <LocaleResource Name="Error.3DSecure">
                 <Value>Bei der Bestätigung Ihrer Karte durch Ihren Kartenanbieter ist ein Fehler aufgetreten.</Value>
+            </LocaleResource>
+            <LocaleResource Name="Error.GooglePayTranactionError">
+                <Value>Diese Transaktion ist fehlgeschlagen.</Value>
             </LocaleResource>
             <LocaleResource Name="CartHasChanged">
                 <Value>Ihr Warenkorb hat sich nach dem Login geändert. Bitte bestätigen Sie Ihren aktuellen Warenkorb bei PayPal.</Value>

@@ -472,7 +472,6 @@ namespace Smartstore.Web.Controllers
         public async Task<IActionResult> ChangePassword(ChangePasswordModel model)
         {
             var customer = Services.WorkContext.CurrentCustomer;
-
             if (!customer.IsRegistered())
             {
                 return ChallengeOrForbid();
@@ -572,6 +571,8 @@ namespace Smartstore.Web.Controllers
                 if (identityResult.Succeeded)
                 {
                     customer.GenericAttributes.PasswordRecoveryToken = string.Empty;
+                    // Detect and repair accidental guest role assignments
+                    await CheckRegisteredRole(customer);
                     await _db.SaveChangesAsync();
 
                     model.SuccessfullyChanged = true;
@@ -629,6 +630,12 @@ namespace Smartstore.Web.Controllers
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, false);
             if (result.Succeeded)
             {
+                var customer = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                if (customer != null)
+                {
+                    await FinalizeLoginAsync(Services.WorkContext.CurrentCustomer, customer, logActivity: false);
+                }
+
                 Services.ActivityLogger.LogActivity(KnownActivityLogTypes.PublicStoreLogin, T("ActivityLog.PublicStore.LoginExternal"), info.LoginProvider);
                 return RedirectToReferrer(returnUrl, () => RedirectToRoute("Homepage"));
             }
@@ -657,12 +664,7 @@ namespace Smartstore.Web.Controllers
                             return await FinalizeCustomerRegistrationAsync(customer, returnUrl);
                         }
 
-                        // Migrate shopping cart.
-                        await _shoppingCartService.MigrateCartAsync(Services.WorkContext.CurrentCustomer, customer);
-
-                        Services.ActivityLogger.LogActivity(KnownActivityLogTypes.PublicStoreLogin, T("ActivityLog.PublicStore.Login"), customer);
-
-                        await Services.EventPublisher.PublishAsync(new CustomerSignedInEvent { Customer = customer });
+                        await FinalizeLoginAsync(Services.WorkContext.CurrentCustomer, customer, logActivity: true);
                     }
 
                     // Display errors to user.
@@ -796,6 +798,44 @@ namespace Smartstore.Web.Controllers
                     return RedirectToRoute("Homepage");
                 }
             }
+        }
+
+        private async Task<bool> CheckRegisteredRole(Customer customer)
+        {
+            if (customer.IsSystemAccount || (customer.Username.IsEmpty() && customer.Email.IsEmpty()))
+            {
+                return false;
+            }
+
+            var updated = false;
+            var guestRoleMappings = customer.CustomerRoleMappings
+                .Where(x => !x.IsSystemMapping && x.CustomerRole.SystemName.EqualsNoCase(SystemCustomerRoleNames.Guests))
+                .ToArray();
+            if (guestRoleMappings.Length > 0)
+            {
+                _db.CustomerRoleMappings.RemoveRange(guestRoleMappings);
+                updated = true;
+            }
+
+            if (!customer.IsRegistered())
+            {               
+                var registeredRole = await _db.CustomerRoles
+                    .AsNoTracking()
+                    .Where(x => x.SystemName == SystemCustomerRoleNames.Registered)
+                    .OrderBy(x => x.Id)
+                    .FirstOrDefaultAsync();
+                if (registeredRole != null)
+                {
+                    _db.CustomerRoleMappings.Add(new()
+                    {
+                        CustomerId = customer.Id,
+                        CustomerRoleId = registeredRole.Id
+                    });
+                    updated = true;
+                }
+            }
+
+            return updated;
         }
 
         private async Task MapRegisterModelToCustomerAsync(Customer customer, RegisterModel model)
@@ -960,7 +1000,7 @@ namespace Smartstore.Web.Controllers
             await _userManager.RemoveFromRoleAsync(customer, SystemCustomerRoleNames.Guests);
         }
 
-        private IActionResult RedirectToLocal(string returnUrl)
+        private ActionResult RedirectToLocal(string returnUrl)
         {
             return RedirectToReferrer(returnUrl, () => RedirectToRoute("Login"));
         }
@@ -971,6 +1011,17 @@ namespace Smartstore.Web.Controllers
             {
                 result.Errors.Select(x => x.Description).Distinct()
                     .Each(x => ModelState.AddModelError(string.Empty, x));
+            }
+        }
+
+        private async Task FinalizeLoginAsync(Customer guest, Customer registered, bool logActivity) 
+        {
+            await _shoppingCartService.MigrateCartAsync(guest, registered);
+            await Services.EventPublisher.PublishAsync(new CustomerSignedInEvent { Customer = registered });
+
+            if (logActivity)
+            {
+                Services.ActivityLogger.LogActivity(KnownActivityLogTypes.PublicStoreLogin, T("ActivityLog.PublicStore.Login"), registered);
             }
         }
 

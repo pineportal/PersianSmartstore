@@ -115,8 +115,8 @@ namespace Smartstore.Shipping
             }
 
             var patterns = pattern.Contains(',')
-                ? pattern.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim())
-                : new string[] { pattern };
+                ? pattern.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim())
+                : [pattern];
 
             try
             {
@@ -152,16 +152,26 @@ namespace Smartstore.Shipping
                 return response;
             }
 
-            int countryId = 0;
-            int stateProvinceId = 0;
+            var countryId = 0;
+            var stateProvinceId = 0;
             string zip = null;
-            decimal subTotal = decimal.Zero;
+            var subTotal = decimal.Zero;
 
             if (request.ShippingAddress != null)
             {
                 countryId = request.ShippingAddress.CountryId ?? 0;
                 stateProvinceId = request.ShippingAddress.StateProvinceId ?? 0;
                 zip = request.ShippingAddress.ZipPostalCode;
+            }
+            else if (_shippingByTotalSettings.UseShippingOriginIfShippingAddressMissing)
+            {
+                var originAddress = await _shippingService.GetShippingOriginAddressAsync();
+                if (originAddress != null)
+                {
+                    countryId = originAddress.CountryId ?? 0;
+                    stateProvinceId = originAddress.StateProvinceId ?? 0;
+                    zip = originAddress.ZipPostalCode;
+                }
             }
 
             var allProducts = request.Items

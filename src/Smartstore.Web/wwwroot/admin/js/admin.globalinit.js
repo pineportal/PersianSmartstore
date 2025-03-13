@@ -5,7 +5,7 @@
     var _commonPluginFactories = [
         // panel toggling
         function (ctx) {
-            ctx.find('input[type=checkbox][data-toggler-for]').each(function (i, el) {
+            ctx.find('input[type=checkbox][data-toggler-for]').each((i, el) => {
                 Smartstore.Admin.togglePanel(el, false);
             });
         },
@@ -119,7 +119,7 @@
         applyCommonPlugins($("body"));
 
         // Handle panel toggling
-        $(document).on('change', 'input[type=checkbox][data-toggler-for]', function (e) {
+        $(document).on('change', 'input[type=checkbox][data-toggler-for]', (e) => {
             Smartstore.Admin.togglePanel(e.target, true);
         });
 
@@ -169,8 +169,16 @@
                 }
                 if (sectionHeaderHasButtons === true) {
                     var y = $(this).scrollTop();
-                    sectionHeader.toggleClass("sticky", y >= navbarHeight);
-                    $(document.body).toggleClass("sticky-header", y >= navbarHeight);
+                    if (y >= navbarHeight) {
+                        sectionHeader.addClass("sticky");
+                        $(document.body).addClass("sticky-header");
+                        $(document.body).css('--content-offset', sectionHeader.outerHeight() + 'px');
+                    }
+                    else {
+                        sectionHeader.removeClass("sticky");
+                        $(document.body).removeClass("sticky-header");
+                        $(document.body).css('--content-offset', '');
+                    }
                 }
             }).trigger('resize');
         }

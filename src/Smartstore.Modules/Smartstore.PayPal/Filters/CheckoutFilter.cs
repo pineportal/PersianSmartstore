@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Smartstore.Core;
 using Smartstore.Core.Checkout.Orders;
-using Smartstore.Core.Checkout.Payment;
 using Smartstore.Core.Data;
 using Smartstore.Core.Logging;
 using Smartstore.Core.Widgets;
@@ -18,7 +17,7 @@ namespace Smartstore.PayPal.Filters
     {
         private static readonly string[] _apms =
         {
-            PayPalConstants.Giropay,
+            PayPalConstants.Trustly,
             PayPalConstants.Bancontact,
             PayPalConstants.Blik,
             PayPalConstants.Eps,
@@ -65,7 +64,8 @@ namespace Smartstore.PayPal.Filters
             if (!await _payPalHelper.IsAnyProviderActiveAsync(
                 PayPalConstants.Standard,
                 PayPalConstants.PayLater,
-                PayPalConstants.Sepa) && !redirectRequired)
+                PayPalConstants.Sepa,
+                PayPalConstants.GooglePay) && !redirectRequired)
             {
                 await next();
                 return;
@@ -113,7 +113,7 @@ namespace Smartstore.PayPal.Filters
 
                     var isSelected = false;
                     var firstPaymentMethod = model.PaymentMethods.First();
-                    var funding = "paypal";
+                    var funding = FundingOptions.paypal.ToString();
 
                     if (firstPaymentMethod != null)
                     {
@@ -121,15 +121,20 @@ namespace Smartstore.PayPal.Filters
                             (firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.Standard
                             || firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.Sepa
                             || firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.PayLater
+                            || firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.GooglePay
                             ) && firstPaymentMethod.Selected;
 
                         if (firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.Sepa)
                         {
-                            funding = "sepa";
+                            funding = FundingOptions.sepa.ToString();
                         }
                         else if (firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.PayLater)
                         {
-                            funding = "paylater";
+                            funding = FundingOptions.paylater.ToString();
+                        }
+                        else if (firstPaymentMethod.PaymentMethodSystemName == PayPalConstants.GooglePay)
+                        {
+                            funding = FundingOptions.googlepay.ToString();
                         }
                     }
 

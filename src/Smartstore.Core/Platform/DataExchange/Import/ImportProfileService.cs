@@ -15,7 +15,7 @@ namespace Smartstore.Core.DataExchange.Import
     {
         const string ImportFileRoot = "ImportProfiles";
 
-        private static readonly object _lock = new();
+        private static readonly Lock _lock = new();
         private static Dictionary<ImportEntityType, Dictionary<string, string>> _entityProperties = null;
 
         private readonly SmartDbContext _db;
@@ -313,7 +313,6 @@ namespace Smartstore.Core.DataExchange.Import
                             {
                                 case ImportEntityType.Product:
                                     names["SeName"] = string.Empty;
-                                    names["Specification"] = "Specification";
                                     break;
                                 case ImportEntityType.Category:
                                     names["SeName"] = string.Empty;

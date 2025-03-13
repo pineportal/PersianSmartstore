@@ -223,7 +223,7 @@ namespace Smartstore.Core.Catalog.Products
             {
                 string name = product.GetLocalized(x => x.Name, lang, false, false);
 
-                await _urlService.SaveSlugAsync(clone, string.Empty, name, false, lang.Id, true);
+                await _urlService.SaveSlugAsync(clone, string.Empty, name, false, lang.Id);
             }
         }
 
@@ -376,6 +376,7 @@ namespace Smartstore.Core.Catalog.Products
                     ManufacturerPartNumber = combination.ManufacturerPartNumber,
                     Price = combination.Price,
                     AssignedMediaFileIds = combination.AssignedMediaFileIds,
+                    Weight = combination.Weight,
                     Length = combination.Length,
                     Width = combination.Width,
                     Height = combination.Height,

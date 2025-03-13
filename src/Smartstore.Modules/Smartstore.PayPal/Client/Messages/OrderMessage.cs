@@ -146,8 +146,8 @@ namespace Smartstore.PayPal.Client.Messages
         [JsonProperty("pay_upon_invoice")]
         public PaymentSourceInvoice PaymentSourceInvoice;
 
-        [JsonProperty("giropay")]
-        public PaymentSourceApm PaymentSourceGiroPay;
+        [JsonProperty("trustly")]
+        public PaymentSourceApm PaymentSourceTrustly;
 
         [JsonProperty("bancontact")]
         public PaymentSourceApm PaymentSourceBancontact;
@@ -166,6 +166,9 @@ namespace Smartstore.PayPal.Client.Messages
 
         [JsonProperty("p24")]
         public PaymentSourceApm PaymentSourceP24;
+
+        [JsonProperty("google_pay")]
+        public PaymentSourceGooglePay PaymentSourceGooglePay;
     }
 
     public class ShippingDetail
@@ -256,7 +259,7 @@ namespace Smartstore.PayPal.Client.Messages
         public string BirthDate;
 
         public PhoneMessage Phone;
-        public BillingAddressMessage BillingAddress;
+        public AddressMessage BillingAddress;
         public ExperienceContext ExperienceContext;
     }
 
@@ -267,6 +270,21 @@ namespace Smartstore.PayPal.Client.Messages
         public string Email;
         [JsonProperty("bic")] // INFO: Snake case will transform it to b_i_c otherwise
         public string BIC;
+    }
+
+    public class PaymentSourceGooglePay
+    {
+        public PayPalAttributes Attributes;
+    }
+
+    public class PayPalAttributes
+    {
+        public VerificationAttribute Verification;
+    }
+
+    public class VerificationAttribute
+    {
+        public string Method;
     }
 
     public class Payer
@@ -283,7 +301,7 @@ namespace Smartstore.PayPal.Client.Messages
         /// </summary>
         public string GivenName;
 
-        public string SurName;
+        public string Surname;
     }
 
     public class PhoneMessage
@@ -292,7 +310,7 @@ namespace Smartstore.PayPal.Client.Messages
         public string CountryCode;
     }
 
-    public class BillingAddressMessage
+    public class AddressMessage
     {
         /// <summary>
         /// Street inclusive house number
@@ -327,22 +345,55 @@ namespace Smartstore.PayPal.Client.Messages
 
     public class PayPalApplictionContext
     {
+        /// <summary>
+        /// The location from which the shipping address is derived.
+        /// </summary>
         public ShippingPreference ShippingPreference;
+
+        /// <summary>
+        /// Configures the label name to Continue or Subscribe Now for subscription consent experience.
+        /// </summary>
+        public UserAction UserAction { get; set; }
 
         /// <summary>
         /// Region info e.g. de-DE
         /// </summary>
+        [MaxLength(10)]
+        [MinLength(2)]
         public string Locale;
 
         /// <summary>
         /// Specifies the URL to which the customer's browser is returned after payment was made.
         /// </summary>
+        [MaxLength(4000)]
+        [MinLength(10)]
         public string ReturnUrl;
 
         /// <summary>
         /// Specifies the URL to which the customer's browser is returned if payment was cancelled.
         /// </summary>
+        [MaxLength(4000)]
+        [MinLength(10)]
         public string CancelUrl;
+    }
+
+    /// <summary>
+    /// Configures the label name to Continue or Subscribe Now for subscription consent experience.
+    /// </summary>
+    public enum UserAction
+    {
+        /// <summary>
+        /// After you redirect the customer to the PayPal subscription consent page, a Continue button appears. 
+        /// Use this option when you want to control the activation of the subscription and do not want PayPal to activate the subscription.
+        /// </summary>
+        [EnumMember(Value = "CONTINUE")]
+        Continue,
+        /// <summary>
+        /// After you redirect the customer to the PayPal subscription consent page, a Subscribe Now button appears. 
+        /// Use this option when you want PayPal to activate the subscription.
+        /// </summary>
+        [EnumMember(Value = "SUBSCRIBE_NOW")]
+        SubscribeNow
     }
 
     public enum Intent

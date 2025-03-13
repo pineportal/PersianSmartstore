@@ -302,6 +302,15 @@
     </div>
     <div class="adminRow">
         <div class="adminTitle">
+            <smart-label asp-for="DisplayOrder" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="DisplayOrder" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
             <smart-label asp-for="Condition" />
         </div>
         <div class="adminData">
@@ -501,7 +510,7 @@
                 <smart-label asp-for="RecurringCycleLength" />
             </div>
             <div class="adminData">
-                <input asp-for="RecurringCycleLength" />
+                <editor asp-for="RecurringCycleLength" />
                 <span asp-validation-for="RecurringCycleLength"></span>
             </div>
         </div>
@@ -519,7 +528,7 @@
                 <smart-label asp-for="RecurringTotalCycles" />
             </div>
             <div class="adminData">
-                <input asp-for="RecurringTotalCycles" />
+                <editor asp-for="RecurringTotalCycles" />
                 <span asp-validation-for="RecurringTotalCycles"></span>
             </div>
         </div>

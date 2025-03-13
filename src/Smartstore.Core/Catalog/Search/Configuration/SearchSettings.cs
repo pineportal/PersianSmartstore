@@ -1,6 +1,7 @@
 ﻿using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Configuration;
 using Smartstore.Core.Search;
+using Smartstore.Core.Search.Facets;
 
 namespace Smartstore.Core.Catalog.Search
 {
@@ -52,6 +53,11 @@ namespace Smartstore.Core.Catalog.Search
         public ProductSortingEnum DefaultSortOrder { get; set; } = ProductSortingEnum.Relevance;
 
         /// <summary>
+        /// Gets or sets a value indicating whether products should be sorted by display order rather than by relevance.
+        /// </summary>
+        public bool UseFeaturedSorting { get; set; }
+
+        /// <summary>
         /// Hidden setting indicating whether to use catalog search instead of Linq search in backend.
         /// </summary>
         public bool UseCatalogSearchInBackend { get; set; }
@@ -60,8 +66,6 @@ namespace Smartstore.Core.Catalog.Search
         /// Specifies whether the product page should be opened directly if the search term matches a SKU, MPN or GTIN.
         /// </summary>
         public bool SearchProductByIdentificationNumber { get; set; }
-
-        // TBD: what about area specific searchin setting (product, blog, etc.)
 
         #region Common facet settings
 
@@ -83,6 +87,10 @@ namespace Smartstore.Core.Catalog.Search
         public int DeliveryTimeDisplayOrder { get; set; } = 4;
         public int AvailabilityDisplayOrder { get; set; } = 5;
         public int NewArrivalsDisplayOrder { get; set; } = 6;
+
+        public FacetSorting CategorySorting { get; set; } = FacetSorting.HitsDesc;
+        public FacetSorting BrandSorting { get; set; } = FacetSorting.LabelAsc;
+        public FacetSorting DeliveryTimeSorting { get; set; } = FacetSorting.DisplayOrder;
 
         #endregion
 

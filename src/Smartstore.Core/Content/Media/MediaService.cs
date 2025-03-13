@@ -482,7 +482,6 @@ namespace Smartstore.Core.Content.Media
             DuplicateFileHandling dupeFileHandling = DuplicateFileHandling.ThrowError)
         {
             var pathData = CreatePathData(path);
-
             var file = await _db.MediaFiles.FirstOrDefaultAsync(x => x.Name == pathData.FileName && x.FolderId == pathData.Folder.Id);
             var isDupe = file != null;
             var result = await ProcessFileAsync(
@@ -1233,13 +1232,9 @@ namespace Smartstore.Core.Content.Media
                             _db.TryUpdate(file);
                             await _db.SaveChangesAsync();
                         }
-                        catch (InvalidOperationException ioe)
+                        catch (InvalidOperationException)
                         {
                             // Ignore exception for pictures that already have been processed.
-                            if (!ioe.IsAlreadyAttachedEntityException())
-                            {
-                                throw;
-                            }
                         }
                     }
                 }

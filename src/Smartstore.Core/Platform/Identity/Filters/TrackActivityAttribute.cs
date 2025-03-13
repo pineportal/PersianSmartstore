@@ -82,27 +82,40 @@ namespace Smartstore.Core.Identity
 
         private void DoTrack(ActionExecutingContext context)
         {
-            if (!context.HttpContext.Request.IsNonAjaxGet())
+            var now = DateTime.UtcNow;
+            var customer = _workContext.CurrentCustomer;
+            if (customer == null || customer.Deleted || customer.IsSystemAccount)
             {
                 return;
             }
 
-            var now = DateTime.UtcNow;
-            var customer = _workContext.CurrentCustomer;
-            if (customer == null || customer.Deleted || customer.IsSystemAccount)
-                return;
+            var forceTrack = false;
 
-            bool dirty = false;
+            if (context.HttpContext.Request.IsSubRequest())
+            {
+                var isNewGuest = (now - customer.CreatedOnUtc) < TimeSpan.FromSeconds(2) && customer.IsGuest();
+                if (!isNewGuest)
+                {
+                    // Only get out in sub requests if the customer is NOT a new guest. We WANT to track new guests to check for abuse.
+                    return;
+                }
+                else
+                {
+                    forceTrack = true;
+                }
+            }
+
+            var dirty = false;
 
             // Last activity date
-            if (_attribute.TrackDate && customer.LastActivityDateUtc.AddMinutes(1.0) < now)
+            if (forceTrack || customer.LastActivityDateUtc.AddMinutes(1.0) < now)
             {
                 customer.LastActivityDateUtc = now;
                 dirty = true;
             }
 
             // Last IP address
-            if (_attribute.TrackIpAddress && _privacySettings.StoreLastIpAddress)
+            if (_attribute.TrackIpAddress && (forceTrack || _privacySettings.StoreLastIpAddress))
             {
                 var currentIpAddress = _webHelper.GetClientIpAddress().ToString();
                 if (currentIpAddress.HasValue())
@@ -113,7 +126,7 @@ namespace Smartstore.Core.Identity
             }
 
             // Last user agent
-            if (_attribute.TrackUserAgent && _customerSettings.StoreLastUserAgent)
+            if (_attribute.TrackUserAgent && (forceTrack || _customerSettings.StoreLastUserAgent))
             {
                 var currentUserAgent = _userAgent.UserAgent;
                 if (currentUserAgent.HasValue() && currentUserAgent.Length <= 255)
@@ -124,7 +137,7 @@ namespace Smartstore.Core.Identity
             }
 
             // Last device type
-            if (_attribute.TrackDeviceFamily && _customerSettings.StoreLastDeviceFamily)
+            if (_attribute.TrackDeviceFamily && (forceTrack || _customerSettings.StoreLastDeviceFamily))
             {
                 var currentDeviceName = _userAgent.Device.IsUnknown() ? _userAgent.Platform.Name : _userAgent.Device.Name;
                 if (currentDeviceName.HasValue() && currentDeviceName.Length <= 255 && currentDeviceName != "Unknown")
@@ -135,7 +148,7 @@ namespace Smartstore.Core.Identity
             }
 
             // Last visited page
-            if (_attribute.TrackPage && _customerSettings.StoreLastVisitedPage)
+            if (_attribute.TrackPage && (forceTrack || _customerSettings.StoreLastVisitedPage))
             {
                 var currentUrl = _webHelper.GetCurrentPageUrl(withQueryString: true);
                 if (currentUrl.HasValue() && SanitizeUrl(ref currentUrl))
@@ -151,7 +164,7 @@ namespace Smartstore.Core.Identity
             }
         }
 
-        private static bool SanitizeUrl(ref string url)
+        internal static bool SanitizeUrl(ref string url)
         {
             var len = url.Length;
             

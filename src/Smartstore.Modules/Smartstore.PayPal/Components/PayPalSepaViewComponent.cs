@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Smartstore.PayPal.Services;
 
 namespace Smartstore.PayPal.Components
 {
@@ -10,8 +11,7 @@ namespace Smartstore.PayPal.Components
         protected override IViewComponentResult InvokeCore()
         {
             // Get displayable options from settings depending on location (OffCanvasCart or Cart).
-            var isCartPage = RouteIdent == "ShoppingCart.Cart";
-            if (isCartPage && !Settings.FundingsCart.Contains(FundingOptions.sepa.ToString()))
+            if (PayPalHelper.IsCartRoute(RouteIdent) && !Settings.FundingsCart.Contains(FundingOptions.sepa.ToString()))
             {
                 return Empty();
             }

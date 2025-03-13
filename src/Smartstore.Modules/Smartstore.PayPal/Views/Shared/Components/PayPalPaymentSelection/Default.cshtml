@@ -1,5 +1,4 @@
 ﻿@model PublicPaymentMethodModel
-
 <!-- Set up a container element for the paypal button -->
 <div id="paypal-button-container"
      class="paypal-button-container"
@@ -10,44 +9,61 @@
      data-color="@Model.ButtonColor"
      attr-style='(Model.IsPaymentSelection && !Model.IsSelectedMethod, "display:none")'></div>
 
+@if (Model.IsGooglePayActive)
+{
+    <div id="paypal-google-pay-container"
+         data-init-transaction-url="@Url.Action("InitTransaction", "PayPal")"
+         data-get-transaction-info-url="@Url.Action("GetGooglePayTransactionInfo", "PayPal")"
+         data-create-order-url="@Url.Action("CreateOrder", "PayPal")"
+         data-forward-url="@Url.Action("BillingAddress", "Checkout")"
+         data-is-sandbox="@(Model.IsSandbox ? "true" : "false")"
+         data-route-ident="@Model.RouteIdent">
+    </div>
+}
+
 @*INFO: No target zone here as can also be rendered via AJAX*@
 <script data-origin="paypal-payment-selection">
-
     window.Res.PayPal = {
         "NoScriptsLoaded": "@T("Plugins.Smartstore.PayPal.NoScriptsLoaded")"
     };
 
+    const paymentMap = {
+        "Payments.PayPalStandard": "paypal",
+        "Payments.PayPalSepa": "sepa",
+        "Payments.PayPalPayLater": "paylater",
+        "Payments.PayPalGooglePay": "googlepay"
+    };
+
     $(function () {
-        var ppButton = new PayPalButton("#paypal-button-container", "@Model.Funding");
-        var btnNext = $(".payment-method-next-step-button");
-        var btnContainer = $("#paypal-button-container");
-        
+        const ppButton = new PayPalButton("#paypal-button-container", "@Model.Funding");
+        const btnNext = $(".payment-method-next-step-button");
+        const btnContainer = $("#paypal-button-container");
+        const btnContainerGooglePay = $("#paypal-google-pay-container");
+
         // Listen for changes to the radio inputs.
         $(document).on("change", "input[name='paymentmethod']", (e) => {
-            var isPayPal = false;
-            var fundingSource = "paypal";
+            const method = e.target.value;
+            const fundingSource = paymentMap[method] || null;
 
-            if (e.target.value == "Payments.PayPalStandard") {
-                isPayPal = true;
-            }
-            else if (e.target.value == "Payments.PayPalSepa") {
-                isPayPal = true;
-                fundingSource = "sepa";
-            }
-            else if (e.target.value == "Payments.PayPalPayLater") {
-                isPayPal = true;
-                fundingSource = "paylater";
+            if (!fundingSource) {
+                btnNext.show();
+                btnContainer.hide();
+                btnContainerGooglePay.hide();
+                return;
             }
 
-            if (isPayPal) {
-                ppButton.initPayPalScript(fundingSource, true)
-                btnNext[0].style.display = 'none';
-                btnContainer[0].style.display = 'block';
+            if (fundingSource === "googlepay") {
+                new GooglePayPayPalButton();
+                btnContainer.hide();
+                btnContainerGooglePay.show();
             }
             else {
-                btnNext[0].style.display = 'block';
-                btnContainer[0].style.display = 'none';
+                ppButton.initPayPalScript(fundingSource, true);
+                btnContainer.show();
+                btnContainerGooglePay.hide();
             }
+
+            btnNext.hide();
         });
 
         $("input[name='paymentmethod']:checked").trigger("change");

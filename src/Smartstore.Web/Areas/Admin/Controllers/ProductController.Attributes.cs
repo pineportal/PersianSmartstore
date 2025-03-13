@@ -461,27 +461,20 @@ namespace Smartstore.Admin.Controllers
                         .ThenInclude(x => x.Rules)
                         .FindByIdAsync(id, false);
                 }
-                catch (InvalidOperationException ioe)
+                catch (InvalidOperationException)
                 {
-                    if (ioe.IsAlreadyAttachedEntityException())
-                    {
-                        var ruleSetIdsToDelete = await _db.RuleSets
-                            .Where(x => x.ProductVariantAttributeId == id)
-                            .Select(x => x.Id)
-                            .OrderBy(x => x)
-                            .Skip(1)
-                            .ToArrayAsync();
+                    var ruleSetIdsToDelete = await _db.RuleSets
+                        .Where(x => x.ProductVariantAttributeId == id)
+                        .Select(x => x.Id)
+                        .OrderBy(x => x)
+                        .Skip(1)
+                        .ToArrayAsync();
 
-                        if (ruleSetIdsToDelete.Length > 0)
-                        {
-                            await _db.RuleSets
-                                .Where(x => ruleSetIdsToDelete.Contains(x.Id))
-                                .ExecuteDeleteAsync();
-                        }
-                    }
-                    else
+                    if (ruleSetIdsToDelete.Length > 0)
                     {
-                        ioe.ReThrow();
+                        await _db.RuleSets
+                            .Where(x => ruleSetIdsToDelete.Contains(x.Id))
+                            .ExecuteDeleteAsync();
                     }
                 }
             }
@@ -1062,11 +1055,13 @@ namespace Smartstore.Admin.Controllers
             Guard.NotNull(model);
             Guard.NotNull(product);
 
+            var baseWeight = await _db.MeasureWeights.FindByIdAsync(_measureSettings.BaseWeightId, false);
             var baseDimension = await _db.MeasureDimensions.FindByIdAsync(_measureSettings.BaseDimensionId);
 
             model.ProductId = product.Id;
-            model.PrimaryStoreCurrencyCode = _currencyService.PrimaryCurrency.CurrencyCode;
+            model.BaseWeightIn = baseWeight?.GetLocalized(x => x.Name) ?? string.Empty;
             model.BaseDimensionIn = baseDimension?.GetLocalized(x => x.Name) ?? string.Empty;
+            model.PrimaryStoreCurrencyCode = _currencyService.PrimaryCurrency.CurrencyCode;
 
             if (entity != null)
             {

@@ -112,6 +112,10 @@ namespace Smartstore.Core.Checkout.Orders
                 }
                 else
                 {
+                    // INFO: Messages may not be sent within the transaction scope.
+                    // PdfInvoiceHttpClient always fails with an HTTP client timeout (TaskCanceledException).
+                    await SendOrderMessages(ctx);
+
                     // Events
                     await _eventPublisher.PublishOrderPlacedAsync(ctx.Order);
 
@@ -300,7 +304,7 @@ namespace Smartstore.Core.Checkout.Orders
                     Total = new(initialOrder.OrderTotal, _primaryCurrency)
                 };
 
-                paymentRequired = cartTotal.Total.Value != decimal.Zero && cart.Requirements.HasFlag(CheckoutRequirements.Payment);
+                paymentRequired = cartTotal.Total.Value != decimal.Zero;
                 paymentSystemName = initialOrder.PaymentMethodSystemName;
 
                 // Address validations.
@@ -442,6 +446,14 @@ namespace Smartstore.Core.Checkout.Orders
                     {
                         order.ShippingMethod = shippingOption.Name;
                         order.ShippingRateComputationMethodSystemName = shippingOption.ShippingRateComputationMethodSystemName;
+
+                        if (order.ShippingMethod.IsEmpty() && shippingOption.ShippingMethodId > 0)
+                        {
+                            order.ShippingMethod = await _db.ShippingMethods
+                                .Where(x => x.Id == shippingOption.ShippingMethodId)
+                                .Select(x => x.Name)
+                                .FirstOrDefaultAsync();
+                        }
                     }
                 }
             }
@@ -571,8 +583,10 @@ namespace Smartstore.Core.Checkout.Orders
             var order = ctx.Order;
             var io = ctx.InitialOrder;
             var pr = ctx.PaymentRequest;
-            var billingAddressRequired = ctx.Cart.Requirements.HasFlag(CheckoutRequirements.BillingAddress);
-            var paymentRequired = ctx.CartTotal.Total.Value != decimal.Zero && ctx.Cart.Requirements.HasFlag(CheckoutRequirements.Payment);
+            var total = ctx.CartTotal.Total.Value;
+            var paymentRequired = !pr.IsRecurringPayment
+                ? total != decimal.Zero && ctx.Cart.Requirements.HasFlag(CheckoutRequirements.Payment)
+                : total != decimal.Zero;
 
             if (paymentRequired)
             {
@@ -586,6 +600,8 @@ namespace Smartstore.Core.Checkout.Orders
 
             if (!pr.IsRecurringPayment)
             {
+                var billingAddressRequired = ctx.Cart.Requirements.HasFlag(CheckoutRequirements.BillingAddress);
+
                 order.BillingAddress = billingAddressRequired ? (Address)ctx.Customer.BillingAddress?.Clone() : null;
                 order.ShippingAddress = ctx.CartRequiresShipping ? (Address)ctx.Customer.ShippingAddress?.Clone() : null;
 
@@ -600,7 +616,7 @@ namespace Smartstore.Core.Checkout.Orders
             }
             else
             {
-                order.BillingAddress = billingAddressRequired ? (Address)io.BillingAddress?.Clone() : null;
+                order.BillingAddress = (Address)io.BillingAddress?.Clone();
                 order.ShippingAddress = ctx.CartRequiresShipping ? (Address)io.ShippingAddress?.Clone() : null;
                 
                 ctx.IsRecurringCart = true;
@@ -997,10 +1013,34 @@ namespace Smartstore.Core.Checkout.Orders
 
         private async Task FinalizeOrderPlacement(PlaceOrderContext ctx)
         {
-            var order = ctx.Order;
-            var notes = new List<string> { T("Admin.OrderNotice.OrderPlaced") };
+            _db.OrderNotes.Add(new()
+            {
+                OrderId = ctx.Order.Id,
+                Note = T("Admin.OrderNotice.OrderPlaced"),
+                CreatedOnUtc = DateTime.UtcNow
+            });
 
-            // Messages and order notes.
+            // Log activity.
+            if (!ctx.PaymentRequest.IsRecurringPayment)
+            {
+                _activityLogger.LogActivity(KnownActivityLogTypes.PublicStorePlaceOrder, T("ActivityLog.PublicStore.PlaceOrder"), ctx.Order.GetOrderNumber());
+            }
+
+            if (!ctx.PaymentRequest.IsRecurringPayment && !ctx.PaymentRequest.IsMultiOrder)
+            {
+                ctx.Customer.ResetCheckoutData(ctx.PaymentRequest.StoreId, true, true, true, true, true, true);
+                await _shoppingCartService.DeleteCartAsync(ctx.Cart, false);
+            }
+
+            // INFO: DeleteCartAsync or CheckOrderStatusAsync perform commits.
+        }
+
+        private async Task SendOrderMessages(PlaceOrderContext ctx)
+        {
+            var order = ctx.Order;
+            var notes = new List<string>();
+
+            // Messages.
             var msg = await _messageFactory.SendOrderPlacedStoreOwnerNotificationAsync(order, _localizationSettings.DefaultAdminLanguageId);
             if (msg?.Email?.Id != null)
             {
@@ -1024,21 +1064,11 @@ namespace Smartstore.Core.Checkout.Orders
                 }
             }
 
-            AddOrderNotes(order, [.. notes]);
-
-            // Log activity.
-            if (!ctx.PaymentRequest.IsRecurringPayment)
+            if (notes.Count > 0)
             {
-                _activityLogger.LogActivity(KnownActivityLogTypes.PublicStorePlaceOrder, T("ActivityLog.PublicStore.PlaceOrder"), order.GetOrderNumber());
+                AddOrderNotes(order, [.. notes]);
+                await _db.SaveChangesAsync();
             }
-
-            if (!ctx.PaymentRequest.IsRecurringPayment && !ctx.PaymentRequest.IsMultiOrder)
-            {
-                ctx.Customer.ResetCheckoutData(ctx.PaymentRequest.StoreId, true, true, true, true, true, true);
-                await _shoppingCartService.DeleteCartAsync(ctx.Cart, false);
-            }
-
-            // INFO: DeleteCartAsync or CheckOrderStatusAsync perform commits.
         }
 
         class PlaceOrderContext

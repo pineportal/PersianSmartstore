@@ -8,6 +8,7 @@ using Smartstore.Core.Configuration;
 using Smartstore.Core.Data;
 using Smartstore.Core.Identity;
 using Smartstore.Core.Localization;
+using Smartstore.Core.Security;
 using Smartstore.Core.Stores;
 using Smartstore.Core.Web;
 using Smartstore.Data.Hooks;
@@ -35,10 +36,11 @@ namespace Smartstore.Core
             DetectPdfConverter,
             DetectAuthenticated,
             DetectGuest,
-            DetectBotForMedia,
             DetectBot,
             DetectWebhookEndpoint,
-            DetectByClientIdent
+            DetectByClientIdent,
+            DetectCrawlerEndpoint,
+            DetectResourceEndpoint
         ];
 
         private readonly SmartDbContext _db;
@@ -53,6 +55,7 @@ namespace Smartstore.Core
         private readonly IUserAgent _userAgent;
         private readonly IWebHelper _webHelper;
         private readonly IGeoCountryLookup _geoCountryLookup;
+        private readonly IOverloadProtector _overloadProtector;
 
         public DefaultWorkContextSource(
             SmartDbContext db,
@@ -66,7 +69,8 @@ namespace Smartstore.Core
             ICacheManager cache,
             IUserAgent userAgent,
             IWebHelper webHelper,
-            IGeoCountryLookup geoCountryLookup)
+            IGeoCountryLookup geoCountryLookup,
+            IOverloadProtector overloadProtector)
         {
             _db = db;
             _httpContextAccessor = httpContextAccessor;
@@ -80,6 +84,7 @@ namespace Smartstore.Core
             _cache = cache;
             _webHelper = webHelper;
             _geoCountryLookup = geoCountryLookup;
+            _overloadProtector = overloadProtector;
         }
 
         public ILogger Logger { get; set; } = NullLogger.Instance;
@@ -113,8 +118,10 @@ namespace Smartstore.Core
                 CustomerService = _customerService,
                 Db = _db,
                 HttpContext = _httpContextAccessor.HttpContext,
+                Endpoint = _httpContextAccessor.HttpContext?.GetEndpoint(),
                 UserAgent = _userAgent,
-                WebHelper = _webHelper
+                WebHelper = _webHelper,
+                OverloadProtector = _overloadProtector
             };
 
             try
@@ -167,6 +174,17 @@ namespace Smartstore.Core
                 // No record yet or account deleted/deactivated.
                 // Also dont' treat registered customers as guests.
                 // Create new record in these cases.
+
+                if (await context.OverloadProtector.ForbidNewGuestAsync(context.HttpContext))
+                {
+                    // DDoS attack? Prevent new guest session and throw to block the request.
+                    throw new HttpResponseException(StatusCodes.Status403Forbidden, "Forbidden");
+                }
+
+                // Check traffic limit before creating new guest session.
+                await CheckGuestDeniedAsync(context);
+
+                // Create guest session
                 customer = await CreateGuestCustomerAsync(context.ClientIdent);
             }
 
@@ -193,8 +211,24 @@ namespace Smartstore.Core
 
         protected virtual async Task<Customer> CreateGuestCustomerAsync(string clientIdent)
         {
-            var customer = await _customerService.CreateGuestCustomerAsync(clientIdent);
+            var customer = await _customerService.CreateGuestCustomerAsync(clientIdent, c =>
+            {
+                try
+                {
+                    c.LastIpAddress = _webHelper.GetClientIpAddress().ToString();
+                    c.LastUserAgent = _userAgent.UserAgent.EmptyNull().Truncate(255);
+                    c.LastUserDeviceType = _userAgent.Device.IsUnknown() ? _userAgent.Platform.Name : _userAgent.Device.Name;
 
+                    var currentUrl = _webHelper.GetCurrentPageUrl(withQueryString: true);
+                    c.LastVisitedPage = TrackActivityFilter.SanitizeUrl(ref currentUrl) 
+                        ? currentUrl
+                        : currentUrl.Truncate(2048);
+                }
+                catch
+                {
+                }
+            });
+            
             _customerService.AppendVisitorCookie(customer);
 
             return customer;
@@ -404,16 +438,21 @@ namespace Smartstore.Core
             }
         }
         
-        #region Customer resolvers
+        #region Customer detectors
 
         protected class DetectCustomerContext
         {
             public DefaultWorkContextSource WorkContextSource { get; init; }
             public HttpContext HttpContext { get; init; }
+            public Endpoint Endpoint { get; init; }
             public SmartDbContext Db { get; init; }
             public ICustomerService CustomerService { get; init; }
             public IUserAgent UserAgent { get; init; }
             public IWebHelper WebHelper { get; init; }
+
+            public IOverloadProtector OverloadProtector { get; init; }
+            public bool? DenyGuest { get; set; }
+            public bool? DenyBot { get; set; }
 
             public Guid? CustomerGuid { get; set; }
             public string ClientIdent { get; set; }
@@ -445,21 +484,24 @@ namespace Smartstore.Core
             return Task.FromResult<Customer>(null);
         }
 
-        private static Task<Customer> DetectBot(DetectCustomerContext context)
+        private static async Task<Customer> DetectBot(DetectCustomerContext context)
         {
             if (context.UserAgent.IsBot())
             {
-                return context.CustomerService.GetCustomerBySystemNameAsync(SystemCustomerNames.Bot);
+                // Check traffic limit for bots.
+                await CheckBotDeniedAsync(context);
+                // Return Bot system account
+                return await context.CustomerService.GetCustomerBySystemNameAsync(SystemCustomerNames.Bot);
             }
 
-            return Task.FromResult<Customer>(null);
+            return null;
         }
 
         private static async Task<Customer> DetectWebhookEndpoint(DetectCustomerContext context)
         {
             if (context.HttpContext is HttpContext httpContext)
             {
-                var isWebhook = httpContext.GetEndpoint()?.Metadata?.GetMetadata<WebhookEndpointAttribute>() != null;
+                var isWebhook = context.Endpoint?.Metadata?.GetMetadata<WebhookEndpointAttribute>() != null;
                 if (!isWebhook && httpContext.Response.StatusCode == StatusCodes.Status401Unauthorized)
                 {
                     isWebhook = httpContext.Features.Get<IExceptionHandlerPathFeature>()?.Path?.StartsWithNoCase("/odata/") ?? false;
@@ -493,34 +535,24 @@ namespace Smartstore.Core
             {
                 context.CustomerGuid = customerGuid;
                 
-                // Cookie present. Try to load guest customer by it's value.
+                // Cookie present. Try to load guest customer by its value.
                 var customer = await context.Db.Customers
                     //.IncludeShoppingCart()
                     .IncludeCustomerRoles()
                     .Where(c => c.CustomerGuid == customerGuid)
                     .FirstOrDefaultAsync();
 
+                // Don't treat registered customers as guests.
                 if (customer != null && !customer.IsRegistered())
                 {
-                    // Don't treat registered customers as guests.
+                    // Check traffic limit for guests.
+                    await CheckGuestDeniedAsync(context, customer);
+
                     return customer;
                 }
             }
 
             return null;
-        }
-
-        private static Task<Customer> DetectBotForMedia(DetectCustomerContext context)
-        {
-            // Don't overstress the system with guest detection for media files.
-            // If there's no endpoint, it's most likely a media file request.
-            // Bad bots don't accept cookies anyway. If there is no visitor cookie, it's a bot.
-            if (context.CustomerGuid == null && context.HttpContext.GetEndpoint() == null)
-            {
-                return context.CustomerService.GetCustomerBySystemNameAsync(SystemCustomerNames.Bot);
-            }
-
-            return Task.FromResult<Customer>(null);
         }
 
         private static async Task<Customer> DetectByClientIdent(DetectCustomerContext context)
@@ -556,10 +588,44 @@ namespace Smartstore.Core
                 else
                 {
                     customer.DetectedByClientIdent = true;
+
+                    // Check traffic limit for guests.
+                    await CheckGuestDeniedAsync(context, customer);
+
+                    // Try to append visitor cookie to better identify visitor on next (sub)-request
+                    context.CustomerService.AppendVisitorCookie(customer);
                 }
             }
 
             return customer;
+        }
+
+        private static async Task<Customer> DetectCrawlerEndpoint(DetectCustomerContext context)
+        {
+            if (context.Endpoint?.Metadata?.GetMetadata<CrawlerEndpointAttribute>() != null)
+            {
+                // Check traffic limit for bots.
+                await CheckBotDeniedAsync(context);
+                // Access to sitemap.xml, robots.txt etc. is most likely coming from crawlers/bots.
+                return await context.CustomerService.GetCustomerBySystemNameAsync(SystemCustomerNames.Bot);
+            }
+
+            return null;
+        }
+
+        private static async Task<Customer> DetectResourceEndpoint(DetectCustomerContext context)
+        {
+            if (context.HttpContext is HttpContext httpContext)
+            {
+                if (context.Endpoint == null || !httpContext.Request.IsNonAjaxGet())
+                {
+                    // If there's no endpoint, it's most likely a resource request (media, bundle etc.).
+                    // Bad bots don't accept cookies anyway. If there is no visitor cookie, treat like bot.
+                    return await context.CustomerService.GetCustomerBySystemNameAsync(SystemCustomerNames.Bot);
+                }
+            }
+
+            return null;
         }
 
         private static async Task ReleaseIdentLockAsync(DetectCustomerContext context)
@@ -568,6 +634,24 @@ namespace Smartstore.Core
             {
                 await context.LockHandle.ReleaseAsync();
                 context.LockHandle = null;
+            }
+        }
+
+        private static async Task CheckGuestDeniedAsync(DetectCustomerContext context, Customer customer = null)
+        {
+            context.DenyGuest ??= !context.HttpContext.Request.IsSubRequest() && await context.OverloadProtector.DenyGuestAsync(context.HttpContext, customer);
+            if (context.DenyGuest == true)
+            {
+                throw new HttpResponseException(StatusCodes.Status429TooManyRequests, "Too many requests");
+            }
+        }
+
+        private static async Task CheckBotDeniedAsync(DetectCustomerContext context)
+        {
+            context.DenyBot ??= !context.HttpContext.Request.IsSubRequest() && await context.OverloadProtector.DenyBotAsync(context.HttpContext, context.UserAgent);
+            if (context.DenyBot == true)
+            {
+                throw new HttpResponseException(StatusCodes.Status429TooManyRequests, "Too many requests");
             }
         }
 

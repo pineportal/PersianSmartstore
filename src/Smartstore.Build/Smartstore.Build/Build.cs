@@ -9,7 +9,6 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Serilog;
-using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 [ShutdownDotNetAfterServerBuild]
@@ -70,9 +69,9 @@ class Build : NukeBuild
 
             DotNetClean(s => s
                 .SetProject(Solution)
-                .SetVerbosity(DotNetVerbosity.Minimal));
+                .SetVerbosity(DotNetVerbosity.minimal));
 
-            EnsureCleanDirectory(SourceDirectory / "Smartstore.Web/Modules");
+            (SourceDirectory / "Smartstore.Web/Modules").CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
@@ -89,7 +88,7 @@ class Build : NukeBuild
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .SetVerbosity(DotNetVerbosity.Minimal)
+                .SetVerbosity(DotNetVerbosity.minimal)
                 //.SetAssemblyVersion(GitVersion.AssemblySemVer)
                 //.SetFileVersion(GitVersion.AssemblySemFileVer)
                 //.SetInformationalVersion(GitVersion.InformationalVersion)
@@ -104,10 +103,10 @@ class Build : NukeBuild
             var publishName = GetPublishName();
             AbsolutePath outputDir = ArtifactsDirectory / publishName;
 
-            if (outputDir.Exists())
+            if (outputDir.DirectoryExists())
             {
                 Log.Information($"Deleting {publishName}...");
-                EnsureCleanDirectory(outputDir);
+                outputDir.CreateOrCleanDirectory();
             }
 
             Log.Information($"Publishing Smartstore {publishName}...");
@@ -131,18 +130,17 @@ class Build : NukeBuild
             Log.Information($"Zipping {publishName}...");
 
             AbsolutePath rootPath = ArtifactsDirectory / publishName;
-            if (!rootPath.Exists())
+            if (!rootPath.DirectoryExists())
             {
                 throw new Exception($"Path '{publishName}' does not exist. Please build the {publishName} solution before packing.");
             }
 
             AbsolutePath zipPath = ArtifactsDirectory / $"Smartstore.{publishName}.zip";
 
-            CompressionTasks.CompressZip(
-                directory: rootPath,
-                archiveFile: zipPath,
+            rootPath.ZipTo(
+                zipPath,
                 filter: null,
-                compressionLevel: CompressionLevel.Optimal,
+                compressionLevel: CompressionLevel.SmallestSize,
                 fileMode: FileMode.Create);
         });
 

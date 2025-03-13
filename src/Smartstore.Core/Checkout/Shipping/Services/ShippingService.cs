@@ -1,4 +1,5 @@
 ﻿using System.Linq.Dynamic.Core;
+using Smartstore.Caching;
 using Smartstore.Core.Catalog.Attributes;
 using Smartstore.Core.Checkout.Attributes;
 using Smartstore.Core.Checkout.Cart;
@@ -23,6 +24,7 @@ namespace Smartstore.Core.Checkout.Shipping
         private readonly ShippingSettings _shippingSettings;
         private readonly IProviderManager _providerManager;
         private readonly ISettingFactory _settingFactory;
+        private readonly IRequestCache _requestCache;
         private readonly IRoundingHelper _roundingHelper;
         private readonly IStoreContext _storeContext;
         private readonly SmartDbContext _db;
@@ -34,6 +36,7 @@ namespace Smartstore.Core.Checkout.Shipping
             ShippingSettings shippingSettings,
             IProviderManager providerManager,
             ISettingFactory settingFactory,
+            IRequestCache requestCache,
             IRoundingHelper roundingHelper,
             IStoreContext storeContext,
             SmartDbContext db)
@@ -44,6 +47,7 @@ namespace Smartstore.Core.Checkout.Shipping
             _shippingSettings = shippingSettings;
             _providerManager = providerManager;
             _settingFactory = settingFactory;
+            _requestCache = requestCache;
             _roundingHelper = roundingHelper;
             _storeContext = storeContext;
             _db = db;
@@ -72,7 +76,7 @@ namespace Smartstore.Core.Checkout.Shipping
 
                     _settingFactory.SaveSettingsAsync(_shippingSettings).GetAwaiter().GetResult();
 
-                    return new Provider<IShippingRateComputationMethod>[] { fallbackProvider };
+                    return [fallbackProvider];
                 }
 
                 if (DataSettings.DatabaseIsInstalled())
@@ -128,19 +132,24 @@ namespace Smartstore.Core.Checkout.Shipping
         {
             Guard.NotNull(cart);
 
-            var cartWeight = await GetCartWeight(cart.Items, true, includeFreeShippingProducts);
-
-            // Checkout attributes.
-            if (cart.Customer != null)
+            var cacheKey = $"shipping-cart-total-weight:{cart.GetHashCode()}-{includeFreeShippingProducts}";
+            var cartWeight = await _requestCache.GetAsync(cacheKey, async () =>
             {
-                var checkoutAttributes = cart.Customer.GenericAttributes.CheckoutAttributes;
-                if (checkoutAttributes.AttributesMap.Any())
-                {
-                    var attributeValues = await _checkoutAttributeMaterializer.MaterializeCheckoutAttributeValuesAsync(checkoutAttributes);
+                var weight = await GetCartWeight(cart.Items, true, includeFreeShippingProducts);
 
-                    cartWeight += attributeValues.Sum(x => x.WeightAdjustment);
+                // Checkout attributes.
+                if (cart.Customer != null)
+                {
+                    var checkoutAttributes = cart.Customer.GenericAttributes.CheckoutAttributes;
+                    if (checkoutAttributes.AttributesMap.Any())
+                    {
+                        var attributeValues = await _checkoutAttributeMaterializer.MaterializeCheckoutAttributeValuesAsync(checkoutAttributes);
+                        weight += attributeValues.Sum(x => x.WeightAdjustment);
+                    }
                 }
-            }
+
+                return weight;
+            });
 
             return cartWeight;
         }
@@ -225,6 +234,17 @@ namespace Smartstore.Core.Checkout.Shipping
             return result;
         }
 
+        public virtual async Task<Address> GetShippingOriginAddressAsync()
+        {
+            if (_shippingSettings.ShippingOriginAddressId == 0)
+            {
+                return null;
+            }
+
+            return await _requestCache.GetAsync($"shipping-origin-address-{_shippingSettings.ShippingOriginAddressId}", 
+                async () => await _db.Addresses.FindByIdAsync(_shippingSettings.ShippingOriginAddressId, false));
+        }
+
         private async Task<decimal> GetCartWeight(OrganizedShoppingCartItem[] cart, bool multiplyByQuantity, bool includeFreeShippingProducts)
         {
             // INFO: child elements (bundle items) are not taken into account when calculating the weight.
@@ -240,7 +260,7 @@ namespace Smartstore.Core.Checkout.Shipping
             }
             else if (cart.Length == 1)
             {
-                if (IgnoreCartItem(cart[0]))
+                if (IgnoreCartItem(cart[0].Item))
                 {
                     return decimal.Zero;
                 }
@@ -250,11 +270,11 @@ namespace Smartstore.Core.Checkout.Shipping
             else
             {
                 selection = new ProductVariantAttributeSelection(string.Empty);
-                foreach (var item in cart)
+                foreach (var item in cart.Select(x => x.Item))
                 {
                     if (!IgnoreCartItem(item))
                     {
-                        foreach (var attribute in item.Item.AttributeSelection.AttributesMap)
+                        foreach (var attribute in item.AttributeSelection.AttributesMap)
                         {
                             if (!attribute.Value.IsNullOrEmpty())
                             {
@@ -280,17 +300,22 @@ namespace Smartstore.Core.Checkout.Shipping
                 : [];
 
             // INFO: always iterate cart items (not attribute values). Attributes can occur multiple times in cart.
-            foreach (var item in cart)
+            foreach (var item in cart.Select(x => x.Item))
             {
                 if (IgnoreCartItem(item))
                 {
                     continue;
                 }
 
-                var itemWeight = item.Item.Product.Weight;
+                if (item.AttributeSelection.HasAttributes)
+                {
+                    await _productAttributeMaterializer.MergeWithCombinationAsync(item.Product, item.AttributeSelection, null);
+                }
+
+                var itemWeight = item.Product.Weight;
 
                 // Add attributes weight.
-                foreach (var pair in item.Item.AttributeSelection.AttributesMap)
+                foreach (var pair in item.AttributeSelection.AttributesMap)
                 {
                     var integerValues = pair.Value
                         .Select(x => x.ToString())
@@ -320,7 +345,7 @@ namespace Smartstore.Core.Checkout.Shipping
 
                 if (multiplyByQuantity)
                 {
-                    itemWeight *= item.Item.Quantity;
+                    itemWeight *= item.Quantity;
                 }
 
                 cartWeight += itemWeight;
@@ -328,9 +353,9 @@ namespace Smartstore.Core.Checkout.Shipping
 
             return cartWeight;
 
-            bool IgnoreCartItem(OrganizedShoppingCartItem cartItem)
+            bool IgnoreCartItem(ShoppingCartItem cartItem)
             {
-                return !includeFreeShippingProducts && cartItem.Item.Product.IsFreeShipping;
+                return !includeFreeShippingProducts && cartItem.Product.IsFreeShipping;
             }
 
             static string CreateAttributeKey(int productVariantAttributeId, int productVariantAttributeValueId)
