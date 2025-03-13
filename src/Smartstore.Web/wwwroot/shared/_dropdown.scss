@@ -4,38 +4,39 @@
 // ==============================================================
 
 .dropdown-group {
-	position: relative;
+    position: relative;
 
-	> .dropdown-item {
-		position: relative;
-		padding-inline-end: 2rem;
+    > .dropdown-item {
+        position: relative;
+        padding-inline-end: 2rem;
 
-		&:before {
-			// make caret
-			position: absolute;
-			inset-inline-end: $dropdown-item-padding-x / 2;
-			top: 50%;
-			transform: translateY(-40%);
+        &:before {
+            // make caret
+            position: absolute;
+            inset-inline-end: $dropdown-item-padding-x / 2;
+            top: 50%;
+            transform: translateY(-40%);
             color: $gray-500;
-			@include fontawesome("\f054", 10px); // chevron-right
+            @include fontawesome("\f054", 10px); // chevron-right
 
             [dir=rtl] & {
                 // RTL: Swap the icon direction
                 content: '\f053';
             }
-		}
-	}
+        }
+    }
 
-	&:hover > .dropdown-item {
-		color: $dropdown-link-hover-color;
-		background-color: $dropdown-link-hover-bg;
-	}
+    &:hover > .dropdown-item {
+        color: $dropdown-link-hover-color;
+        background-color: $dropdown-link-hover-bg;
+    }
 
-	.dropdown-menu {
+    .dropdown-menu {
         // Is popperized now (04.01.2024)
-		position: absolute;
-		margin-top: 0 !important;
-	}
+        position: absolute;
+        margin-top: 0 !important;
+        inset-inline-start: initial;
+    }
 }
 
 

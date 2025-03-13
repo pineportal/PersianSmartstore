@@ -35,10 +35,6 @@
     // Forms
     // ------------------------------
 
-    fieldset.content-group > legend > span {
-        padding-right: initial;
-        padding-left: 1rem;
-    }
 
     .form-floating > label {
         transform-origin: 100% 0;
@@ -47,7 +43,6 @@
     .form-check .form-check-input {
         float: right;
     }
-
     // Nav collapsible
     // ---
     @include media-breakpoint-down(sm) {
@@ -87,46 +82,11 @@
     // Typo
     // ----
 
-    .heading {
-        &:before {
-            background: radial-gradient(ellipse at right, $body-bg 25%, rgba(#000, 0.25) 100%);
-        }
-
-        .heading-title {
-            padding-right: 0;
-            padding-left: 1rem;
-        }
+    .heading:before 
+    {
+        background: radial-gradient(ellipse at right, $body-bg 25%, rgba(#000, 0.25) 100%);
     }
 
-    .heading-center {
-        .heading-title {
-            padding-right: 0;
-            padding-left: 1rem;
-        }
-    }
-    // Utils
-    // ------------------------------
-
-    .has-count[data-count]:after {
-        padding-left: 0;
-        padding-right: 0.2rem;
-    }
-
-    .list-group {
-        .list-group-item.active {
-            &:before {
-                right: -1px;
-                left: auto;
-            }
-        }
-
-        &.has-icons {
-            .list-group-item-icon {
-                margin-left: 0.75rem;
-                margin-right: initial;
-            }
-        }
-    }
     // Flip all .fa directional icons
     // ------------------------------
 
