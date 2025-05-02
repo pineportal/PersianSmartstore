@@ -25,7 +25,11 @@
     }
 
     var id = Html.IdForModel();
-    var format = picktime ? "L LT" : "L";
+    if (!TryGetMetadata<string>("format", out var format))
+    {
+        format = picktime ? "L LT" : "L";
+    }
+
     var attributes = new AttributeDictionary().Merge(ConvertUtility.ObjectToDictionary(ViewData["htmlAttributes"] ?? new object()));
 }
 

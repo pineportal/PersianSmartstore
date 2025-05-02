@@ -22,6 +22,7 @@ using Smartstore.Core.Checkout.Tax;
 using Smartstore.Core.Common.Configuration;
 using Smartstore.Core.Common.Services;
 using Smartstore.Core.Content.Media;
+using Smartstore.Core.Identity;
 using Smartstore.Core.Localization;
 using Smartstore.Core.Logging;
 using Smartstore.Core.Messaging;
@@ -32,6 +33,7 @@ using Smartstore.Core.Seo;
 using Smartstore.Core.Stores;
 using Smartstore.Engine.Modularity;
 using Smartstore.Utilities.Html;
+using Smartstore.Web.Modelling.Settings;
 using Smartstore.Web.Models.Common;
 using Smartstore.Web.Models.DataGrid;
 using Smartstore.Web.Rendering;
@@ -51,10 +53,12 @@ namespace Smartstore.Admin.Controllers
         private readonly Lazy<IGiftCardService> _giftCardService;
         private readonly IProductAttributeMaterializer _productAttributeMaterializer;
         private readonly IPaymentService _paymentService;
+        private readonly ILocalizedEntityService _localizedEntityService;
         private readonly ITaxService _taxService;
         private readonly IEncryptor _encryptor;
         private readonly ModuleManager _moduleManager;
         private readonly IMessageFactory _messageFactory;
+        private readonly CustomerSettings _customerSettings;
         private readonly CatalogSettings _catalogSettings;
         private readonly TaxSettings _taxSettings;
         private readonly MeasureSettings _measureSettings;
@@ -76,11 +80,13 @@ namespace Smartstore.Admin.Controllers
             Lazy<IGiftCardService> giftCardService,
             IProductAttributeMaterializer productAttributeMaterializer,
             IPaymentService paymentService,
+            ILocalizedEntityService localizedEntityService,
             ICurrencyService currencyService,
             ITaxService taxService,
             IEncryptor encryptor,
             ModuleManager moduleManager,
             IMessageFactory messageFactory,
+            CustomerSettings customerSettings,
             CatalogSettings catalogSettings,
             TaxSettings taxSettings,
             MeasureSettings measureSettings,
@@ -100,10 +106,12 @@ namespace Smartstore.Admin.Controllers
             _giftCardService = giftCardService;
             _productAttributeMaterializer = productAttributeMaterializer;
             _paymentService = paymentService;
+            _localizedEntityService = localizedEntityService;
             _taxService = taxService;
             _encryptor = encryptor;
             _moduleManager = moduleManager;
             _messageFactory = messageFactory;
+            _customerSettings = customerSettings;
             _catalogSettings = catalogSettings;
             _taxSettings = taxSettings;
             _measureSettings = measureSettings;
@@ -1795,6 +1803,82 @@ namespace Smartstore.Admin.Controllers
 
         #endregion
 
+        #region Order settings
+
+        [Permission(Permissions.Configuration.Setting.Read)]
+        [LoadSetting]
+        public async Task<IActionResult> OrderSettings(int storeScope, OrderSettings settings)
+        {
+            var allStores = Services.StoreContext.GetAllStores();
+            var store = storeScope == 0 ? Services.StoreContext.CurrentStore : allStores.FirstOrDefault(x => x.Id == storeScope);
+            var model = await MapperFactory.MapAsync<OrderSettings, OrderSettingsModel>(settings);
+
+            model.PrimaryStoreCurrencyCode = Services.CurrencyService.PrimaryCurrency.CurrencyCode;
+            model.StoreCount = allStores.Count;
+
+            if (settings.GiftCards_Activated_OrderStatusId > 0)
+            {
+                model.GiftCardsActivatedOrderStatusId = settings.GiftCards_Activated_OrderStatusId;
+            }
+
+            if (settings.GiftCards_Deactivated_OrderStatusId > 0)
+            {
+                model.GiftCardsDeactivatedOrderStatusId = settings.GiftCards_Deactivated_OrderStatusId;
+            }
+
+            AddLocales(model.Locales, (locale, languageId) =>
+            {
+                locale.ReturnRequestActions = settings.GetLocalizedSetting(x => x.ReturnRequestActions, languageId, storeScope, false, false);
+                locale.ReturnRequestReasons = settings.GetLocalizedSetting(x => x.ReturnRequestReasons, languageId, storeScope, false, false);
+            });
+
+            model.OrderIdent = _db.DataProvider.GetTableIdent<Order>();
+
+            return View(model);
+        }
+
+        [Permission(Permissions.Configuration.Setting.Update)]
+        [HttpPost, SaveSetting]
+        public async Task<IActionResult> OrderSettings(OrderSettings settings, OrderSettingsModel model, int storeScope)
+        {
+            if (!ModelState.IsValid)
+            {
+                return await OrderSettings(storeScope, settings);
+            }
+
+            ModelState.Clear();
+
+            await MapperFactory.MapAsync(model, settings);
+            settings.GiftCards_Activated_OrderStatusId = Convert.ToInt32(model.GiftCardsActivatedOrderStatusId);
+            settings.GiftCards_Deactivated_OrderStatusId = Convert.ToInt32(model.GiftCardsDeactivatedOrderStatusId);
+
+            foreach (var localized in model.Locales)
+            {
+                await _localizedEntityService.ApplyLocalizedSettingAsync(settings, x => x.ReturnRequestActions, localized.ReturnRequestActions, localized.LanguageId, storeScope);
+                await _localizedEntityService.ApplyLocalizedSettingAsync(settings, x => x.ReturnRequestReasons, localized.ReturnRequestReasons, localized.LanguageId, storeScope);
+            }
+
+            await _db.SaveChangesAsync();
+
+            // Order ident.
+            if (model.OrderIdent.HasValue)
+            {
+                try
+                {
+                    _db.DataProvider.SetTableIdent<Order>(model.OrderIdent.Value);
+                }
+                catch (Exception ex)
+                {
+                    NotifyError(ex.Message);
+                }
+            }
+
+            NotifySuccess(T("Admin.Configuration.Updated"));
+            return RedirectToAction(nameof(OrderSettings));
+        }
+
+        #endregion
+
         #region Utilities
 
         private async Task PrepareOrderOverviewModel(OrderOverviewModel model, Order order)
@@ -1805,8 +1889,7 @@ namespace Smartstore.Admin.Controllers
             model.StoreName = Services.StoreContext.GetStoreById(order.StoreId)?.Name ?? StringExtensions.NotAvailable;
             model.CustomerName = order.BillingAddress?.GetFullName()?.NullEmpty()
                 ?? order.ShippingAddress?.GetFullName()?.NullEmpty()
-                ?? order.Customer.GetFullName().NullEmpty() 
-                ?? order.Customer.GetDisplayName(T).NaIfEmpty();
+                ?? order.Customer.FormatUserName(_customerSettings, T, false);
             model.CustomerEmail = order.BillingAddress?.Email ?? order.Customer?.FindEmail();
             model.CustomerDeleted = order.Customer?.Deleted ?? true;
             model.OrderTotalString = Format(order.OrderTotal);

@@ -157,7 +157,7 @@
                         if (opts.animate) {
                             elem.html(val)
                                 .addClass('data-binding')
-                                .one(Prefixer.event.animationEnd, function (e) {
+                                .one('animationend', function (e) {
                                     elem.removeClass('data-binding');
                                 });
                         }
@@ -236,7 +236,7 @@
                 // iOS Safari freaks out when a YouTube video starts playing while the block is collapsed:
                 // the video disapperars after a while! Other video embeds like Vimeo seem to behave correctly.
                 // So: shit on moreLess in this case.
-                if (Modernizr.touchevents && /iPhone|iPad/.test(navigator.userAgent)) {
+                if (window.touchable && /iPhone|iPad/.test(navigator.userAgent)) {
                     var containsToxicEmbed = el.find("iframe[src*='youtube.com']").length > 0;
                     if (containsToxicEmbed) {
                         el.removeClass('more-less');

@@ -1,19 +1,23 @@
 ﻿using Smartstore.Core.Content.Menus;
 using Smartstore.Core.Data;
+using Smartstore.Core.Stores;
 
 namespace Smartstore.Core.AI.Prompting
 {
     public partial class AIMessageBuilder
     {
         private readonly SmartDbContext _db;
+        private readonly IStoreContext _storeContext;
         private readonly ILinkResolver _linkResolver;
 
         public AIMessageBuilder(
             SmartDbContext db,
+            IStoreContext storeContext,
             ILinkResolver linkResolver,
             AIMessageResources promptResources)
         {
             _db = db;
+            _storeContext = storeContext;
             _linkResolver = linkResolver;
             Resources = promptResources;
         }
@@ -40,10 +44,9 @@ namespace Smartstore.Core.AI.Prompting
         /// </summary>
         /// <param name="model">The <see cref="IAITextModel"/> model</param>
         /// <param name="chat">The <see cref="AIChat" /> containing a <see cref="List{AIChatMessage}"/> to which the generated messages will be added.</param>
-        /// <param name="isRichText">A value indicating whether to build a HTML containing rich text prompt.</param>
-        public virtual Task<AIChat> AddTextMessagesAsync(IAITextModel model, AIChat chat, bool isRichText)
+        public virtual Task<AIChat> AddTextMessagesAsync(IAITextModel model, AIChat chat)
         {
-            return isRichText
+            return chat.Topic == AIChatTopic.RichText
                 ? AddRichTextMessagesAsync(model, chat)
                 : AddSimpleTextMessagesAsync(model, chat);
         }
@@ -73,8 +76,6 @@ namespace Smartstore.Core.AI.Prompting
                 {
                     chat.User(Resources.ParagraphWordCount(model.ParagraphWordCount)).SetMetaData(model.ParagraphWordCount);
                 }
-
-                chat.System(Resources.WriteCompleteParagraphs());
             }
 
             if (model.ParagraphHeadingTag.HasValue())
@@ -109,7 +110,7 @@ namespace Smartstore.Core.AI.Prompting
 
             if (model.KeywordsToAvoid.HasValue())
             {
-                chat.User(Resources.KeywordsToAvoid(model.KeywordsToAvoid)).SetMetaData(model.MakeKeywordsBold);
+                chat.User(Resources.KeywordsToAvoid(model.KeywordsToAvoid)).SetMetaData(model.KeywordsToAvoid);
             }
 
             return chat;
@@ -227,18 +228,15 @@ namespace Smartstore.Core.AI.Prompting
         /// <param name="chat">The <see cref="AIChat" /> containing a <see cref="List{AIChatMessage}"/> to which the generated message will be added.</param>
         public virtual AIChat AddMetaTitleMessages(string forPromptPart, AIChat chat)
         {
-            // TODO: (mh) (ai) Längsten Shopnamen ermitteln und Zeichenlänge in die Anweisung einfügen.
-            // INFO: Der Name des Shops wird von Smartstore automatisch dem Title zugefügt. 
-            // TODO: (mh) (ai) Ausfürlich mit allen Entitäten testen.
-            // Das Original mit dem auf der Produktdetailseite getestet wurde war:
-            //forPromptPart += " Verwende dabei nicht den Namen des Shops. Der wird von der Webseite automatisch zugefügt. Reserviere dafür 5 Worte.";
+            int longestStoreNameLength = _storeContext.GetCachedStores().Stores.Values.Max(s => s.Name.Length);
+            var operativeRoleInstructions = new List<string>
+            {
+                Resources.ReserveSpaceForShopName(longestStoreNameLength + 1)
+            };
 
             // INFO: No need for word limit in SEO properties. Because we advised the KI to be a SEO expert, it already knows the correct limits.
-            return AddRoleMessage(AIRole.SEOExpert, chat)
-                .User(forPromptPart)
-                .System(Resources.ReserveSpaceForShopName())
-                // INFO: Smartstore automatically adds inverted commas to the title.
-                .System(Resources.DontUseQuotes());
+            return AddRoleMessage(AIRole.SEOExpert, chat, operativeRoleInstructions)
+                .UserTopic(forPromptPart);
         }
 
         /// <summary>
@@ -250,8 +248,7 @@ namespace Smartstore.Core.AI.Prompting
         {
             // INFO: No need for word limit in SEO properties. Because we advised the AI to be a SEO expert, it already knows the correct limits.
             return AddRoleMessage(AIRole.SEOExpert, chat)
-                .User(forPromptPart)
-                .System(Resources.DontUseQuotes());
+                .UserTopic(forPromptPart);
         }
 
         /// <summary>
@@ -263,22 +260,114 @@ namespace Smartstore.Core.AI.Prompting
         {
             // INFO: No need for word limit in SEO properties. Because we advised the KI to be a SEO expert, it already knows the correct limits.
             return AddRoleMessage(AIRole.SEOExpert, chat)
-                .User(forPromptPart)
+                .UserTopic(forPromptPart)
                 .System(Resources.SeparateListWithComma());
         }
 
         #region Helper methods
 
         /// <summary>
-        /// Adds a <see cref="AIChatMessage"/> containing an instruction for the AI to act in a specific role.
+        /// Adds a <see cref="AIChatMessage"/> containing instructions for the AI to act in a specific role.
         /// </summary>
         /// <param name="role">The <see cref="AIRole"/></param>
         /// <param name="chat">The <see cref="AIChat" /> containing a <see cref="List{AIChatMessage}"/> to which the generated message will be added.</param>
+        /// <param name="roleInstructions">
+        /// A list of explicit behavioral instructions that define how the AI should interpret and act within its system role. 
+        /// These rules form the operational core of the system prompt and guide the model's response style, structure, and constraints. 
+        /// Each entry in the list should represent a clear, standalone directive.
+        /// </param>
         /// <param name="entityName">The name of the entity. Currently only used to fill a placeholder for the productname when the role is <see cref="AIRole.ProductExpert"/></param>
         /// <returns>AI Instruction: e.g.: Be a SEO expert.</returns>
-        public virtual AIChat AddRoleMessage(AIRole role, AIChat chat, string entityName = "")
+        public virtual AIChat AddRoleMessage(AIRole role, AIChat chat, List<string> roleInstructions = null, string entityName = "")
         {
-            return chat.System(Resources.Role(role, entityName));
+            var message = Resources.Role(role, entityName);
+            roleInstructions ??= [];
+
+            // Lets add some generic operational instructions for explizit roles.
+            var resRoot = AIMessageResources.PromptResourceRoot;
+
+            // INFO: ProductExpert will be used exclusivly by RichTextDialog of Product.LongDescription
+            if (role == AIRole.ProductExpert)
+            {
+                // Add an empty line between the first role and the second role to make clear that these are two different dimensions of the role.
+                message += "\n\n" + Resources.Role(AIRole.HtmlEditor);
+
+                roleInstructions.AddRange(
+                    Resources.GetResource(resRoot + "Product.NoAssumptions"),
+                    Resources.DontCreateProductTitle()
+                );
+            }
+            else if (role == AIRole.ImageAnalyzer)
+            {
+                message += "\n\n" + Resources.Role(AIRole.SEOExpert);
+
+                var imageAnalyzerResRoot = resRoot + "ImageAnalyzer.";
+
+                // INFO: This instruction must be built differently to accomplish sub lists
+                var objectDefinition = Resources.GetResource(imageAnalyzerResRoot + "ObjectDefinition");
+                objectDefinition += "\n  - " + Resources.GetResource(imageAnalyzerResRoot + "ObjectDefinition.Title");
+                objectDefinition += "\n  - " + Resources.GetResource(imageAnalyzerResRoot + "ObjectDefinition.Alt");
+                objectDefinition += "\n  - " + Resources.GetResource(imageAnalyzerResRoot + "ObjectDefinition.Tags");
+
+                roleInstructions.AddRange(
+                    objectDefinition,
+                    Resources.GetResource(imageAnalyzerResRoot + "NoContent"),
+                    Resources.GetResource(resRoot+ "CreateJson"),
+                    Resources.DontUseMarkdown()
+                );
+            }
+            else if (role == AIRole.Translator)
+            {
+                var translatorResRoot = resRoot + "Translator.";
+
+                roleInstructions.AddRange(
+                    Resources.GetResource(translatorResRoot + "TranslateTextContentOnly"),
+                    Resources.GetResource(translatorResRoot + "PreserveHtmlStructure"),
+                    Resources.GetResource(translatorResRoot + "IgnoreTechnicalAttributes"),
+                    Resources.GetResource(translatorResRoot + "KeepHtmlEntitiesIntact"),
+                    Resources.GetResource(translatorResRoot + "TranslateWithContext"),
+                    Resources.GetResource(translatorResRoot + "TranslateDescriptiveAttributes"),
+                    Resources.GetResource(translatorResRoot + "PreserveToneAndStyle"),
+                    // TODO: (mh) (ai) Dangerous!!! Senseless token eater.
+                    Resources.GetResource(translatorResRoot + "SkipAlreadyTranslated"),
+                    Resources.DontUseQuotes(),
+                    Resources.GetResource(translatorResRoot + "NoMetaComments"),
+                    Resources.DontUseMarkdown()
+                );
+            }
+
+            if (chat.Topic == AIChatTopic.RichText)
+            {
+                roleInstructions.AddRange(
+                    Resources.WriteCompleteParagraphs(), 
+                    Resources.UseImagePlaceholders(),
+                    Resources.CreatHtmlWithoutMarkdown(),
+                    Resources.NoFriendlyIntroductions(),
+                    Resources.StartWithDivTag()
+                );
+            }
+            else if (chat.Topic == AIChatTopic.Suggestion)
+            {
+                var suggestionResRoot = resRoot + "Suggestions.";
+
+                roleInstructions.AddRange(
+                    Resources.GetResource(suggestionResRoot + "Separation"),
+                    Resources.GetResource(suggestionResRoot + "NoNumbering"),
+                    Resources.GetResource(suggestionResRoot + "NoRepitions"),
+                    Resources.DontUseMarkdown(),
+                    Resources.DontUseQuotes(),
+                    Resources.DontUseLineBreaks()
+                );
+            }
+
+            if (roleInstructions != null && roleInstructions.Count > 0)
+            {
+                // INFO: Structuring role instructions as a clear list helps the AI parse and follow them more reliably, reducing the risk of missed rules.
+                message += "\n\n" + Resources.GetResource(resRoot + "Role.Rules") + "\n\n- ";
+                message += string.Join("\n- ", roleInstructions);
+            }
+
+            return chat.System(message);
         }
 
         /// <summary>
@@ -287,17 +376,11 @@ namespace Smartstore.Core.AI.Prompting
         /// <param name="chat">The <see cref="AIChat" /> containing a <see cref="List{AIChatMessage}"/> to which the generated messages will be added.</param>
         public virtual AIChat AddSuggestionMessages(IAISuggestionModel model, AIChat chat)
         {
-            chat.System(Resources.GetResource("Smartstore.AI.Prompts.Suggestions.GeneralPrompt"));
-
             if (model.CharLimit > 0)
             {
                 chat.System(Resources.GetResource("Smartstore.AI.Prompts.Suggestions.CharLimit", model.CharLimit))
                     .SetMetaData(model.CharLimit);
             }
-
-            chat.System(Resources.DontUseMarkdown())
-                .System(Resources.DontUseQuotes())
-                .System(Resources.DontUseLineBreaks());
 
             return chat;
         }
@@ -315,13 +398,15 @@ namespace Smartstore.Core.AI.Prompting
 
             if (model.CharLimit > 0 && model.WordLimit > 0)
             {
-                chat.User(Resources.CharWordLimit(model.CharLimit, model.WordLimit.Value))
+                // INFO: WordLimit should be a user message and CharLimit a system message.
+                // But as this case is probably very rare, we just use the system message for both.
+                chat.System(Resources.CharWordLimit(model.CharLimit, model.WordLimit.Value))
                     .SetMetaData(model.CharLimit)
                     .SetMetaData(model.WordLimit);
             }
             else if (model.CharLimit > 0)
             {
-                chat.User(Resources.CharLimit(model.CharLimit))
+                chat.System(Resources.CharLimit(model.CharLimit))
                     .SetMetaData(model.CharLimit);
             }
             else if (model.WordLimit > 0)
@@ -342,11 +427,13 @@ namespace Smartstore.Core.AI.Prompting
         /// <param name="chat">The <see cref="AIChat" /> containing a <see cref="List{AIChatMessage}"/> to which the generated messages will be added.</param>
         protected virtual async Task<AIChat> AddRichTextMessagesAsync(IAITextModel model, AIChat chat)
         {
-            AddHtmlMessages(chat);
+            // INFO: For products we use a slightly different version
+            if (model.TargetProperty != "FullDescription" && model.Type != "Product")
+            {
+                chat.System(Resources.DontCreateTitle(model.EntityName));
+            }
+
             await AddLanguageMessagesAsync(model, chat);
-
-            chat.System(Resources.DontCreateTitle(model.EntityName));
-
             AddTextLayoutMessages(model, chat);
             AddKeywordsMessages(model, chat);
             AddImageContainerMessages(model, chat, model.IncludeIntro, model.IncludeConclusion);
@@ -392,17 +479,6 @@ namespace Smartstore.Core.AI.Prompting
             }
 
             return chat;
-        }
-
-        /// <summary>
-        /// Adds messages of type <see cref="AIChatMessage"/> to a <see cref="AIChat" /> for HTML creation.
-        /// </summary>
-        protected virtual AIChat AddHtmlMessages(AIChat chat)
-        {
-            return chat
-                .System(Resources.CreateHtml())
-                .System(Resources.JustHtml())
-                .System(Resources.StartWithDivTag());
         }
 
         #endregion

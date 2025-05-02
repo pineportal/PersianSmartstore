@@ -1,25 +1,40 @@
 # Release Notes
 
-## Smartstore 6.0.1
+## Smartstore 6.1.0
 
 ### New Features
 
 - Updated to **.NET 9**
   - Increased overall performance
-- #1258 Added **DeepSeek** AI provider.
+- **AI**
+  - #1258 Added **DeepSeek** AI provider.
+  - Added **Gemini** AI provider.
+  - Added *Continue Writing* for HTML editor
+  - #1259 Implemented setting for keywords to generally avoid.
+- Added settings to add alternate links for localized page versions to the XML Sitemap and HTML Header.
+- Import: Added an option to update all products that match a key field value.
 - #1142 Implemented configurable Content-Security-Policy (CSP) HTTP header.
 - #990 Added a weight field to attribute combinations.
 - Added a setting to control whether shipping costs are displayed on the cart page as long as the customer has not yet entered a shipping address.
 - Shipping by total: Added a setting to let the shipping origin determine the shipping cost if the shipping address is missing.
 - #501 New category option for ignoring a category in menus.
-- #1259 AI: Implemented setting for keywords to generally avoid.
 - #248 Catalog search: Added an option for featured product sort order.
 - #1281 Added shipping setting: Apply free shipping over 'X' only for specific shipping countries.
-- MegaSearch:
+- **MegaSearch:**
   - ~20% performance increase
   - Added setting to indicate whether to split compound words.
   - Added setting to include/exclude the meta keywords of products in the search index.
   - #1275 Import of product keywords (import file column `MegaSearch.Product.Keywords`).
+- **Summernote HTML editor:**
+  - Save HTML content without reloading the page
+  - Emoji support
+    - Multi-language labels, tags and shortcodes
+    - Search for labels and CLDR shortcodes
+    - Inline GitHub-style emoji picker
+  - Zoom support ranging from 25% to 500%
+  - Displays the tag path of the current selection
+  - Sticky toolbar when the editor is focused
+  - Added a feature to allow AI to continue writing
 - #1225 Added settings to sort search filters of facet groups: category, brand, and delivery time.
 - Added PDF setting for the maximum number of objects to print.
 - Fixed number of attachments always being 0 in queued email list.
@@ -31,7 +46,8 @@
 - #1010 Allowed the admin to align a blog or news image within its element box.
 - #1261 Blogs and news: Added a setting indicating whether to allow users to leave comments if they have never purchased before.
 - #1263 Allowed the admin to mark an order as *paid* even if the payment was previously voided.
-- PayPal:
+- **PayPal:**
+	- Added support for GooglePay.
 	- Added option for admin to decide how to handle orders declined by payment.
 	- Removed Giropay provider.
 	- Added Trustly provider.
@@ -42,32 +58,51 @@
 - #1266 Refreshed browser URL when a product variant changes so that it points to the current variant.
 - #1226 Enhanced `ResetPasswordAsync` to detect and repair accidental guest role assignments.
 - #214 Added backend menu entry for each Rule Builder scope.
-- Added new bot detection patterns to `useragent.yml`.
 - Updated `dbip-country-lite.mmdb`.
 - Logging: Added client UserAgent string to log entries.
 - Improved processing of recurring payments.
-- ChatGPT:
-  - #1262 Added OpenAI `o1` and `03-mini` to supported models.
+- **AI:** 
+	- More robust prompting
+	- Added new bot detection patterns to `useragent.yml`.
+- **ChatGPT:**
+  - #1262 Updated OpenAI supported models to the latest and most relevant: `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-3.5-turbo`
   - Added a setting for the maximum number of completion tokens.
+  - Added support for gpt-image-1 and removed dall-e-2
+- #1236 PayPal: Added setting to disable address application in case the store's address validation settings need to be respected.
+- #1274 Recycle Bin: Possibility to filter products with/without assignment to orders.
+- Store cookie consent information in database and display on customer edit page.
+- Display the dimension and weight of a product without ending 0 decimal places.
+- #1163 GMC: Updated feed to use new certification attribute for EU energy efficiency classes.
+- #1282 More neutral message text when the password is reset.
+- Fixed missing HTML meta item for price on product detail page when price is 0.00.
 
 ### Bugfixes
 
 - Fixed occasional incorrect shipping costs applied based on shipping address.
 - #1229 Fixed HTTP client timeout when sending an *order placed* message with PDF attached.
 - #1235 Fixed products remaining published when stock equals the minimum stock quantity, and low stock activity is set to *unpublish*.
+- #1234 Deleting a customer who has made forum posts throws a `SqlException`.
 - Fixed incorrect discounted price on product detail page due to missing cache invalidation.
-- Fixed checkout shipping link not opening the shipping information dialog.
+- **Checkout**:
+  - Fixed checkout shipping link not opening the shipping information dialog.
+  - Fixed missing shipping-address-differs checkbox for guests who have not yet entered an address.
+  - Fixed checkout bug when address country is null.
+- Fixed an issue where tier prices could be missing when exporting the associated product data.
 - Logging: Excluded file source from DB logging.
 - Fixed missing base path resolution for bootstrap-icons.svg.
 - Ignored surrogate characters (emojis) when building URL slugs.
 - #1269 Redirected entity slugs to the default language slugs after disabling a language.
-- ChatGPT:
+- **Page Builder:** 
+  - Child stories were not rendered in edit mode.
+- **ChatGPT:**
   - Fixed `NullReferenceException` and deprecated model error when creating image metadata.
   - #1241 Added setting for token limit (`max_completion_tokens`), processing responses in chunks.
   - Fixed unintentional truncation of suggestions.
-- AI: Respected text direction of selected language in rich text dialog.
-- Summernote HTML editor:
-  - Toolbar is now sticky when editor has focus.
+- **AI:** 
+	- Respect text direction of the selected language in the rich-text dialog.
+	- Fixed a bug where the prompt preview incorrectly generated a new text request when opened via the Summernote AI button.
+	- Manufacturer prompt had messages for rich text generation when SEO properties were about to be created.
+- **Summernote HTML editor:**
   - Fixed unwanted line break after caret position due to outdated beautify library.
   - Fixed various focus handling and popover issues.
   - Fixed various code synchronization issues.
@@ -78,7 +113,7 @@
 - Fixed duplicate key violation (`IX_UrlRecord_Slug`) when copying a product with identical localized names.
 - Prevented negative total tax amounts resulting from negative payment method fees.
 - #1238 Fixed `NullReferenceException` when manually triggering recurring payments.
-- GPSR:
+- **GPSR:**
   - Fixed `NullReferenceException` when multiple product rules assigned to text blocks.
   - Fixed rare cases of missing manufacturer information display.
 - Prevented `InvalidOperationException` due to entity already attached when processing order completion notifications.
@@ -87,9 +122,9 @@
 - Fixed `InvalidOperationException` related to missing Content-Type header in GDPR consent filter.
 - Fixed cookie migration issue.
 - #1233 Forum: Displayed posts marked as deleted.
-- PayPal:
+- **PayPal:**
 	- Fixed order status updates on webhook notifications with direct capture settings.
-	- Fixed credit card payment issue with activated QuickCheckout.
+	- Fixed credit card payment issue with activated Quick-Checkout.
 	- Fixed PayPal buttons displaying incorrectly after quantity control usage on shopping cart.
 - Excluded inactive items during shopping cart validation for recurring/non-recurring products.
 - Excluded Web API endpoint URLs from applying `TrailingSlashRule` (avoids HTTP 401 error).
@@ -102,10 +137,7 @@
 - Billiger & Guenstiger: Fixed cookie information displaying when tracking disabled.
 - MegaMenu: Fixed initialization issue with input controls.
 - Fixed rare cases of the log list not loading.
-- Fixed checkout bug when address country is null.
 - Fixed bug preventing shopping cart migration after external login.
-
-
 
 
 ## Smartstore 6.0.0

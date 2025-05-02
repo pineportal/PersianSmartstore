@@ -424,13 +424,18 @@ $img-margin-right: 10px;
 }
 
 
-// Placeholder
+// Placeholder & Selection
 // ------------------------------------------
 
 .note-placeholder {
     position: absolute;
     display: none;
     color: var(--gray-600);
+}
+
+.note-selection {
+    background-color: var(--primary-bg-subtle);
+    color: var(--body-color);
 }
 
 
@@ -696,10 +701,8 @@ $img-margin-right: 10px;
     }
 
     .scrollable-menu {
-        --scrollbar-track-color: #fff;
-        --scrollbar-track-hover-color: #fff;
         height: auto;
-        max-height: 340px;
+        max-height: 400px;
         min-width: 280px;
         overflow-x: hidden;
     }
@@ -744,6 +747,15 @@ $img-margin-right: 10px;
         --btn-active-bg: var(--primary-bg-subtle) !important;
         --btn-active-border-color: var(--note-btn-active-border-color) !important;
     }
+}
+
+.note-duotone-primary,
+.note-duotone-secondary {
+    color: var(--primary);
+}
+
+.note-duotone-secondary {
+    opacity: 0.4;
 }
 
 .btn-group-split {
@@ -851,6 +863,76 @@ $img-margin-right: 10px;
         outline-offset: -1px;
         padding: 2px;
         border-radius: 3px;
+    }
+}
+
+
+// Emojis
+// ------------------------------------------
+
+.note-emoji-popover {
+    --note-emoji-size: 40px;
+    --note-emoji-gap: 1px;
+    --note-emoji-cols: 10;
+    --note-emoji-padding: 0.5rem;
+
+    > .popover-content-emoji {
+        display: flex;
+        flex-flow: column;
+        overflow: hidden;
+        height: 348px;
+        width: calc(var(--note-emoji-size) * var(--note-emoji-cols) + (var(--note-emoji-gap) * var(--note-emoji-cols)) + (var(--note-emoji-padding) * 2) + 13px);
+    }
+}
+
+.note-emoji-searchbox {
+    padding-inline: var(--note-emoji-padding);
+}
+
+.note-emoji-list {
+    gap: var(--note-emoji-gap);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    margin: var(--note-emoji-padding);
+    margin-inline-end: 0;
+    padding-inline-end: var(--note-emoji-padding);
+}
+
+.nav.nav-emoji {
+    justify-content: space-around;
+    flex-wrap: nowrap;
+
+    > .nav-link {
+        &:not(.active) {
+            filter: grayscale(1);
+            opacity: 0.65;
+        }
+    }
+}
+
+.btn.note-emoji {
+    font-size: 24px;
+    font-weight: var(--font-weight-normal);
+    border-width: 0;
+    overflow-x: hidden;
+    --btn-active-shadow: none;
+    --btn-height: var(--note-emoji-size);
+}
+
+.note-emoji-skin {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--c, #ffdc5d);
+    transition: transform 0.12s;
+
+    &.active {
+        outline: 2px solid rgba(0,0,0, 0.6);
+        transition: none;
+    }
+
+    &:hover:not(.active) {
+        transform: scale(1.35);
     }
 }
 

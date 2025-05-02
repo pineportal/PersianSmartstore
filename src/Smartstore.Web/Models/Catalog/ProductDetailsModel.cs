@@ -80,8 +80,8 @@ namespace Smartstore.Web.Models.Catalog
 
         public string SeName { get; set; }
         public string ProductUrl { get; set; }
-        public string CanonicalUrl { get; set; }
         public string UpdateUrl { get; set; }
+        public string CanonicalUrl { get; set; }
         public ProductType ProductType { get; set; }
         public bool VisibleIndividually { get; set; }
 

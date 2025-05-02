@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using Smartstore.Core.AI.Prompting;
+using Smartstore.Core.Content.Media;
 using Smartstore.Engine.Modularity;
 
 namespace Smartstore.Core.AI
@@ -62,6 +63,13 @@ namespace Smartstore.Core.AI
             CancellationToken cancelToken = default);
 
         /// <summary>
+        /// Gets the image creation or editing options.
+        /// </summary>
+        /// <param name="modelName">The name of the AI model.</param>
+        /// <returns></returns>
+        AIImageOptions GetImageOptions(string modelName);
+
+        /// <summary>
         /// Get the URL(s) of AI generated image(s).
         /// </summary>
         /// <param name="model">The AI image model.</param>
@@ -74,11 +82,11 @@ namespace Smartstore.Core.AI
         /// <summary>
         /// Analyzes an image based on an AI prompt.
         /// </summary>
-        /// <param name="url">URL of the image to analyze.</param>
+        /// <param name="file">Image to analyze.</param>
         /// <param name="chat">The AI chat.</param>
         /// <param name="cancelToken">The cancellation token.</param>
         /// <returns>The analysis result.</returns>
         /// <exception cref="AIException">Thrown when an error occurs during image analysis.</exception>
-        Task<string> AnalyzeImageAsync(string url, AIChat chat, CancellationToken cancelToken = default);
+        Task<string> AnalyzeImageAsync(MediaFile file, AIChat chat, CancellationToken cancelToken = default);
     }
 }

@@ -93,8 +93,8 @@ namespace Smartstore.Core.Widgets
         /// </summary>
         public static void AddMetaRobots(this IPageAssetBuilder builder, string name = "robots", string content = "noindex")
         {
-            Guard.NotEmpty(name, nameof(name));
-            Guard.NotEmpty(content, nameof(content));
+            Guard.NotEmpty(name);
+            Guard.NotEmpty(content);
 
             builder.AddHtmlContent(
                 "head",

@@ -36,8 +36,10 @@
                 return;
             }
 
-            let isRichText = tool.data('is-rich-text');
             const cmd = el.data('command');
+            const isSummernoteInlineEditing = el.closest(".html-editor-root").length !== 0;
+            
+            let isRichText = tool.data('is-rich-text') || (cmd === "create-new" && isSummernoteInlineEditing);
 
             let params = {
                 entityName: tool.data('entity-name'),
@@ -52,8 +54,13 @@
                 displayWordLimit: tool.data('display-word-limit'),
                 displayStyle: tool.data('display-style'),
                 displayTone: tool.data('display-tone'),
+                selectedElementType: tool.data('range-is-on')
             };
-            
+
+            if (tool.closest(".note-dropdown-menu").length) {
+                params.origin = "summernote";
+            }
+
             if (!isRichText) {
                 Object.assign(params, {
                     // TODO: (mh) (ai) Is this still needed? Originally it was used to supress optimization options in the dialog (e.g. For SEO-Meta-Properties).
@@ -69,6 +76,11 @@
                     displayImageOptions: tool.data('display-image-options'),
                     displayLayoutOptions: tool.data('display-layout-options')
                 });
+
+                var richTextUrl = tool.data("rich-text-modal-url");
+                if (richTextUrl) {
+                    tool.data('modal-url', richTextUrl);
+                }
             }
 
             openDialog(tool, params, isRichText);

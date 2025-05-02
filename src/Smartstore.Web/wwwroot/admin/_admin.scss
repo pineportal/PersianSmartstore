@@ -677,6 +677,10 @@ legend {
         right: var(--content-padding-x);
     }
 
+    body.note-fullscreen-body & {
+        z-index: $zindex-tooltip + 10;
+    }
+
     &.busy {
         opacity: 1;
     }
@@ -743,6 +747,8 @@ legend {
 }
 
 .adminContent {
+    --adminRow-margin-y: 0.8rem;
+
     display: block;
     width: 100%;
     margin-right: auto;
@@ -770,8 +776,7 @@ legend {
 
     div.adminRow {
         // div type rows do margin collapse, fix it.
-        margin-top: 0.8rem;
-        margin-bottom: 0.8rem;
+        margin-block: var(--adminRow-margin-y, 0.8rem);
     }
 
     .adminTitle,

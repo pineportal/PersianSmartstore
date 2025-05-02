@@ -1,4 +1,5 @@
 ﻿using Smartstore.Core.AI.Prompting;
+using Smartstore.Core.Content.Media;
 using Smartstore.Core.Localization;
 using Smartstore.Utilities;
 
@@ -64,10 +65,13 @@ namespace Smartstore.Core.AI
             CancellationToken cancelToken = default)
             => throw new NotImplementedException();
 
+        public virtual AIImageOptions GetImageOptions(string modelName)
+            => new();
+
         public virtual Task<string[]> CreateImagesAsync(IAIImageModel prompt, int numImages = 1, CancellationToken cancelToken = default)
             => throw new NotSupportedException();
 
-        public virtual Task<string> AnalyzeImageAsync(string url, AIChat chat, CancellationToken cancelToken = default)
+        public virtual Task<string> AnalyzeImageAsync(MediaFile file, AIChat chat, CancellationToken cancelToken = default)
             => throw new NotSupportedException();
 
         #region Utilities
@@ -159,13 +163,6 @@ namespace Smartstore.Core.AI
                             var parts = content.Split(AnswerSeparator);
                             for (var j = 0; j < parts.Length; ++j)
                             {
-                                var part = parts[j];
-                                if (!string.IsNullOrEmpty(part))
-                                {
-                                    answers[answerIndex].Append(part);
-                                    yield return new AIChatCompletionResponse(part, answerIndex, response.FinishReason);
-                                }
-
                                 if (j > 0)
                                 {
                                     if ((answerIndex + 1) < answers.Length)
@@ -180,6 +177,14 @@ namespace Smartstore.Core.AI
                                         break;
                                     }
                                 }
+
+                                var part = parts[j];
+                                if (!string.IsNullOrEmpty(part))
+                                {
+                                    // Emit the part.
+                                    answers[answerIndex].Append(part);
+                                    yield return new AIChatCompletionResponse(part, answerIndex, response.FinishReason);
+                                }
                             }
 
                             if (isComplete)
@@ -187,6 +192,7 @@ namespace Smartstore.Core.AI
                         }
                         else
                         {
+                            answers[answerIndex].Append(content);
                             yield return response;
                         }
                     }
@@ -219,6 +225,7 @@ namespace Smartstore.Core.AI
                 }
             }
 
+            // Add the entire answer to the chat.
             chat.AddMessages(answers);
         }
 

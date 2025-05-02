@@ -53,12 +53,6 @@
         Square
     }
 
-    public enum ImageCreationStyle
-    {
-        Vivid,
-        Natural
-    }
-
     /// <summary>
     /// Represents the AI role.
     /// </summary>
@@ -71,6 +65,8 @@
         Blogger,
         Journalist,
         SalesPerson,
-        ProductExpert
+        ProductExpert,
+        HtmlEditor,
+        ImageAnalyzer
     }
 }

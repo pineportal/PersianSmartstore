@@ -12,6 +12,7 @@ using Smartstore.Core.Seo;
 using Smartstore.Core.Stores;
 using Smartstore.Data;
 using Smartstore.Data.Hooks;
+using Smartstore.Linq;
 using Smartstore.Net.Http;
 
 namespace Smartstore.Core.DataExchange.Import
@@ -311,53 +312,10 @@ namespace Smartstore.Core.DataExchange.Import
 
             foreach (var row in batch)
             {
-                Product product = null;
                 var id = row.GetDataValue<int>(nameof(Product.Id));
+                var products = await GetProductsByKeyFields(id, row, context);
 
-                foreach (var keyName in context.KeyFieldNames)
-                {
-                    if (keyName == nameof(Product.Id))
-                    {
-                        product = await _db.Products.FindByIdAsync(id, true, context.CancelToken);
-                    }
-                    else
-                    {
-                        var keyValue = row.GetDataValue<string>(keyName).TrimSafe();
-                        if (keyValue.HasValue())
-                        {
-                            switch (keyName)
-                            {
-                                case nameof(Product.Sku):
-                                    product = await _db.Products
-                                        .ApplySkuFilter(keyValue)
-                                        .FirstOrDefaultAsync(context.CancelToken);
-                                    break;
-                                case nameof(Product.Gtin):
-                                    product = await _db.Products
-                                        .ApplyGtinFilter(keyValue)
-                                        .FirstOrDefaultAsync(context.CancelToken);
-                                    break;
-                                case nameof(Product.ManufacturerPartNumber):
-                                    product = await _db.Products
-                                        .ApplyMpnFilter(keyValue)
-                                        .FirstOrDefaultAsync(context.CancelToken);
-                                    break;
-                                case nameof(Product.Name):
-                                    product = await _db.Products
-                                        .AsQueryable()
-                                        .Where(x => x.Name == keyValue)
-                                        .OrderBy(x => x.Id)
-                                        .FirstOrDefaultAsync(context.CancelToken);
-                                    break;
-                            }
-                        }
-                    }
-
-                    if (product != null)
-                        break;
-                }
-
-                if (product == null)
+                if (products.IsNullOrEmpty())
                 {
                     if (context.UpdateOnly)
                     {
@@ -373,153 +331,172 @@ namespace Smartstore.Core.DataExchange.Import
                         continue;
                     }
 
-                    product = new Product();
+                    products ??= [];
+                    products.Add(new Product());
                 }
 
                 var name = row.GetDataValue<string>(nameof(Product.Name));
+                //$"- id:{id} count:{products.Count} products:{string.Join(',', products.Select(x => x.Id))}".Dump();
 
-                row.Initialize(product, name ?? product.Name);
+                // Iterate in reverse order to let ImportRow.Entity finally point to the first product (see below targetProductIds code).
+                for (var i = products.Count - 1; i >= 0; i--)
+                {
+                    var product = products[i];
 
-                if (!row.IsNew && hasNameColumn && !product.Name.EqualsNoCase(name))
-                {
-                    // Perf: use this later for SeName updates.
-                    row.NameChanged = true;
-                }
+                    if (i == 0)
+                    {
+                        row.Initialize(product, name ?? product.Name);
 
-                row.SetProperty(context.Result, (x) => x.ProductTypeId, (int)ProductType.SimpleProduct);
-                row.SetProperty(context.Result, (x) => x.Name);
-                row.SetProperty(context.Result, (x) => x.ShortDescription);
-                row.SetProperty(context.Result, (x) => x.FullDescription);
-                row.SetProperty(context.Result, (x) => x.AdminComment);
-                row.SetProperty(context.Result, (x) => x.ShowOnHomePage);
-                row.SetProperty(context.Result, (x) => x.HomePageDisplayOrder);
-                row.SetProperty(context.Result, (x) => x.MetaKeywords);
-                row.SetProperty(context.Result, (x) => x.MetaDescription);
-                row.SetProperty(context.Result, (x) => x.MetaTitle);
-                row.SetProperty(context.Result, (x) => x.AllowCustomerReviews, true);
-                row.SetProperty(context.Result, (x) => x.ApprovedRatingSum);
-                row.SetProperty(context.Result, (x) => x.NotApprovedRatingSum);
-                row.SetProperty(context.Result, (x) => x.ApprovedTotalReviews);
-                row.SetProperty(context.Result, (x) => x.NotApprovedTotalReviews);
-                row.SetProperty(context.Result, (x) => x.Published, true);
-                row.SetProperty(context.Result, (x) => x.Sku);
-                row.SetProperty(context.Result, (x) => x.ManufacturerPartNumber);
-                row.SetProperty(context.Result, (x) => x.Gtin);
-                row.SetProperty(context.Result, (x) => x.IsGiftCard);
-                row.SetProperty(context.Result, (x) => x.GiftCardTypeId);
-                row.SetProperty(context.Result, (x) => x.RequireOtherProducts);
-                row.SetProperty(context.Result, (x) => x.RequiredProductIds);   // TODO: global scope
-                row.SetProperty(context.Result, (x) => x.AutomaticallyAddRequiredProducts);
-                row.SetProperty(context.Result, (x) => x.IsDownload);
-                //row.SetProperty(context.Result, (x) => x.DownloadId);
-                //row.SetProperty(context.Result, (x) => x.UnlimitedDownloads, true);
-                row.SetProperty(context.Result, (x) => x.MaxNumberOfDownloads, 10);
-                row.SetProperty(context.Result, (x) => x.DownloadExpirationDays);
-                row.SetProperty(context.Result, (x) => x.DownloadActivationTypeId, 1);
-                row.SetProperty(context.Result, (x) => x.HasSampleDownload);
-                row.SetProperty(context.Result, (x) => x.SampleDownloadId, null, ImportUtility.ZeroToNull);    // TODO: global scope
-                row.SetProperty(context.Result, (x) => x.HasUserAgreement);
-                row.SetProperty(context.Result, (x) => x.UserAgreementText);
-                row.SetProperty(context.Result, (x) => x.IsRecurring);
-                row.SetProperty(context.Result, (x) => x.RecurringCycleLength, 100);
-                row.SetProperty(context.Result, (x) => x.RecurringCyclePeriodId);
-                row.SetProperty(context.Result, (x) => x.RecurringTotalCycles, 10);
-                row.SetProperty(context.Result, (x) => x.IsShippingEnabled, true);
-                row.SetProperty(context.Result, (x) => x.IsFreeShipping);
-                row.SetProperty(context.Result, (x) => x.AdditionalShippingCharge);
-                row.SetProperty(context.Result, (x) => x.IsEsd);
-                row.SetProperty(context.Result, (x) => x.IsTaxExempt);
-                row.SetProperty(context.Result, (x) => x.TaxCategoryId, 1);    // TODO: global scope
-                row.SetProperty(context.Result, (x) => x.ManageInventoryMethodId);
-                row.SetProperty(context.Result, (x) => x.StockQuantity, 10000);
-                row.SetProperty(context.Result, (x) => x.DisplayStockAvailability);
-                row.SetProperty(context.Result, (x) => x.DisplayStockQuantity);
-                row.SetProperty(context.Result, (x) => x.MinStockQuantity);
-                row.SetProperty(context.Result, (x) => x.LowStockActivityId);
-                row.SetProperty(context.Result, (x) => x.NotifyAdminForQuantityBelow, 1);
-                row.SetProperty(context.Result, (x) => x.BackorderModeId);
-                row.SetProperty(context.Result, (x) => x.AllowBackInStockSubscriptions);
-                row.SetProperty(context.Result, (x) => x.OrderMinimumQuantity, 1);
-                row.SetProperty(context.Result, (x) => x.OrderMaximumQuantity, 50);
-                row.SetProperty(context.Result, (x) => x.QuantityStep, 1);
-                row.SetProperty(context.Result, (x) => x.HideQuantityControl);
-                row.SetProperty(context.Result, (x) => x.AllowedQuantities);
-                row.SetProperty(context.Result, (x) => x.DisableBuyButton);
-                row.SetProperty(context.Result, (x) => x.DisableWishlistButton);
-                row.SetProperty(context.Result, (x) => x.AvailableForPreOrder);
-                row.SetProperty(context.Result, (x) => x.CallForPrice);
-                row.SetProperty(context.Result, (x) => x.Price);
-                row.SetProperty(context.Result, (x) => x.ComparePrice);
-                row.SetProperty(context.Result, (x) => x.ComparePriceLabelId);
-                row.SetProperty(context.Result, (x) => x.ProductCost);
-                row.SetProperty(context.Result, (x) => x.SpecialPrice);
-                row.SetProperty(context.Result, (x) => x.SpecialPriceStartDateTimeUtc);
-                row.SetProperty(context.Result, (x) => x.SpecialPriceEndDateTimeUtc);
-                row.SetProperty(context.Result, (x) => x.CustomerEntersPrice);
-                row.SetProperty(context.Result, (x) => x.MinimumCustomerEnteredPrice);
-                row.SetProperty(context.Result, (x) => x.MaximumCustomerEnteredPrice, 1000);
-                // HasTierPrices: see ProcessTierPricesAsync.
-                // LowestAttributeCombinationPrice: see ProcessAttributeCombinationsAsync.
-                row.SetProperty(context.Result, (x) => x.Weight);
-                row.SetProperty(context.Result, (x) => x.Length);
-                row.SetProperty(context.Result, (x) => x.Width);
-                row.SetProperty(context.Result, (x) => x.Height);
-                row.SetProperty(context.Result, (x) => x.DisplayOrder);
-                row.SetProperty(context.Result, (x) => x.DeliveryTimeId);      // TODO: global scope
-                row.SetProperty(context.Result, (x) => x.QuantityUnitId);      // TODO: global scope
-                row.SetProperty(context.Result, (x) => x.BasePriceEnabled);
-                row.SetProperty(context.Result, (x) => x.BasePriceMeasureUnit);
-                row.SetProperty(context.Result, (x) => x.BasePriceAmount);
-                row.SetProperty(context.Result, (x) => x.BasePriceBaseAmount);
-                row.SetProperty(context.Result, (x) => x.BundleTitleText);
-                row.SetProperty(context.Result, (x) => x.BundlePerItemShipping);
-                row.SetProperty(context.Result, (x) => x.BundlePerItemPricing);
-                row.SetProperty(context.Result, (x) => x.BundlePerItemShoppingCart);
-                row.SetProperty(context.Result, (x) => x.AvailableStartDateTimeUtc);
-                row.SetProperty(context.Result, (x) => x.AvailableEndDateTimeUtc);
-                // With new entities, "LimitedToStores" is an implicit field, meaning
-                // it has to be set to true by code if it's absent but "StoreIds" exists.
-                row.SetProperty(context.Result, (x) => x.LimitedToStores, !row.GetDataValue<List<int>>("StoreIds").IsNullOrEmpty());
-                row.SetProperty(context.Result, (x) => x.CustomsTariffNumber);
-                row.SetProperty(context.Result, (x) => x.CountryOfOriginId);
-                row.SetProperty(context.Result, (x) => x.AttributeCombinationRequired);
+                        if (!row.IsNew && hasNameColumn && !product.Name.EqualsNoCase(name))
+                        {
+                            // Perf: use this later for SeName updates.
+                            row.NameChanged = true;
+                        }
 
-                if (row.TryGetDataValue(nameof(Product.QuantityControlType), out int qct))
-                {
-                    product.QuantityControlType = (QuantityControlType)qct;
-                }
-                if (row.TryGetDataValue(nameof(Product.AttributeChoiceBehaviour), out int attributeChoiceBehaviour))
-                {
-                    product.AttributeChoiceBehaviour = (AttributeChoiceBehaviour)attributeChoiceBehaviour;
-                }
-                if (row.TryGetDataValue(nameof(Product.Visibility), out int visibilityValue))
-                {
-                    product.Visibility = (ProductVisibility)visibilityValue;
-                }
-                if (row.TryGetDataValue(nameof(Product.Condition), out int conditionValue))
-                {
-                    product.Condition = (ProductCondition)conditionValue;
-                }
+                        row.SetProperty(context.Result, (x) => x.Name);
+                    }
+                    else
+                    {
+                        // "UpdateAllKeyFieldMatches" is enabled.
+                        // INFO: We do not update the name of the 2nd, 3rd, etc. matched product in this case.
+                        // Then their slug would have to be updated as well, and this requires too much restructuring due to the dependency on ImportRow.
+                        row.Initialize(product, product.Name);
+                    }
 
-                if (row.TryGetDataValue("ProductTemplateViewPath", out string tvp, row.IsTransient))
-                {
-                    product.ProductTemplateId = tvp.HasValue() && cargo.TemplateViewPaths.ContainsKey(tvp)
-                        ? cargo.TemplateViewPaths[tvp]
-                        : defaultTemplateId;
-                }
+                    row.SetProperty(context.Result, (x) => x.ProductTypeId, (int)ProductType.SimpleProduct);
+                    row.SetProperty(context.Result, (x) => x.ShortDescription);
+                    row.SetProperty(context.Result, (x) => x.FullDescription);
+                    row.SetProperty(context.Result, (x) => x.AdminComment);
+                    row.SetProperty(context.Result, (x) => x.ShowOnHomePage);
+                    row.SetProperty(context.Result, (x) => x.HomePageDisplayOrder);
+                    row.SetProperty(context.Result, (x) => x.MetaKeywords);
+                    row.SetProperty(context.Result, (x) => x.MetaDescription);
+                    row.SetProperty(context.Result, (x) => x.MetaTitle);
+                    row.SetProperty(context.Result, (x) => x.AllowCustomerReviews, true);
+                    row.SetProperty(context.Result, (x) => x.ApprovedRatingSum);
+                    row.SetProperty(context.Result, (x) => x.NotApprovedRatingSum);
+                    row.SetProperty(context.Result, (x) => x.ApprovedTotalReviews);
+                    row.SetProperty(context.Result, (x) => x.NotApprovedTotalReviews);
+                    row.SetProperty(context.Result, (x) => x.Published, true);
+                    row.SetProperty(context.Result, (x) => x.Sku);
+                    row.SetProperty(context.Result, (x) => x.ManufacturerPartNumber);
+                    row.SetProperty(context.Result, (x) => x.Gtin);
+                    row.SetProperty(context.Result, (x) => x.IsGiftCard);
+                    row.SetProperty(context.Result, (x) => x.GiftCardTypeId);
+                    row.SetProperty(context.Result, (x) => x.RequireOtherProducts);
+                    row.SetProperty(context.Result, (x) => x.RequiredProductIds);   // TODO: global scope
+                    row.SetProperty(context.Result, (x) => x.AutomaticallyAddRequiredProducts);
+                    row.SetProperty(context.Result, (x) => x.IsDownload);
+                    //row.SetProperty(context.Result, (x) => x.DownloadId);
+                    //row.SetProperty(context.Result, (x) => x.UnlimitedDownloads, true);
+                    row.SetProperty(context.Result, (x) => x.MaxNumberOfDownloads, 10);
+                    row.SetProperty(context.Result, (x) => x.DownloadExpirationDays);
+                    row.SetProperty(context.Result, (x) => x.DownloadActivationTypeId, 1);
+                    row.SetProperty(context.Result, (x) => x.HasSampleDownload);
+                    row.SetProperty(context.Result, (x) => x.SampleDownloadId, null, ImportUtility.ZeroToNull);    // TODO: global scope
+                    row.SetProperty(context.Result, (x) => x.HasUserAgreement);
+                    row.SetProperty(context.Result, (x) => x.UserAgreementText);
+                    row.SetProperty(context.Result, (x) => x.IsRecurring);
+                    row.SetProperty(context.Result, (x) => x.RecurringCycleLength, 100);
+                    row.SetProperty(context.Result, (x) => x.RecurringCyclePeriodId);
+                    row.SetProperty(context.Result, (x) => x.RecurringTotalCycles, 10);
+                    row.SetProperty(context.Result, (x) => x.IsShippingEnabled, true);
+                    row.SetProperty(context.Result, (x) => x.IsFreeShipping);
+                    row.SetProperty(context.Result, (x) => x.AdditionalShippingCharge);
+                    row.SetProperty(context.Result, (x) => x.IsEsd);
+                    row.SetProperty(context.Result, (x) => x.IsTaxExempt);
+                    row.SetProperty(context.Result, (x) => x.TaxCategoryId, 1);    // TODO: global scope
+                    row.SetProperty(context.Result, (x) => x.ManageInventoryMethodId);
+                    row.SetProperty(context.Result, (x) => x.StockQuantity, 10000);
+                    row.SetProperty(context.Result, (x) => x.DisplayStockAvailability);
+                    row.SetProperty(context.Result, (x) => x.DisplayStockQuantity);
+                    row.SetProperty(context.Result, (x) => x.MinStockQuantity);
+                    row.SetProperty(context.Result, (x) => x.LowStockActivityId);
+                    row.SetProperty(context.Result, (x) => x.NotifyAdminForQuantityBelow, 1);
+                    row.SetProperty(context.Result, (x) => x.BackorderModeId);
+                    row.SetProperty(context.Result, (x) => x.AllowBackInStockSubscriptions);
+                    row.SetProperty(context.Result, (x) => x.OrderMinimumQuantity, 1);
+                    row.SetProperty(context.Result, (x) => x.OrderMaximumQuantity, 50);
+                    row.SetProperty(context.Result, (x) => x.QuantityStep, 1);
+                    row.SetProperty(context.Result, (x) => x.HideQuantityControl);
+                    row.SetProperty(context.Result, (x) => x.AllowedQuantities);
+                    row.SetProperty(context.Result, (x) => x.DisableBuyButton);
+                    row.SetProperty(context.Result, (x) => x.DisableWishlistButton);
+                    row.SetProperty(context.Result, (x) => x.AvailableForPreOrder);
+                    row.SetProperty(context.Result, (x) => x.CallForPrice);
+                    row.SetProperty(context.Result, (x) => x.Price);
+                    row.SetProperty(context.Result, (x) => x.ComparePrice);
+                    row.SetProperty(context.Result, (x) => x.ComparePriceLabelId);
+                    row.SetProperty(context.Result, (x) => x.ProductCost);
+                    row.SetProperty(context.Result, (x) => x.SpecialPrice);
+                    row.SetProperty(context.Result, (x) => x.SpecialPriceStartDateTimeUtc);
+                    row.SetProperty(context.Result, (x) => x.SpecialPriceEndDateTimeUtc);
+                    row.SetProperty(context.Result, (x) => x.CustomerEntersPrice);
+                    row.SetProperty(context.Result, (x) => x.MinimumCustomerEnteredPrice);
+                    row.SetProperty(context.Result, (x) => x.MaximumCustomerEnteredPrice, 1000);
+                    // HasTierPrices: see ProcessTierPricesAsync.
+                    // LowestAttributeCombinationPrice: see ProcessAttributeCombinationsAsync.
+                    row.SetProperty(context.Result, (x) => x.Weight);
+                    row.SetProperty(context.Result, (x) => x.Length);
+                    row.SetProperty(context.Result, (x) => x.Width);
+                    row.SetProperty(context.Result, (x) => x.Height);
+                    row.SetProperty(context.Result, (x) => x.DisplayOrder);
+                    row.SetProperty(context.Result, (x) => x.DeliveryTimeId);      // TODO: global scope
+                    row.SetProperty(context.Result, (x) => x.QuantityUnitId);      // TODO: global scope
+                    row.SetProperty(context.Result, (x) => x.BasePriceEnabled);
+                    row.SetProperty(context.Result, (x) => x.BasePriceMeasureUnit);
+                    row.SetProperty(context.Result, (x) => x.BasePriceAmount);
+                    row.SetProperty(context.Result, (x) => x.BasePriceBaseAmount);
+                    row.SetProperty(context.Result, (x) => x.BundleTitleText);
+                    row.SetProperty(context.Result, (x) => x.BundlePerItemShipping);
+                    row.SetProperty(context.Result, (x) => x.BundlePerItemPricing);
+                    row.SetProperty(context.Result, (x) => x.BundlePerItemShoppingCart);
+                    row.SetProperty(context.Result, (x) => x.AvailableStartDateTimeUtc);
+                    row.SetProperty(context.Result, (x) => x.AvailableEndDateTimeUtc);
+                    // With new entities, "LimitedToStores" is an implicit field, meaning
+                    // it has to be set to true by code if it's absent but "StoreIds" exists.
+                    row.SetProperty(context.Result, (x) => x.LimitedToStores, !row.GetDataValue<List<int>>("StoreIds").IsNullOrEmpty());
+                    row.SetProperty(context.Result, (x) => x.CustomsTariffNumber);
+                    row.SetProperty(context.Result, (x) => x.CountryOfOriginId);
+                    row.SetProperty(context.Result, (x) => x.AttributeCombinationRequired);
 
-                if (row.TryGetDataValue(nameof(Product.ParentGroupedProductId), out int parentId) && parentId != 0 && id != 0)
-                {
-                    parentProductIds[id] = parentId;
-                }
+                    if (row.TryGetDataValue(nameof(Product.QuantityControlType), out int qct))
+                    {
+                        product.QuantityControlType = (QuantityControlType)qct;
+                    }
+                    if (row.TryGetDataValue(nameof(Product.AttributeChoiceBehaviour), out int attributeChoiceBehaviour))
+                    {
+                        product.AttributeChoiceBehaviour = (AttributeChoiceBehaviour)attributeChoiceBehaviour;
+                    }
+                    if (row.TryGetDataValue(nameof(Product.Visibility), out int visibilityValue))
+                    {
+                        product.Visibility = (ProductVisibility)visibilityValue;
+                    }
+                    if (row.TryGetDataValue(nameof(Product.Condition), out int conditionValue))
+                    {
+                        product.Condition = (ProductCondition)conditionValue;
+                    }
 
-                if (row.IsTransient)
-                {
-                    _db.Products.Add(product);
-                }
-                else
-                {
-                    product.UpdatedOnUtc = DateTime.UtcNow;
+                    if (row.TryGetDataValue("ProductTemplateViewPath", out string tvp, row.IsTransient))
+                    {
+                        product.ProductTemplateId = tvp.HasValue() && cargo.TemplateViewPaths.ContainsKey(tvp)
+                            ? cargo.TemplateViewPaths[tvp]
+                            : defaultTemplateId;
+                    }
+
+                    if (row.TryGetDataValue(nameof(Product.ParentGroupedProductId), out int parentId) && parentId != 0 && id != 0)
+                    {
+                        parentProductIds[id] = parentId;
+                    }
+
+                    if (row.IsTransient)
+                    {
+                        _db.Products.Add(product);
+                    }
+                    else
+                    {
+                        product.UpdatedOnUtc = DateTime.UtcNow;
+                    }
                 }
             }
 
@@ -529,7 +506,6 @@ namespace Smartstore.Core.DataExchange.Import
             // Get new product ids.
             // Required to assign associated products to their parent products.
             var targetProductIds = context.GetCustomProperty<Dictionary<int, int>>(TargetProductIdsKey);
-
             foreach (var row in batch.Where(x => x.Entity != null))
             {
                 var id = row.GetDataValue<int>(nameof(Product.Id));
@@ -540,6 +516,74 @@ namespace Smartstore.Core.DataExchange.Import
             }
 
             return num;
+        }
+
+        private async Task<List<Product>> GetProductsByKeyFields(int id, ImportRow<Product> row, ImportExecuteContext ctx)
+        {
+            var predicates = new List<Expression<Func<Product, bool>>>(ctx.KeyFieldNames.Length);
+
+            foreach (var keyName in ctx.KeyFieldNames)
+            {
+                if (keyName == nameof(Product.Id))
+                {
+                    predicates.Add(x => x.Id == id);
+                }
+                else
+                {
+                    var keyValue = row.GetDataValue<string>(keyName).TrimSafe();
+                    if (keyValue.HasValue())
+                    {
+                        switch (keyName)
+                        {
+                            case nameof(Product.Sku):
+                                predicates.Add(x => x.Sku == keyValue);
+                                break;
+                            case nameof(Product.Gtin):
+                                predicates.Add(x => x.Gtin == keyValue);
+                                break;
+                            case nameof(Product.ManufacturerPartNumber):
+                                predicates.Add(x => x.ManufacturerPartNumber == keyValue);
+                                break;
+                            case nameof(Product.Name):
+                                predicates.Add(x => x.Name == keyValue);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            if (predicates.Count == 0)
+            {
+                return null;
+            }
+
+            var predicate = PredicateBuilder.New(predicates.First());
+            for (var i = 1; i < predicates.Count; i++)
+            {
+                predicate = PredicateBuilder.Or(predicate, predicates[i]);
+            }
+
+            var query = _db.Products.Where(predicate);
+
+            if (ctx.ExtraData.UpdateAllKeyFieldMatches)
+            {
+                // Specify distinct before order, otherwise order is lost.
+                query = query.Distinct();
+            }
+
+            query = query
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Id);
+
+            if (ctx.ExtraData.UpdateAllKeyFieldMatches)
+            {
+                return await query.ToListAsync(ctx.CancelToken);
+            }
+            else
+            {
+                var product = await query.FirstOrDefaultAsync(ctx.CancelToken);
+                return product != null ? [product] : null;
+            }
         }
 
         protected virtual async Task<int> ProcessProductCategoriesAsync(
@@ -695,13 +739,13 @@ namespace Smartstore.Core.DataExchange.Import
 
                     if (!tagsPerProduct.TryGetValue(product.Id, out var existingTags))
                     {
-                        existingTags = new List<ProductTag>();
+                        existingTags = [];
                     }
 
-                    if (!sourceTags.Any())
+                    if (sourceTags.Count == 0)
                     {
                         // Remove all tags.
-                        if (existingTags.Any())
+                        if (existingTags.Count != 0)
                         {
                             await _db.LoadCollectionAsync(product, x => x.ProductTags, cancelToken: context.CancelToken);
                             product.ProductTags.Clear();
@@ -714,7 +758,7 @@ namespace Smartstore.Core.DataExchange.Import
                             .Where(x => !sourceTags.Keys.Any(y => y.EqualsNoCase(x.Name)))
                             .ToList();
 
-                        if (tagsToRemove.Any())
+                        if (tagsToRemove.Count != 0)
                         {
                             await _db.LoadCollectionAsync(product, x => x.ProductTags, cancelToken: context.CancelToken);
                             tagsToRemove.Each(x => product.ProductTags.Remove(x));

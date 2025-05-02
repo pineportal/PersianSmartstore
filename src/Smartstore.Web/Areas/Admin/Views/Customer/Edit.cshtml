@@ -54,7 +54,7 @@
 
             <button sm-if="!Model.Deleted" type="button" id="delete-customer" class="btn btn-danger">
                 <i class="far fa-trash-can"></i>
-                <span>@T("Admin.Common.Delete")</span>
+                <span>@T("Admin.Customers.DeleteCustomer")</span>
             </button>
 
             <zone name="admin_button_toolbar_after" />
@@ -69,4 +69,9 @@
 @if (Model.Id != 0)
 {
     <partial name="_ChangePasswordPopup" model="new CustomerModel.ChangePasswordModel { Id = Model.Id }" />
+
+    if (Model.CookieConsent != null)
+    {
+        <partial name="_CookieConsentPopup" model="Model.CookieConsent" />
+    }
 }

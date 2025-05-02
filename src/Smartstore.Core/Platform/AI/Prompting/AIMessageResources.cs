@@ -9,6 +9,8 @@ namespace Smartstore.Core.AI.Prompting
     /// </summary>
     public partial class AIMessageResources(ILocalizationService localizationService)
     {
+        public static string PromptResourceRoot => "Smartstore.AI.Prompts.";
+
         private readonly ILocalizationService _localizationService = localizationService;
 
         /// <summary>
@@ -24,11 +26,127 @@ namespace Smartstore.Core.AI.Prompting
         /// Prevents the AI from generating markdown.
         /// </summary>
         /// <returns>
-        /// AI instruction: Do not use markdown formatting.
+        /// AI instruction: Do not use Markdown formatting, no backticks (```) and no indented code sections.
         /// </returns>
         public virtual string DontUseMarkdown()
             => P("DontUseMarkdown");
 
+        /// <summary>
+        /// Prevents the AI from generating markdown.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Only return pure HTML code - do not use Markdown formatting, no backticks (```) and no indented code sections.
+        /// </returns>
+        public virtual string CreatHtmlWithoutMarkdown()
+            => $"{CreateHtml()} - {DontUseMarkdown()}";
+
+        /// <summary>
+        /// Necessary for the AI to create the generated text as HTML.
+        /// </summary>
+        /// <param name="appendPeriod">Indicates whether a period should be added at the end of the sentence.</param>
+        /// <returns>
+        /// AI instruction: Only return pure HTML code(.)
+        /// </returns>
+        public virtual string CreateHtml(bool appendPeriod = false)
+            => P("CreateHtml") + (appendPeriod ? "." : "");
+        
+        /// <summary>
+        /// Instructs the AI to skip any introduction.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Don't start your answer with meta-comments or introductions like: 'Gladly, here's your HTML'.
+        /// </returns>
+        public virtual string NoFriendlyIntroductions()
+            => P("NoFriendlyIntroductions");
+
+        /// <summary>
+        /// Informs the AI about the current caret position
+        /// </summary>
+        /// <returns>
+        /// AI instruction: The placeholder [CARETPOS] marks the position where your new text should appear.
+        /// </returns>
+        public virtual string CaretPos()
+            => P("CaretPos");
+
+        /// <summary>
+        /// Instructs where to continue text when caret position is missing.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: If the placeholder [CARETPOS] is not included in the HTML, insert the new text at the end of the document.
+        /// </returns>
+        public virtual string MissingCaretPosHandling()
+            => P("MissingCaretPosHandling");
+
+        /// <summary>
+        /// Operational rule to generate only valid HTML.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: The generated output must be completely valid HTML that fits seamlessly into the existing HTML content.
+        /// </returns>
+        public virtual string ValidHtmlOutput()
+            => P("ValidHtmlOutput");
+
+        /// <summary>
+        /// Operational rule to remove placeholder for caret position.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Remove the placeholder [CARETPOS] completely. It must NEVER be included in the response - neither visibly nor as a control character.
+        /// </returns>
+        public virtual string RemoveCaretPosPlaceholder()
+            => P("RemoveCaretPosPlaceholder");
+
+        /// <summary>
+        /// Instruction to return the complete parent tag of the current caret position for block-level elements.
+        /// </summary>
+        /// <returns>
+        /// ALWAYS return the complete enclosing block-level parent element in which the new text was inserted or changed.
+        /// ONLY return this one element - no other content before or after it.
+        /// </returns>
+        public virtual string ReturnCompleteParentTag()
+            => $"{P("ReturnCompleteParentTag")} {P("ReturnInstructionReinforcer")}";
+
+        /// <summary>
+        /// Instruction to return the complete parent tag of the current caret position for tables.
+        /// </summary>
+        /// <returns>
+        /// ALWAYS return the complete enclosing <c>&lt;table&gt;</c> tag in which the new text was inserted or changed.
+        /// ONLY return this one element - no other content before or after it.
+        /// </returns>
+        public virtual string ReturnCompleteTable()
+            => $"{P("ReturnCompleteTable")} {P("ReturnInstructionReinforcer")}";
+
+        /// <summary>
+        /// Instruction to return the complete parent tag of the current caret position for lists.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: ALWAYS return the complete tag of the list (<c>&lt;ul&gt;</c>, <c>&lt;ol&gt;</c> or <c>&lt;menu&gt;</c>) 
+        /// in which the new text was inserted or changed.
+        /// ONLY return this one element - no other content before or after it.
+        /// </returns>
+        public virtual string ReturnCompleteList()
+            => $"{P("ReturnCompleteList")} {P("ReturnInstructionReinforcer")}";
+
+        /// <summary>
+        /// Instruction to return the complete parent tag of the current caret position for definition lists.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: ALWAYS return the complete enclosing <c>&lt;dl&gt;</c> tag in which the new text was inserted or changed.
+        /// ONLY return this one element - no other content before or after it.
+        /// </returns>
+        public virtual string ReturnCompleteDefinitionList()
+            => $"{P("ReturnCompleteDefinitionList")} {P("ReturnInstructionReinforcer")}";
+        
+        /// <summary>
+        /// Instruction to highlight any text that is added.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Any text deviation from the transmitted original text must be enclosed with the mark tag. 
+        /// When you create a new answer, take into account the text you added previously.
+        /// Enclose ANY text you have added within this chat history with the mark tag.
+        /// </returns>
+        public virtual string PreservePreviousHighlightTags()
+            => P("PreservePreviousHighlightTags");
+        
         /// <summary>
         /// Prevents the AI from generating line breaks.
         /// </summary>
@@ -55,6 +173,65 @@ namespace Smartstore.Core.AI.Prompting
         /// </returns>
         public virtual string ProcessHtmlElementsIndividually()
             => P("ProcessHtmlElementsIndividually");
+
+        /// <summary>
+        /// Instruction to use last span of submitted HTML structure for continue writing.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Use last span for continue writing.
+        /// </returns>
+        public virtual string PreserveOriginalText()
+            => P("PreserveOriginalText");
+
+        /// <summary>
+        /// Instruction to return the generated text only.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Only return the text you have written in your answer.
+        /// </returns>
+        public virtual string ReturnNewTextOnly()
+            => P("ReturnNewTextOnly");
+
+        /// <summary>
+        /// Instruction to add the new text for continue writing to the last span tag.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Be sure to append the new mark-up to the last span tag. Ignore any concerns, e.g. whether it is valid HTML.
+        /// </returns>
+        public virtual string AppendToLastSpan()
+            => P("AppendToLastSpan");
+
+        /// <summary>
+        /// Instruction to use last span of submitted HTML structure for continue writing.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Replace the placeholder [CARETPOS] with your continued text. Leave the rest of the text unchanged.
+        /// If the placeholder is in a block-level element, only add text to complete this paragraph.
+        /// If the [CARETPOS] placeholder is not found, continue at the end of the text.
+        /// </returns>
+        public virtual string ContinueAtPlaceholder()
+            => P("ContinueAtPlaceholder");
+
+        /// <summary>
+        /// Instruction to use selected tabel as HTML generation context.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: If the user requests a table extension, use [CARETPOS] exclusively to localize the table.
+        /// Expand the table logically without continuing directly at the caret position - unless the user explicitly requests that the current cell be edited.
+        /// </returns>
+        public virtual string ContinueTable()
+            => P("ContinueTable");
+
+        /// <summary>
+        /// Instruction to wrap the new text with a mark tag.
+        /// </summary>
+        /// <returns>
+        /// AI instruction: Any text that you generate or add must be enclosed in a real HTML <c>&lt;mark&gt;</c> tag. 
+        /// Example: <c>&lt;mark&gt;additional sentence&lt;/mark&gt;</c> or <c>&lt;li&gt;&lt;mark&gt;additional list item&lt;/mark&gt;&lt;/li&gt;</c>. 
+        /// The word 'mark' must never appear as visible text content.
+        /// </returns>
+        public virtual string WrapNewContentWithHighlightTag()
+            => P("WrapNewContentWithHighlightTag");
 
         /// <summary>
         /// Instructs the AI to write text that does not exceed a defined number of words.
@@ -102,26 +279,6 @@ namespace Smartstore.Core.AI.Prompting
             => P("LanguageStyle", style);
 
         /// <summary>
-        /// Necessary for the AI to create the generated text as HTML.
-        /// </summary>
-        /// <returns>
-        /// AI instruction: Create HTML text.
-        /// </returns>
-        public virtual string CreateHtml()
-            => P("CreateHtml");
-
-        /// <summary>
-        /// No introductions or explanations please.
-        /// </summary>
-        /// <returns>
-        /// AI instruction: Just return the HTML you have created so that it can be integrated directly into a website. 
-        /// Don't give explanations about what you have created or introductions like: 'Gladly, here is your HTML'. 
-        /// Do not include the generated HTML in any delimiters like: '```html' 
-        /// </returns>
-        public virtual string JustHtml()
-            => P("JustHtml");
-
-        /// <summary>
         /// Necessary so that the AI does not create an entire HTML document.
         /// </summary>
         /// <returns>AI instruction: Start with a div tag.</returns>
@@ -131,11 +288,29 @@ namespace Smartstore.Core.AI.Prompting
         /// <summary>
         /// The title is rendered by the respective entity itself on the page.
         /// </summary>
+        /// <returns>AI instruction: Do not create a heading that contains the product name.</returns>
+        public virtual string DontCreateProductTitle()
+            => P("DontCreateProductTitle");
+
+        /// <summary>
+        /// The title is rendered by the respective entity itself on the page.
+        /// </summary>
         /// <param name="entityName">The name of the entity.</param>
         /// <returns>AI instruction: Do not create the title: '<paramref name="entityName"/>'.</returns>
         public virtual string DontCreateTitle(string entityName)
             => P("DontCreateTitle", entityName);
 
+        /// <summary>
+        /// Instruction to use a specific placeholder for image requests.
+        /// </summary>
+        /// <returns>
+        /// If an image is to be inserted, use a <c>&lt;div class=“mb-3”&gt;</c> with an <c>&lt;i&gt;</c> tag 
+        /// containing the classes 'far fa-xl fa-file-image ai-preview-file' as a placeholder.
+        /// The title attribute must correspond to the associated section heading.
+        /// </returns>
+        public virtual string UseImagePlaceholders()
+            => P("UseImagePlaceholders");
+        
         /// <summary>
         /// Instruction to write in a specific language.
         /// </summary>
@@ -154,9 +329,13 @@ namespace Smartstore.Core.AI.Prompting
         /// <summary>
         /// Instruction to reserve space for the name of the website.
         /// </summary>
-        /// <returns>AI instruction: Do not use the name of the website as this will be added later. Reserve 5 words for this..</returns>
-        public virtual string ReserveSpaceForShopName()
-            => P("ReserveSpaceForShopName");
+        /// <param name="longestStoreNameLenth">The length of the logest store name.</param>
+        /// <returns>
+        ///     When creating text for title tags, do not use the name of the website, as this will be added later - 
+        ///     Reserve <paramref name="longestStoreNameLenth"/> characters for this.
+        /// </returns>
+        public virtual string ReserveSpaceForShopName(int longestStoreNameLenth)
+            => P("ReserveSpaceForShopName", longestStoreNameLenth.ToString());
 
         #region HTML Structure instructions
 
@@ -181,8 +360,10 @@ namespace Smartstore.Core.AI.Prompting
         /// <param name="paragraphCount">The count of paragraphs.</param>
         /// <returns>AI instruction: The text should be divided into <paramref name="paragraphCount"/> paragraphs, which are enclosed with p tags.</returns>
         public virtual string ParagraphCount(int paragraphCount)
-            => P("ParagraphCount", paragraphCount);
-
+        {
+            return paragraphCount > 1 ? P("ParagraphCount", paragraphCount) : P("OneParagraph");
+        }
+        
         /// <summary>
         /// Defines the number of words for each paragraph.
         /// </summary>
@@ -358,7 +539,7 @@ namespace Smartstore.Core.AI.Prompting
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string P(string keyPart, params object[] args)
-            => GetResource("Smartstore.AI.Prompts." + keyPart, args);
+            => GetResource(PromptResourceRoot + keyPart, args);
 
         #endregion
     }

@@ -261,6 +261,7 @@ bots:
   - match: Googlebot
   - match: Applebot
   - match: DuckDuckBot
+  - match: YandexImages
     name: $1
 
   - match: googleweblight
@@ -270,9 +271,6 @@ bots:
   - match: yandex-bot
   - match: YaDirectFetcher
     name: YandexBot
-
-  - match: YandexImages
-    name: $1
 
   - match: /Sogou.*?Spider/
     name: Sogou Spider
@@ -298,6 +296,7 @@ bots:
   - match: Google-Extended
   - match: Google-InspectionTool
   - match: Google-CloudVertexBot
+  - match: Google SketchUp
   - match: StartmeBot
     name: $1
 
@@ -306,6 +305,9 @@ bots:
 
   - match: FeedFetcher-Google
     name: Google FeedFetcher
+
+  - match: AppEngine-Google
+    name: Google AppEngine
 
   - match: GoogleProducer
     name: Google Publisher Center
@@ -321,6 +323,47 @@ bots:
   - match: Owler
     name: OWLer - Open Web Crawler
   
+  # AI Bots
+  - match: GPTBot
+  - match: OAI-SearchBot
+  - match: OAI-Bot/
+    name: OpenAI GPT Bot
+
+  - match: DeepSeek
+    name: DeepSeek Chat Bot
+
+  - match: Google-DeepAI
+    name: Google Gemini
+
+  - match: BingAI
+  - match: BingChat
+    name: Microsoft Bing Chat (Copilot)
+
+  - match: MetaAI
+    name: Meta AI
+
+  - match: PerplexityBot/
+    name: Perplexity Bot
+
+  - match: anthropic-ai
+    name: Anthropic AI
+
+  - match: /[cC]laude[bB]ot/
+    name: Claude Bot
+
+  - match: CohereBot
+    name: Cohere Bot
+
+  - match: HuggingFace-Bot
+    name: Hugging Face Transformers
+
+  - match: InflectionPi
+  - match: YouBot/
+  - match: CCBot/
+  - match: ScaleAI-Bot/
+  - match: Diffbot/
+    name: $1
+   
   # Common tools, readers & apps
   - match: python/
     name: Python
@@ -340,11 +383,11 @@ bots:
   - match: Chrome-Lighthouse
     name: Chrome Lighthouse
 
+  - match: WhatsApp
+  - match: Twitterbot
   - match: urlwatch
   - match: uptime-kuma
   - match: UptimeRobot
-  - match: GPTBot
-  - match: ChatGPT-User
   - match: PhxBot
   - match: ImagesiftBot
   - match: PaperLiBot
@@ -369,13 +412,12 @@ bots:
   - match: ZumBot
   - match: Newslitbot
   - match: Feedly
+  - match: Accoona
+  - match: altavista
     name: $1
 
-  - match: OAI-SearchBot
-    name: OpenAI Search Bot
-
-  - match: PerplexityBot/
-    name: Perplexity Bot  
+  - match: WordPress/
+    name: WordPress
 
   - match: axios/
     name: Axios
@@ -420,12 +462,6 @@ bots:
   - match: BingPreview
   - match: LinkedInBot
     name: $1
-
-  - match: anthropic-ai
-    name: Anthropic AI
-
-  - match: /[cC]laude[bB]ot/
-    name: Claude Bot
 
   - match: infoseek
     name: InfoSeek Robot 1.0
@@ -493,9 +529,13 @@ bots:
 
   - match: crawler
   - match: spider
+  - match: indexer
+  - match: sniffer
+  - match: seeker
     name: Generic crawler
 
   - match: -bot/
+  - match: .org_bot
     name: Generic bot
 
 

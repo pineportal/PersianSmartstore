@@ -6,6 +6,7 @@ using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Catalog.Search;
 using Smartstore.Core.Content.Media;
 using Smartstore.Core.Identity;
+using Smartstore.Core.Localization;
 using Smartstore.Core.Security;
 using Smartstore.Core.Stores;
 using Smartstore.Data;
@@ -23,6 +24,7 @@ namespace Smartstore.Web.Controllers
         private readonly CustomerSettings _customerSettings;
         private readonly IMediaService _mediaService;
         private readonly ICategoryService _categoryService;
+        private readonly Lazy<ILocalizedEntityService> _locEntityService;
 
         public EntityController(
             SmartDbContext db,
@@ -32,7 +34,8 @@ namespace Smartstore.Web.Controllers
             SearchSettings searchSettings,
             CustomerSettings customerSettings,
             IMediaService mediaService,
-            ICategoryService categoryService)
+            ICategoryService categoryService,
+            Lazy<ILocalizedEntityService> locEntityService)
         {
             _db = db;
             _catalogSearchService = catalogSearchService;
@@ -42,6 +45,7 @@ namespace Smartstore.Web.Controllers
             _customerSettings = customerSettings;
             _mediaService = mediaService;
             _categoryService = categoryService;
+            _locEntityService = locEntityService;
         }
 
         public async Task<IActionResult> Picker(EntityPickerModel model)
@@ -361,7 +365,7 @@ namespace Smartstore.Web.Controllers
                     }
 
                     var customers = await customerQuery
-                        .ApplyRolesFilter(new[] { registeredRoleId })
+                        .ApplyRolesFilter([registeredRoleId])
                         .ApplyPaging(model.PageIndex, model.PageSize)
                         .ToListAsync();
 
@@ -393,6 +397,66 @@ namespace Smartstore.Web.Controllers
             }
 
             return PartialView("Picker.List", model);
+        }
+
+        [HttpPost]
+        [AuthorizeAdmin]
+        [Permission(Permissions.System.AccessBackend)]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Patch(string entityName, int entityId, string propertyName, [FromBody] object value)
+        {
+            var success = false;
+
+            try
+            {
+                var patch = new EntityPatch(entityName, entityId);
+                patch.Properties.Add(propertyName, value);
+
+                if (await _db.PatchEntityAsync(patch) is not null)
+                {
+                    await _db.SaveChangesAsync();
+                    success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                NotifyError(ex.ToAllMessages());
+            }
+
+            return Json(new { success, entityName, entityId, propertyName });
+        }
+
+        [HttpPost]
+        [AuthorizeAdmin]
+        [Permission(Permissions.System.AccessBackend)]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PatchLocalized(int languageId, string entityName, int entityId, string propertyName, [FromBody] object value)
+        {
+            var success = false;
+
+            try
+            {
+                var localizedProperty = await _db.LocalizedProperties
+                    .ApplyStandardFilter(languageId, entityId, entityName, propertyName)
+                    .FirstOrDefaultAsync();
+
+                _locEntityService.Value.ApplyLocalizedValue(
+                    localizedProperty,
+                    entityId,
+                    entityName,
+                    propertyName,
+                    value,
+                    languageId);
+
+                await _db.SaveChangesAsync();
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                NotifyError(ex.ToAllMessages());
+            }
+
+            return Json(new { success, languageId, entityName, entityId, propertyName });
         }
     }
 }

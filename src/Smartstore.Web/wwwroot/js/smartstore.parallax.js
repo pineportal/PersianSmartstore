@@ -7,7 +7,7 @@
 ; (function ($, window, document, undefined) {
 
     var initialized = false,
-        isTouch = Modernizr.touchevents,
+        isTouch = window.touchable,
         elems = [],
         blocks = [],
         scrollTop = 0,
@@ -43,11 +43,8 @@
         //
     }
 
-    // check what cancelAnimation method to use
-    var clearLoop = window.cancelAnimationFrame || window.mozCancelAnimationFrame || clearTimeout;
-
     // check which transform property to use
-    var transformProp = window.Prefixer.css('transform');
+    var transformProp = 'transform';
 
     function initialize() {
         // Suppressed smooth-parallax for edge per CSS. Observe and leave this commented for now.

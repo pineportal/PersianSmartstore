@@ -26,6 +26,12 @@ namespace Smartstore.Core.AI
         public IReadOnlyList<AIChatMessage> Messages
             => _messages;
 
+        /// <summary>
+        /// Gets the initial user message.
+        /// </summary>
+        /// <example>Create a title for a blog post on the topic '{0}'</example>
+        public AIChatMessage? InitialUserMessage { get; internal set; }
+
         public bool HasMessages()
             => _messages.Count > 0;
 
@@ -33,24 +39,28 @@ namespace Smartstore.Core.AI
         /// Adds messages. Empty messages are not added.
         /// </summary>
         /// <param name="messages">The messages to add.</param>
-        public void AddMessages(params AIChatMessage[] messages)
+        public AIChat AddMessages(params AIChatMessage[] messages)
         {
             if (messages != null)
             {
                 _messages.AddRange(messages.Where(x => x.Content.HasValue()));
             }
+
+            return this;
         }
 
         /// <summary>
         /// Inserts messages at a given index. Empty messages are not inserted.
         /// </summary>
         /// <param name="messages">The messages to insert.</param>
-        public void InsertMessages(int index, params AIChatMessage[] messages)
+        public AIChat InsertMessages(int index, params AIChatMessage[] messages)
         {
             if (messages != null)
             {
                 _messages.InsertRange(index, messages.Where(x => x.Content.HasValue()));
             }
+
+            return this;
         }
 
         /// <summary>

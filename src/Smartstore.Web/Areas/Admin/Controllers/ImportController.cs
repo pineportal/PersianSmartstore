@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Smartstore.Admin.Models.Import;
 using Smartstore.Admin.Models.Scheduling;
+using Smartstore.ComponentModel;
 using Smartstore.Core.Catalog.Brands;
 using Smartstore.Core.Catalog.Categories;
 using Smartstore.Core.Catalog.Products;
@@ -15,6 +16,7 @@ using Smartstore.Core.Security;
 using Smartstore.IO;
 using Smartstore.Scheduling;
 using Smartstore.Utilities;
+using Smartstore.Web.Modelling.Settings;
 
 namespace Smartstore.Admin.Controllers
 {
@@ -226,7 +228,7 @@ namespace Smartstore.Admin.Controllers
             profile.Skip = model.Skip ?? 0;
             profile.Take = model.Take ?? 0;
             profile.UpdateOnly = model.UpdateOnly;
-            profile.KeyFieldNames = model.KeyFieldNames == null ? null : string.Join(",", model.KeyFieldNames);
+            profile.KeyFieldNames = model.KeyFieldNames == null ? null : string.Join(',', model.KeyFieldNames);
 
             try
             {
@@ -259,10 +261,11 @@ namespace Smartstore.Admin.Controllers
 
                 if (model.ExtraData != null)
                 {
-                    profile.ExtraData = XmlHelper.Serialize(new ImportExtraData
-                    {
-                        NumberOfPictures = model.ExtraData.NumberOfPictures
-                    });
+                    var extraData = model.ExtraData.IsDefault()
+                        ? null
+                        : await MapperFactory.MapAsync<ImportProfileModel.ExtraDataModel, ImportExtraData>(model.ExtraData);
+
+                    profile.ExtraData = XmlHelper.Serialize(extraData);
                 }
             }
             catch (Exception ex)
@@ -524,6 +527,36 @@ namespace Smartstore.Admin.Controllers
             return RedirectToReferrer(null, () => RedirectToAction(nameof(List)));
         }
 
+        #region Data exchange settings
+
+        [Permission(Permissions.Configuration.Setting.Read)]
+        [LoadSetting]
+        public IActionResult DataExchangeSettings(DataExchangeSettings settings)
+        {
+            var model = new DataExchangeSettingsModel();
+            MiniMapper.Map(settings, model);
+
+            return View(model);
+        }
+
+        [Permission(Permissions.Configuration.Setting.Update)]
+        [HttpPost, SaveSetting]
+        public IActionResult DataExchangeSettings(DataExchangeSettings settings, DataExchangeSettingsModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return DataExchangeSettings(settings);
+            }
+
+            ModelState.Clear();
+            MiniMapper.Map(model, settings);
+
+            NotifySuccess(T("Admin.Configuration.Updated"));
+            return RedirectToAction(nameof(DataExchangeSettings));
+        }
+
+        #endregion
+
         #region Utilities
 
         private async Task PrepareProfileModel(
@@ -581,7 +614,7 @@ namespace Smartstore.Admin.Controllers
 
             // Common configuration.
             var extraData = XmlHelper.Deserialize<ImportExtraData>(profile.ExtraData);
-            model.ExtraData.NumberOfPictures = extraData.NumberOfPictures;
+            model.ExtraData = await MapperFactory.MapAsync<ImportExtraData, ImportProfileModel.ExtraDataModel>(extraData);
 
             // Column mapping.
             try

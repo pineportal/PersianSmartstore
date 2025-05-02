@@ -195,7 +195,7 @@ namespace Smartstore.Web.Rendering
             return inputGroupColDiv;
         }
 
-        public virtual IHtmlContent GenerateOptimizeCommands(bool forChatDialog, bool enabled = true)
+        public virtual IHtmlContent GenerateOptimizeCommands(bool forChatDialog, bool enabled = true, bool forHtmlEditor = false)
         {
             var builder = new HtmlContentBuilder();
             var className = forChatDialog ? "ai-text-optimizer" : "ai-text-composer";
@@ -220,6 +220,16 @@ namespace Smartstore.Web.Rendering
             builder.AppendHtml(CreateDropdownItem(T($"{resRoot}Simplify"), enabled, "simplify", "text-left", false, className));
             builder.AppendHtml(CreateDropdownItem(T($"{resRoot}Extend"), enabled, "extend", "body-text", false, className));
 
+            if (forChatDialog)
+            {
+                className += " d-none";
+            }
+
+            if (forHtmlEditor)
+            {
+                builder.AppendHtml(CreateDropdownItem(T($"{resRoot}Continue"), enabled, "continue", "three-dots", false, className));
+            }
+            
             return builder;
         }
 
