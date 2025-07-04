@@ -1,4 +1,6 @@
-﻿namespace Smartstore.AmazonPay.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Smartstore.AmazonPay.Models
 {
     [LocalizedDisplay("Plugins.Payments.AmazonPay.")]
     public class ConfigurationModel : ModelBase
@@ -10,7 +12,8 @@
         public string PublicKeyId { get; set; }
 
         [LocalizedDisplay("*PrivateKey")]
-        public bool HasPrivateKey { get; set; }
+        [UIHint("Textarea")]
+        public string PrivateKey { get; set; }
 
         [LocalizedDisplay("*SellerId")]
         public string SellerId { get; set; }

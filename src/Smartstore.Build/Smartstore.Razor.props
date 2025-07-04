@@ -6,6 +6,9 @@
 		<MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
 		<RazorCompileOnBuild>true</RazorCompileOnBuild>
 		<RazorCompileOnPublish>true</RazorCompileOnPublish>
+
+        <!-- Suppresses the generation of the BuildHost processes -->
+        <UseRazorBuildServer>false</UseRazorBuildServer>
 	
 		<!-- TODO: (core) Think about Razor precompilation strategy and implement decently -->
 		<!--
@@ -25,5 +28,12 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<RazorCompileOnBuild>true</RazorCompileOnBuild>
 	</PropertyGroup>
+
+    <PropertyGroup>
+        <CompressionEnabled>false</CompressionEnabled>
+        <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+        <StaticWebAssetFingerprintingEnabled>false</StaticWebAssetFingerprintingEnabled>
+        <DisableBuildCompression>true</DisableBuildCompression>
+    </PropertyGroup>
 
 </Project>
