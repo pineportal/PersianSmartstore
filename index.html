@@ -3,42 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="معرفی Persian SmartStore، یک پلتفرم تجارت الکترونیک متن‌باز، ماژولار، مقیاس‌پذیر و سریع مبتنی بر ASP.NET Core 9">
-    <meta name="keywords" content="Persian SmartStore, تجارت الکترونیک, فروشگاه آنلاین, متن‌باز, ASP.NET Core, چندزبانه, مقیاس‌پذیر">
+    <meta name="description" content="Persian SmartStore - فروشگاه‌ساز فارسی و متن‌باز مبتنی بر ASP.NET Core برای ایجاد فروشگاه‌های مدرن آنلاین">
+    <meta name="keywords" content="فروشگاه‌ساز, Persian SmartStore, اسمارت استور فارسی, فروشگاه آنلاین, متن‌باز, ASP.NET Core, Smartstore, ecommerce">
+        <meta name="google-site-verification" content="g614cw_OG4fOTv6ZmAvTg7YwQvE1L4RbpZ98wo78TFY" />
     <meta name="author" content="PinePortal">
-    <meta name="google-site-verification" content="g614cw_OG4fOTv6ZmAvTg7YwQvE1L4RbpZ98wo78TFY" />
-    <title>Persian SmartStore - پلتفرم تجارت الکترونیک متن‌باز</title>
+    <title>Persian SmartStore - فروشگاه‌ساز فارسی و متن‌باز</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f9f9f9;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.8;
             direction: rtl;
         }
         header {
             background-color: #007bff;
             color: white;
             text-align: center;
-            padding: 2rem;
+            padding: 2rem 1rem;
         }
         header h1 {
             margin: 0;
             font-size: 2.5rem;
         }
+        header p {
+            font-size: 1.2rem;
+            margin-top: 0.5rem;
+        }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 1rem;
         }
         .section {
             background: white;
             padding: 2rem;
             margin-bottom: 2rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         }
         .section h2 {
             color: #007bff;
@@ -56,9 +60,9 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-top: 1rem;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease;
         }
         .cta-button:hover {
             background-color: #218838;
@@ -68,16 +72,10 @@
             color: white;
             text-align: center;
             padding: 1rem;
-            position: relative;
-            bottom: 0;
-            width: 100%;
         }
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.8rem;
-            }
-            .container {
-                padding: 1rem;
             }
             .section {
                 padding: 1rem;
@@ -88,50 +86,76 @@
 <body>
     <header>
         <h1>Persian SmartStore</h1>
-          <h2>اسمارت استور فارسی</h1>
-        <p>یک پلتفرم تجارت الکترونیک متن‌باز، ماژولار و فوق‌العاده سریع</p>
-        <a href="https://github.com/pineportal/PersianSmartstore" class="cta-button" target="_blank">دریافت نسخه فارسی اسمارت استور از GitHub</a>
+        <p>فروشگاه‌ساز فارسی و متن‌باز برای کسب‌وکارهای آنلاین</p>
+        <a href="https://github.com/pineportal/PersianSmartstore" class="cta-button" target="_blank">مشاهده در GitHub</a>
     </header>
 
     <div class="container">
         <div class="section">
-            <h2>درباره Persian SmartStore</h2>
-            <p>Persian SmartStore یک پلتفرم تجارت الکترونیک متن‌باز، ماژولار، مقیاس‌پذیر و فوق‌العاده سریع است که بر پایه ASP.NET Core 9 توسعه یافته است. این پلتفرم با پشتیبانی کامل از زبان فارسی و قابلیت‌های چندزبانه و چندفروشگاهی، برای ایجاد فروشگاه‌های آنلاین قدرتمند و بهینه طراحی شده است.</p>
-            <p>این نسخه فارسی‌شده از SmartStore، با استفاده از فناوری‌های مدرن مانند Vue.js، Sass و Bootstrap، تجربه‌ای کاربرپسند و پاسخ‌گو (Responsive) را برای کاربران دسکتاپ و موبایل فراهم می‌کند.</p>
+            <h2>درباره پروژه</h2>
+            <p>
+                Persian SmartStore نسخه بومی‌شده و فارسی‌شده‌ی فروشگاه‌ساز متن‌باز <strong>Smartstore</strong> است که بر پایه <strong>ASP.NET Core 9</strong> توسعه یافته و برای بازار ایران و کاربران فارسی‌زبان بهینه شده است.
+            </p>
+            <p>
+                این نسخه با پشتیبانی کامل از زبان فارسی، راست‌چین (RTL)، تقویم شمسی و فونت فارسی منتشر شده و با جدیدترین نسخه‌های Smartstore سازگار است.
+            </p>
+            <p>
+                در حال حاضر نسخه‌های زیر از اسمارت استور فارسی‌سازی شده و آماده استفاده هستند:
+            </p>
+            <ul>
+                <li>نسخه 5.1.0</li>
+                <li>نسخه 6.0.0</li>
+                <li>نسخه 6.1.0</li>
+                <li>نسخه 6.2.0</li>
+            </ul>
+            <p>
+                برای شروع، کافی است نسخه موردنظر را از بخش <strong>برنچ‌ها (Branches)</strong> در GitHub انتخاب و دریافت کنید.
+            </p>
         </div>
 
         <div class="section">
-            <h2>ویژگی‌های کلیدی</h2>
+            <h2>امکانات فروشگاه‌ساز اسمارت استور فارسی</h2>
             <ul>
-                <li>پشتیبانی از چندفروشگاهی، چندزبانه و چندارزی با قابلیت کامل RTL</li>
-                <li>مدیریت پیشرفته محصولات شامل بسته‌های محصولی، محصولات دیجیتال و قیمت‌گذاری لایه‌ای</li>
-                <li>ابزارهای بازاریابی مانند کارت هدیه، امتیاز پاداش و تخفیف‌ها</li>
-                <li>جستجوی فیلتردار (Faceted Search) با سرعت بالا</li>
-                <li>مدیریت محتوای CMS با ویرایشگر WYSIWYG و سازنده صفحات</li>
-                <li>پشتیبانی از سئو با آدرس‌های سلسله‌مراتبی و انطباق با GDPR</li>
-                <li>مدیریت رسانه قدرتمند و فشرده‌سازی تصاویر با TinyImage</li>
-                <li>پشتیبانی از پرداخت و حمل‌ونقل متنوع</li>
-                <li>موتور قالب Liquid برای ایمیل‌ها و کمپین‌ها</li>
-                <li>پشتیبانی از داکر برای استقرار آسان</li>
+                <li>پشتیبانی کامل از زبان فارسی و RTL</li>
+                <li>تقویم شمسی در مدیریت و فرم‌های ورودی</li>
+                <li>پنل مدیریتی فارسی‌شده و قابل استفاده آسان</li>
+                <li>ماژولار و قابل توسعه برای برنامه‌نویسان</li>
+                <li>مدیریت محصولات حرفه‌ای (فیزیکی، دیجیتال، ترکیبی)</li>
+                <li>قابلیت چندفروشگاهی و چندزبانه</li>
+                <li>درگاه‌های پرداخت متنوع قابل اتصال</li>
+                <li>پشتیبانی از حمل‌ونقل، مالیات، انبار و صورتحساب</li>
+                <li>ویرایشگر صفحات (Page Builder) و CMS داخلی</li>
+                <li>سئوی قدرتمند با URLهای ساختار‌یافته و قابلیت ویرایش متاها</li>
+                <li>سازگار با GDPR و سیاست‌های امنیت داده</li>
+                <li>موتور قالب Liquid برای ایمیل و پیامک</li>
+                <li>قابل نصب روی ویندوز، لینوکس و مک</li>
+                <li>پشتیبانی از دیتابیس‌های SQL Server، MySQL، PostgreSQL و SQLite</li>
+                <li>قابل استقرار در محیط‌های ابری و با Docker</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2>چرا Persian SmartStore؟</h2>
-            <p>این پلتفرم با معماری پیشرفته و ماژولار خود، توسعه‌دهندگان و صاحبان کسب‌وکار را قادر می‌سازد تا فروشگاه‌های آنلاین خود را با انعطاف‌پذیری بالا و بدون نیاز به دانش عمیق برنامه‌نویسی سفارشی‌سازی کنند. از ویژگی‌های سئو تا ابزارهای مدیریت مشتری، Persian SmartStore تمامی نیازهای یک فروشگاه مدرن را پوشش می‌دهد.</p>
+            <h2>چرا از Persian SmartStore استفاده کنیم؟</h2>
+            <p>
+                این پروژه با هدف بومی‌سازی پلتفرم اسمارت استور و فراهم کردن یک گزینه قدرتمند، رایگان و مدرن برای فروشگاه‌های فارسی‌زبان توسعه یافته است.
+                شما می‌توانید بدون پرداخت هزینه مجوز، یک فروشگاه کامل با امکانات پیشرفته داشته باشید و مطابق نیازهای بومی آن را شخصی‌سازی کنید.
+            </p>
         </div>
 
         <div class="section">
-            <h2>شروع کار</h2>
-            <p>برای شروع، می‌توانید نسخه فارسی Persian SmartStore را از مخزن GitHub دریافت کنید. این پلتفرم روی سیستم‌عامل‌های ویندوز، لینوکس و مک قابل اجرا است و از پایگاه‌های داده‌ای مانند SQL Server، MySQL، PostgreSQL و SQLite پشتیبانی می‌کند.</p>
-            <a href="https://github.com/pineportal/PersianSmartstore" class="cta-button" target="_blank">دریافت از GitHub</a>
+            <h2>شروع کنید</h2>
+            <p>برای راه‌اندازی فروشگاه خود با Persian SmartStore:</p>
+            <ol>
+                <li>وارد مخزن <a href="https://github.com/pineportal/PersianSmartstore" target="_blank">GitHub پروژه</a> شوید.</li>
+                <li>بر اساس نسخه موردنظر خود، برنچ مربوطه را انتخاب و کد را دریافت کنید.</li>
+                <li>با استفاده از دستورالعمل موجود در README، پروژه را اجرا و پیکربندی کنید.</li>
+            </ol>
+            <a href="https://github.com/pineportal/PersianSmartstore" class="cta-button" target="_blank">مشاهده Persian SmartStore در GitHub</a>
         </div>
-
-       
     </div>
 
     <footer>
-        <p>© 2025 PinePortal. تمامی حقوق محفوظ است. | منتشر شده تحت مجوز AGPL</p>
+        <p>© 2025 PinePortal | پروژه متن‌باز تحت مجوز AGPL</p>
     </footer>
 </body>
 </html>
