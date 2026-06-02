@@ -121,18 +121,18 @@ internal class ReturnCase : Migration, ILocaleResourcesProvider, IDataSeeder<Sma
 
     public void MigrateLocaleResources(LocaleResourcesBuilder builder)
     {
-        builder.AddOrUpdate("Enums.ReturnCaseKind.Return", "Return", "Retoure");
-        builder.AddOrUpdate("Enums.ReturnCaseKind.Withdrawal", "Withdrawal", "Widerruf");
+        builder.AddOrUpdate("Enums.ReturnCaseKind.Return", "Return", "Retoure", "مرجوعی");
+        builder.AddOrUpdate("Enums.ReturnCaseKind.Withdrawal", "Withdrawal", "Widerruf", "انصراف");
 
-        // Only update DE and EN.
         builder.AddOrUpdate("ActivityLog.EditReturnRequest")
-            .Value("en", "Edited a return (ID = {0})");
-        builder.AddOrUpdate("ActivityLog.EditReturnRequest")
-            .Value("de", "Retoure (ID = {0}) bearbeitet");
+            .Value("en", "Edited a return (ID = {0})")
+            .Value("de", "Retoure (ID = {0}) bearbeitet")
+            .Value("fa", "ویرایش مرجوعی (شناسه = {0})");
 
         builder.AddOrUpdate("ActivityLog.DeleteReturnRequest")
-            .Value("en", "Deleted a return (ID = {0})");
-        builder.AddOrUpdate("ActivityLog.DeleteReturnRequest")
-            .Value("de", "Retoure (ID = {0}) gelöscht");
+            .Value("en", "Deleted a return (ID = {0})")
+            .Value("de", "Retoure (ID = {0}) gelöscht")
+            .Value("fa", "حذف مرجوعی (شناسه = {0})");
+
     }
 }

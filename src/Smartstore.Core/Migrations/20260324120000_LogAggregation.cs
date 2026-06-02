@@ -46,9 +46,12 @@ internal class LogAggregation : Migration, ILocaleResourcesProvider
     public void MigrateLocaleResources(LocaleResourcesBuilder builder)
     {
         builder.AddOrUpdate("Admin.System.Log.Fields.Occurrences",
-            "Occurrences",
-            "Vorkommen",
-            "Number of times this event was repeated within the 10-minute aggregation window.",
-            "Gibt an, wie oft dieses Ereignis innerhalb des 10-minütigen Aggregationsfensters aufgetreten ist.");
+       "Occurrences",
+       "Vorkommen",
+       "دفعات وقوع",
+       "Number of times this event was repeated within the 10-minute aggregation window.",
+       "Gibt an, wie oft dieses Ereignis innerhalb des 10-minütigen Aggregationsfensters aufgetreten ist.",
+       "تعداد دفعاتی که این رویداد در پنجره زمانی تجمیع ۱۰ دقیقه‌ای تکرار شده است.");
+
     }
 }

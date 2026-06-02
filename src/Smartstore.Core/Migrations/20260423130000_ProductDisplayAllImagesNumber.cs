@@ -42,9 +42,12 @@ internal class ProductDisplayAllImagesNumber : Migration, ILocaleResourcesProvid
     public void MigrateLocaleResources(LocaleResourcesBuilder builder)
     {
         builder.AddOrUpdate("Admin.Configuration.Settings.Catalog.DisplayAllImagesNumber",
-            "Only show selected variant images from this number of images",
-            "Ab dieser Bildanzahl nur Bilder der gewählten Variante anzeigen",
-            "If the number of images reaches this value, only the images of the selected variant are shown. If fewer images are available, all images are shown.",
-            "Sobald diese Bildanzahl erreicht ist, werden nur noch die Bilder der gewählten Variante angezeigt. Bei weniger Bildern werden weiterhin alle Bilder angezeigt.");
+       "Only show selected variant images from this number of images",
+       "Ab dieser Bildanzahl nur Bilder der gewählten Variante anzeigen",
+       "از این تعداد تصویر به بعد، فقط تصاویر تنوع انتخاب‌شده نمایش داده شوند",
+       "If the number of images reaches this value, only the images of the selected variant are shown. If fewer images are available, all images are shown.",
+       "Sobald diese Bildanzahl erreicht ist, werden nur noch die Bilder der gewählten Variante angezeigt. Bei weniger Bildern werden weiterhin alle Bilder angezeigt.",
+       "اگر تعداد تصاویر به این مقدار برسد، تنها تصاویر تنوع (variant) انتخاب‌شده نمایش داده می‌شوند. اگر تصاویر کمتری موجود باشد، تمامی تصاویر نمایش داده خواهند شد.");
+
     }
 }

@@ -1,4 +1,4 @@
-using FluentMigrator;
+﻿using FluentMigrator;
 using Smartstore.Core.Content.Topics;
 using Smartstore.Data.Migrations;
 
@@ -41,11 +41,14 @@ internal class TopicProseContainer : Migration, ILocaleResourcesProvider, IDataS
     public void MigrateLocaleResources(LocaleResourcesBuilder builder)
     {
         builder.AddOrUpdate(
-            "Admin.ContentManagement.Topics.Fields.EnableProseContainer",
-            "Enable narrow text container",
-            "Schmalen Text-Container aktivieren",
-            "When enabled, the topic is rendered in a narrow prose container (not full page width).",
-            "Wenn aktiviert, wird das Topic in einem schmalen Prosa-Container (nicht in voller Seitenbreite) dargestellt.");
+       "Admin.ContentManagement.Topics.Fields.EnableProseContainer",
+       "Enable narrow text container",
+       "Schmalen Text-Container aktivieren",
+       "فعال‌سازی کادر متنی باریک",
+       "When enabled, the topic is rendered in a narrow prose container (not full page width).",
+       "Wenn aktiviert, wird das Topic in einem schmalen Prosa-Container (nicht in voller Seitenbreite) dargestellt.",
+       "در صورت فعال بودن، این موضوع در یک کادر متنی باریک (نه به اندازه تمام عرض صفحه) نمایش داده می‌شود.");
+
     }
 
     private async Task MigrateTopics(SmartDbContext db, CancellationToken cancelToken = default)
