@@ -3,7 +3,7 @@
 @model LogModel
 
 @{
-    Assets.AppendScriptFiles("https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js");
+    Assets.AppendScriptFiles("~/lib/netstack/netstack.js");
     ViewBag.Title = T("Admin.System.Log.ViewLogDetails").Value;
 }
 
@@ -118,19 +118,48 @@
                 <smart-label asp-for="CreatedOn" />
             </div>
             <div class="adminData">
-                <div class="form-control-plaintext">
-                    @Html.DisplayFor(model => model.CreatedOn)
+                <div class="form-control-plaintext hstack gap-1 flex-wrap">
+                    <span class="pr-1">@Html.DisplayFor(model => model.CreatedOn)</span>
+                    @if (Model.Occurrences != null)
+                    {
+                        foreach (var occ in Model.Occurrences)
+                        {
+                            <span class="badge badge-outline badge-success rounded-pill fwb px-2">+@occ</span>
+                        }      
+                    }
                 </div>
             </div>
         </div>
-        <div sm-if="Model.FullMessage.HasValue()" class="adminRow">
-            <div class="adminTitle">
-                <smart-label asp-for="FullMessage" />
-            </div>
-            <div class="adminData wide">
-                @*No whitespace within pre tag*@
-                <pre class="prettyprint xlang-java" style="white-space: pre-wrap;">@Html.DisplayFor(model => model.FullMessage)</pre>
+        <div sm-if="Model.FullMessage.HasValue()" class="adminRow wide">
+            <div class="adminData xwide">
+                <div class="stacktrace-root">
+                    <div class="stacktrace-header pl-3 p-2 d-flex align-items-center" style="gap: 2px">
+                        <smart-label asp-for="FullMessage" class="mb-0" />
+                        <button id="FullMessage-copy" type="button" class="btn-clipboard btn btn-plain btn-icon rounded-circle ml-auto" data-copy-from="#FullMessage">
+                            <bootstrap-icon name="copy" />
+                        </button>
+                        <button id="FullMessage-wrap" type="button" class="btn-stacktrace-wrap btn btn-plain btn-icon rounded-circle" title="Wrap">
+                            <bootstrap-icon name="text-wrap" />
+                        </button>
+                    </div>
+                    @*No whitespace within pre tag*@
+                    <pre id="FullMessage" class="stacktrace">@Html.DisplayFor(model => model.FullMessage)</pre>
+                </div>
             </div>
         </div>
     </div>
 </form>
+
+<script sm-target-zone="scripts" data-origin="LogDetails">
+    $(function() {
+        const stackElement = $('#FullMessage');
+        const stack = new netStack(stackElement[0], {
+            prettyprint: true
+        });
+
+        $('#FullMessage-wrap').on('click', function() {
+            stackElement.toggleClass('wrapped');
+            $(this).toggleClass('active');
+        });
+    });
+</script>

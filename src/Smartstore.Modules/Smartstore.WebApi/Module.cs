@@ -11,32 +11,31 @@ global using Microsoft.EntityFrameworkCore;
 global using Smartstore.Core.Common;
 global using Smartstore.Core.Data;
 global using Smartstore.Core.Security;
-global using static System.Net.Mime.MediaTypeNames.Application;
 global using static Microsoft.AspNetCore.Http.StatusCodes;
+global using MediaType = System.Net.Mime.MediaTypeNames.Application;
 using Smartstore.Engine.Modularity;
 using Smartstore.Http;
 
-namespace Smartstore.Web.Api
+namespace Smartstore.Web.Api;
+
+internal class Module : ModuleBase, IConfigurable
 {
-    internal class Module : ModuleBase, IConfigurable
+    public static string SystemName => "Smartstore.WebApi";
+
+    public RouteInfo GetConfigurationRoute()
+        => new("Configure", "WebApiAdmin", new { area = "Admin" });
+
+    public override async Task InstallAsync(ModuleInstallationContext context)
     {
-        public static string SystemName => "Smartstore.WebApi";
+        await TrySaveSettingsAsync<WebApiSettings>();
+        await ImportLanguageResourcesAsync();
+        await base.InstallAsync(context);
+    }
 
-        public RouteInfo GetConfigurationRoute()
-            => new("Configure", "WebApiAdmin", new { area = "Admin" });
-
-        public override async Task InstallAsync(ModuleInstallationContext context)
-        {
-            await TrySaveSettingsAsync<WebApiSettings>();
-            await ImportLanguageResourcesAsync();
-            await base.InstallAsync(context);
-        }
-
-        public override async Task UninstallAsync()
-        {
-            await DeleteSettingsAsync<WebApiSettings>();
-            await DeleteLanguageResourcesAsync();
-            await base.UninstallAsync();
-        }
+    public override async Task UninstallAsync()
+    {
+        await DeleteSettingsAsync<WebApiSettings>();
+        await DeleteLanguageResourcesAsync();
+        await base.UninstallAsync();
     }
 }

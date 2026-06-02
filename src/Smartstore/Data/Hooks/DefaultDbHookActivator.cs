@@ -1,53 +1,52 @@
 ﻿using Autofac;
 using Autofac.Core;
 
-namespace Smartstore.Data.Hooks
-{
-    public class DefaultDbHookActivator : IDbHookActivator
-    {
-        private readonly Dictionary<HookMetadata, IDbSaveHook> _instances = new();
-        private readonly ILifetimeScope _scope;
+namespace Smartstore.Data.Hooks;
 
-        public DefaultDbHookActivator(ILifetimeScope scope)
+public class DefaultDbHookActivator : IDbHookActivator
+{
+    private readonly Dictionary<HookMetadata, IDbSaveHook> _instances = new();
+    private readonly ILifetimeScope _scope;
+
+    public DefaultDbHookActivator(ILifetimeScope scope)
+    {
+        _scope = scope;
+    }
+
+    public virtual IDbSaveHook Activate(HookMetadata hook)
+    {
+        if (hook == null)
         {
-            _scope = scope;
+            throw new ArgumentNullException(nameof(hook));
         }
 
-        public virtual IDbSaveHook Activate(HookMetadata hook)
+        if (_instances.TryGetValue(hook, out var instance))
         {
-            if (hook == null)
-            {
-                throw new ArgumentNullException(nameof(hook));
-            }
+            return instance;
+        }
 
-            if (_instances.TryGetValue(hook, out var instance))
+        try
+        {
+            for (var i = 0; i < hook.ServiceTypes.Length; i++)
             {
-                return instance;
-            }
-
-            try
-            {
-                for (var i = 0; i < hook.ServiceTypes.Length; i++)
+                if (_scope.TryResolve(hook.ServiceTypes[i], out var obj) && obj is IDbSaveHook saveHook)
                 {
-                    if (_scope.TryResolve(hook.ServiceTypes[i], out var obj) && obj is IDbSaveHook saveHook)
-                    {
-                        instance = _instances[hook] = saveHook;
-                        break;
-                    }
+                    instance = _instances[hook] = saveHook;
+                    break;
                 }
-
-                if (instance == null)
-                {
-                    throw new DependencyResolutionException(
-                        $"None of the provided service types [{string.Join(", ", hook.ServiceTypes.AsEnumerable())}] can resolve the hook '{hook.ImplType}'.");
-                }
-
-                return instance;
             }
-            catch
+
+            if (instance == null)
             {
-                throw;
+                throw new DependencyResolutionException(
+                    $"None of the provided service types [{string.Join(", ", hook.ServiceTypes.AsEnumerable())}] can resolve the hook '{hook.ImplType}'.");
             }
+
+            return instance;
+        }
+        catch
+        {
+            throw;
         }
     }
 }

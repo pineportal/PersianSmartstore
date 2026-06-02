@@ -1,5 +1,6 @@
 ﻿@using Smartstore.Web.Models.Catalog
 @using Smartstore.Core.Catalog.Products
+@using Microsoft.AspNetCore.Http.Extensions
 
 @model ProductDetailsModel
 
@@ -7,11 +8,27 @@
     Assets.AppendTitleParts(Model.MetaTitle.HasValue() ? Model.MetaTitle : Model.Name);
     Assets.AppendMetaDescriptionParts(Model.MetaDescription);
     Assets.AppendMetaKeywordsParts(Model.MetaKeywords);
-    
+
     if (Model.CanonicalUrl.HasValue())
     {
         Assets.AppendCanonicalUrlParts(Model.CanonicalUrl);
     }
+
+    var url = Model.CanonicalUrl ?? Request.GetDisplayUrl();
+    // INFO: Not "showing" this data in the UI does not mean it's not useful for bots. We can add it to the JSON-LD anyway.
+    Assets.JsonLd.Product.Merge(new
+    {
+        name = Model.Name.Value,
+        sku = Model.Sku,
+        gtin = Model.Gtin,
+        mpn = Model.ManufacturerPartNumber,
+        url = url
+    });
+
+    Assets.JsonLd.Product.Quantity("weight", Model.Weight);
+    Assets.JsonLd.Product.Quantity("width", Model.Width);
+    Assets.JsonLd.Product.Quantity("depth", Model.Length);
+    Assets.JsonLd.Product.Quantity("height", Model.Height);
 }
 
 <partial name="MetaProperties" model="Model.MetaProperties" />
@@ -25,7 +42,14 @@
             <form asp-route="Product" asp-route-SeName="@Model.SeName" method="post" id="pd-form">
                 <!-- Top Content: Picture, Description, Attrs, Variants, Bundle Items, Price etc. -->
                 <section class="row pd-section pd-section-top admin-actions-container">
-                    <!-- Picture -->
+                    <!-- Mobile info above gallery -->
+                    <div class="col-12 d-block d-md-none">
+                        <zone name="productdetails_info_mobile_top" />
+                        <partial name="Product.Info.Mobile" model="Model" />
+                        <zone name="productdetails_info_mobile_bottom" />
+                    </div>
+
+                    <!-- Gallery -->
                     <div class="col-12 col-md-6 col-lg-7 pd-data-col">
                         <div class="pd-data-col-inner">
                             <zone name="productdetails_pictures_top" />
@@ -45,7 +69,9 @@
 
                         <zone name="productdetails_info_top" />
 
-                        <partial name="Product.Info" model="Model" />
+                        <div class="pd-info-container d-none d-md-block">
+                            <partial name="Product.Info" model="Model" />
+                        </div>
 
                         <div sm-if="Model.ProductType == ProductType.BundledProduct" class="pd-bundle-container pd-group card shadow-sm">
                             <partial name="Product.Bundle" model="Model" />
@@ -76,30 +102,26 @@
                             @Html.Raw(Model.ProductShareCode)
                         </div>
 
-                        @if (Model.DisplayAdminLink)
-                        {
-                            <div class="admin-actions">
-                                <a asp-action="Edit" asp-controller="Product" asp-area="admin" asp-route-id="@Model.Id"
-                                   class="btn btn-secondary rounded-pill btn-sm"
-                                   target="admin-product"
-                                   rel="nofollow">
-                                    <i class="fa fa-cog"></i>
-                                    <span>@T("Common.Catalog.EditProduct")</span>
-                                </a>
-                            </div>
-                        }
-
+                        <div sm-if="Model.DisplayAdminLink" class="admin-actions">
+                            <a asp-action="Edit" asp-controller="Product" asp-area="admin" asp-route-id="@Model.Id"
+                                class="btn btn-secondary rounded-pill btn-sm"
+                                target="admin-product"
+                                rel="nofollow">
+                                <i class="fa fa-cog" aria-hidden="true"></i>
+                                <span>@T("Common.Catalog.EditProduct")</span>
+                            </a>
+                        </div>
                     </aside>
                 </section>
 
-                <section sm-if="Model.ProductType == ProductType.GroupedProduct" class="pd-section pd-section-variants">
+                <section sm-if="Model.ProductType == ProductType.GroupedProduct" class="pd-section pd-section-variants" aria-labelledby="pd-assoc-list-title">
                     @if (Model.GroupedProduct?.Products?.Count > 0)
                     {
                         <div class="row mb-2 row-gap-2 align-items-center">
                             @if (Model.GroupedProduct.AssociatedProductsTitle.HasValue())
                             {
                                 <div class="col-12 col-lg-6">
-                                    <h3 class="pd-assoc-list-title mb-0">@Model.GroupedProduct.AssociatedProductsTitle</h3>
+                                    <h3 id="pd-assoc-list-title" class="pd-assoc-list-title mb-0">@Model.GroupedProduct.AssociatedProductsTitle</h3>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <partial name="Product.AssociatedProducts.Search" model="Model.GroupedProduct" />
@@ -107,6 +129,7 @@
                             }
                             else
                             {
+                                <span id="pd-assoc-list-title" class="sr-only">@T("Admin.Catalog.Products")</span>
                                 <div class="col-12 col-lg-6 col-xxl-4">
                                     <partial name="Product.AssociatedProducts.Search" model="Model.GroupedProduct" />
                                 </div>
@@ -116,7 +139,7 @@
                     }
                     else
                     {
-                        <div class="pd-no-associated-products alert alert-warning">
+                        <div class="pd-no-associated-products alert alert-warning" role="alert">
                             @T("Products.NoAssociatedProducts")
                         </div>
                     }

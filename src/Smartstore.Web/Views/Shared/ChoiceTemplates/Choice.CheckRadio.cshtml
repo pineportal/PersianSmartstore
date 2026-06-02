@@ -6,37 +6,46 @@
     var controlId = Model.BuildControlId();
     var items = Model.Values ?? new List<ChoiceItemModel>();
     var type = Model.AttributeControlType == AttributeControlType.Checkboxes ? "checkbox" : "radio";
-    // TODO: (mc) Replace .checkbox with .form-check
+    var srLabelTemplate = T("Aria.Label.Choice");
 }
 
-@foreach (var item in items)
-{
-    var checkId = controlId + "_" + item.Id;
-    var hasColor = item.Color.HasValue() && item.Color != "transparent";
-    <div class="form-check" title="@item.Title.NullEmpty()">
-        <input class="form-check-input" type="@type" id="@checkId" name="@controlId" value="@item.Id" 
-               attr-checked='(item.IsPreSelected, "checked")' attr-disabled='(item.IsDisabled, "disabled")' />
+<div attr-role='(type == "radio", "radiogroup")' attr-aria-orientation='(type == "radio", "vertical")'>
+    @foreach (var item in items)
+    {
+        var checkId = controlId + "_" + item.Id;
+        var hasColor = item.Color.HasValue() && item.Color != "transparent";
+        string label = item.GetItemLabel();
+        <div class="form-check" title="@item.Title.NullEmpty()">
+            <input class="form-check-input" 
+                   type="@type" 
+                   id="@checkId" 
+                   name="@controlId" 
+                   value="@item.Id"
+                   aria-label="@srLabelTemplate.Value.FormatInvariant(Model.Name, label)"
+                   attr-checked='(item.IsPreSelected, "checked")' 
+                   attr-disabled='(item.IsDisabled, "disabled")' />
 
-        <label class="form-check-label choice-item@(item.IsUnavailable ? " choice-item-unavailable" : "")" for="@checkId">
-            @if (item.ImageUrl.HasValue())
-            {
-                if (item.SeName.HasValue())
+            <label class="form-check-label choice-item" attr-class='(item.IsUnavailable, "choice-item-unavailable")' for="@checkId">
+                @if (item.ImageUrl.HasValue())
                 {
-                    <a asp-route="Product" asp-route-SeName="@item.SeName" class="choice-item-img" >
-                        <img src="@item.ImageUrl" alt="@item.Name" />
-                    </a>
+                    if (item.SeName.HasValue())
+                    {
+                        <a asp-route="Product" asp-route-SeName="@item.SeName" class="choice-item-img">
+                            <img src="@item.ImageUrl" alt="@item.Name" />
+                        </a>
+                    }
+                    else
+                    {
+                        <img class="choice-item-img" src="@item.ImageUrl" alt="@item.Name" />
+                    }
                 }
-                else
+                else if (hasColor)
                 {
-                    <img class="choice-item-img" src="@item.ImageUrl" alt="@item.Name" />
+                    <span class="choice-item-color" style="background-color: @item.Color"></span>
                 }
-            }
-            else if (hasColor)
-            {
-                <span class="choice-item-color" style="background-color: @item.Color"></span>
-            }
 
-            @item.GetItemLabel()
-        </label>
-    </div>
-}
+                @label
+            </label>
+        </div>
+    }
+</div>

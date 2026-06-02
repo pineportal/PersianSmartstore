@@ -23,6 +23,7 @@
         showLines: false,       // true: show helper lines.
         readOnly: false,        // true: no state changes allowed (checkbox disabled).
         dragAndDrop: false,     // true: drag & drop enabled.
+        showStateInfo: false,   // true: show number of 'on'(green) descendents for 'on-off' stateType.
         showNumChildren: true,
         showNumChildrenDeep: false,
         defaultCollapsedIconClass: null,
@@ -33,6 +34,7 @@
         collapsedClass: 'fas fa-chevron-right',
         leafClass: 'tree-leaf',
         stateTitles: ['', '', '', ''],
+        stateInfoTitles: ['', '', ''],
         disabledTitle: null,
         noDataNote: null
     };
@@ -130,13 +132,18 @@
         });
 
         // Set inherited state.
-        if (opt.stateType === 'on-off' && !opt.readOnly) {
+        if (opt.stateType === 'on-off') {
             // Set indeterminate property.
             //root.find('input[type=checkbox][value=0]').prop('indeterminate', true);
 
-            root.find('ul:first > .tree-node').each(function () {
-                setInheritedState($(this), 0, opt);
-            });
+            let $nodes = root.find('ul:first > .tree-node');
+            if (!opt.readOnly) {
+                $nodes.each((_i, el) => setInheritedState($(el), 0, opt));
+            }
+
+            if (opt.showStateInfo) {
+                $nodes.each((_i, el) => setStateInfo($(el), opt));
+            }
         }
 
         // Expander clicked
@@ -195,6 +202,9 @@
 
                 // Update nodes with inherited state.
                 setInheritedState(node, inheritedState, opt);
+
+                let root = node.parents('.tree-node').last();
+                setStateInfo(root.length ? root : node, opt);
 
                 EventBroker.publishSync('tree.checked', { node, value });
             }
@@ -267,22 +277,26 @@
             }
 
             if (nodeUrl) {
-                var target = nodeData?.UrlTarget || li.data('url-target');
+                const target = nodeData?.UrlTarget || li.data('url-target');
                 labelHtml = `<a class="tree-link tree-name" href="${nodeUrl}"${target ? ` target="${target}"` : ''}${title ? ` title="${title}"` : ''}>${name}</a>`;
             }
             else {
                 labelHtml = `<span class="tree-name"${title ? ` title="${title}"` : ''}>${name}</span>`;
             }
 
-            if (numChildren > 0 && opt.showNumChildren) {
+            if (opt.showNumChildren && numChildren > 0) {
                 labelHtml += `<span class="tree-num">(${numChildren})</span>`;
             }
-            else if (numChildrenDeep > 0 && opt.showNumChildrenDeep) {
+            else if (opt.showNumChildrenDeep && numChildrenDeep > 0) {
                 labelHtml += `<span class="tree-num">(${numChildrenDeep})</span>`;
             }
 
+            if (opt.showStateInfo && opt.stateType === 'on-off' && numChildren > 0) {
+                labelHtml += `<span class="badge badge-secondary text-muted badge-subtle badge-ring badge-counter tree-state-info" title="">0</span>`;
+            }
+
             if (badgeText) {
-                var badgeStyle = nodeData?.BadgeStyle || li.data('badge-style') || 'badge-secondary';
+                const badgeStyle = nodeData?.BadgeStyle || li.data('badge-style') || 'badge-secondary';
                 labelHtml += ` <span class="badge ${badgeStyle}">${badgeText}</span>`;
             }
 
@@ -299,7 +313,7 @@
                 html += `<span class="tree-icon"><i class="${iconClass}"></i></span>`;
             }
             else if (iconUrl) {
-                html += `<span class="tree-icon"><img src="${iconUrl}" /></span>`;
+                html += `<span class="tree-icon"><img src="${iconUrl}" alt="${name}" /></span>`;
             }
 
             html += `<span class="${textClass}">${labelHtml}</span>`;
@@ -450,8 +464,8 @@
     function setInheritedState(node, inheritedState, opt) {
         if (!node) return;
 
-        var childState = inheritedState;
-        var val = parseInt(node.find('> .tree-inner input[type=checkbox]').val()) || 0;
+        let childState = inheritedState;
+        const val = parseInt(node.find('> .tree-inner input[type=checkbox]').val()) || 0;
 
         if (val > 0) {
             // Is directly on.
@@ -466,9 +480,7 @@
                 .attr('title', opt.stateTitles[inheritedState === 2 ? 2 : 3]);
         }
 
-        node.find('> ul > .tree-node').each(function () {
-            setInheritedState($(this), childState, opt);
-        });
+        node.find('> ul > .tree-node').each((_i, el) => setInheritedState($(el), childState, opt));
     }
 
     function getInheritedState(node) {
@@ -484,6 +496,60 @@
         }
 
         return result;
+    }
+
+    function setStateInfo(node, opt) {
+        if (!node) return;
+
+        if (node.hasClass('tree-noleaf')) {
+            const sCount = getStateCount(node);
+            let cssClass = '';
+            let title = '';
+
+            if (sCount.numOn === sCount.numTotal) {
+                cssClass = 'badge-success';
+                title = opt.stateInfoTitles[0].replace('{0}', sCount.numTotal);
+            }
+            else if (sCount.numOn > 0) {
+                cssClass = 'badge-warning';
+                title = opt.stateInfoTitles[1].replace('{0}', sCount.numOn).replace('{1}', sCount.numTotal);
+            }
+            else {
+                cssClass = 'badge-secondary text-muted';
+                title = opt.stateInfoTitles[2];
+            }
+
+            node.find('.tree-state-info')
+                .first()
+                .removeClass('badge-success badge-warning badge-secondary text-muted')
+                .addClass(cssClass)
+                .attr('title', title)
+                .text(sCount.numOn);
+        }
+
+        node.find('> ul > .tree-node').each((_i, el) => setStateInfo($(el), opt));
+    }
+
+    function getStateCount(node) {
+        let numOn = 0;
+        let numTotal = 0;
+
+        if (node) {
+            if (!node.hasClass('tree-noleaf')) {
+                if (node.find('.tree-state-onoff').is('.on, .in-on')) {
+                    numOn++;
+                }
+                numTotal++;
+            }
+
+            node.find('> ul > .tree-node').each((_i, el) => {
+                const tmp = getStateCount($(el));
+                numOn += tmp.numOn;
+                numTotal += tmp.numTotal;
+            });
+        }
+
+        return { numOn, numTotal };
     }
 
     function loadData(root, node, opt, callback) {

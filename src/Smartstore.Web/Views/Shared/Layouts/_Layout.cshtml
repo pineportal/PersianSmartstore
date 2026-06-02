@@ -29,10 +29,16 @@
     }
 }
 
+<a href="#content-center" id="skip-to-content" class="btn-skip-content btn btn-primary btn-lg rounded-pill">
+    @T("Common.SkipToMainContent")
+</a>
+
 <div id="page">
     <div class="canvas-blocker canvas-slidable"></div>
 
     <div class="page-main canvas-slidable">
+
+        <zone name="header_before"></zone>
 
         <header id="header" zone-name="header" replace-content="true">
             <div class="menubar-section d-none d-lg-block @(Display.GetThemeVariable<bool>("inverse-menubar") ? "menubar-inverse" : "menubar-light")">
@@ -46,7 +52,7 @@
                 </div>
             </div>
             <div class="megamenu-section d-none d-lg-block">
-                <nav class="navbar @(Display.GetThemeVariable<bool>("inverse-navbar") ? "navbar-inverse" : "navbar-light")">
+                <nav class="navbar @(Display.GetThemeVariable<bool>("inverse-navbar") ? "navbar-inverse" : "navbar-light")" aria-label="@T("Aria.Label.MainNavigation")">
                     <div class="container megamenu-container">
                         <menu name="Main" template="Main" />
                     </div>
@@ -76,11 +82,11 @@
                         </aside>
                     }
 
-                    <div id="content-center" class="col-lg-@mainColspan">
+                    <main id="content-center" class="col-lg-@mainColspan">
                         <zone name="main_column_before"></zone>
                         @RenderBody()
                         <zone name="main_column_after"></zone>
-                    </div>
+                    </main>
 
                     @if (hasRightCol)
                     {
@@ -105,9 +111,11 @@
         <zone name="page-end"></zone>
     </div>
 
-    <a href="#" id="scroll-top" class="scrollto d-flex align-items-center justify-content-center shadow-sm">
+    <a href="#" id="scroll-top" class="scrollto d-flex align-items-center justify-content-center shadow-sm" aria-label="@T("Common.ScrollUp")">
         <i class="fa fa-lg fa-angle-up"></i>
     </a>
+    <span id="sr-desc-empty" class="sr-only"></span>
+    <span id="sr-status" class="sr-only" role="status" aria-live="polite"></span>
 </div>
 
 <partial name="Notifications" />

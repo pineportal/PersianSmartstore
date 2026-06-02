@@ -2,16 +2,11 @@
 
 @model PopularProductTagsModel
 
-@if (Model.Tags.Count == 0)
-{
-    return;
-}
-
-<div class="block block-popular-tags mb-5">
+<div sm-if="Model.Tags.Count > 0" role="region" aria-labelledby="popular-tags-title" class="block block-popular-tags mb-5">
     <div class="row">
         <div class="col">
             <div class="heading">
-                <h3 class="heading-title fs-h1">
+                <h3 id="popular-tags-title" class="heading-title fs-h1">
                     @T("Products.Tags.Popular")
                 </h3>
             </div>
@@ -19,19 +14,26 @@
         <div sm-if="Model.TotalTags > Model.Tags.Count" class="col col-auto">
             <a asp-route="ProductTagsAll" class="btn btn-outline-info btn-flat">
                 <span>@T("Products.Tags.Popular.ViewAll")</span>
-                <i class="fa fa-angle-right"></i>
+                <i class="fa fa-angle-right" aria-hidden="true"></i>
             </a>
         </div>
-
     </div>
 
-    <div class="listbox block-body">
+    <div class="listbox block-body position-relative">
+        <a sm-if="Model.Tags.Count > 1" href="javascript:;" class="btn-skip-content btn btn-primary rounded-pill">
+            @T("Common.SkipList")
+        </a>
         <div class="tags fs-h4">
-            <ul class="list-inline">
+            <ul class="list-inline" aria-labelledby="popular-tags-title" role="menu" aria-orientation="horizontal">
                 @foreach (var item in Model.Tags)
                 {
-                    <li class="list-inline-item">
-                        <a asp-route="ProductsByTag" asp-route-productTagId="@item.Id" asp-route-path="@item.Slug" class="link-body link-transition link-dnu" style="font-size:@(Model.GetFontSize(item))%;">
+                    <li class="list-inline-item" role="none">
+                        <a asp-route="ProductsByTag" 
+                           asp-route-productTagId="@item.Id" 
+                           asp-route-path="@item.Slug"
+                           role="menuitem"
+                           class="link-body link-transition link-dnu" 
+                           style="font-size:@(Model.GetFontSize(item))%;">
                             <span sm-language-attributes-for="item.Name">@item.Name</span>
                         </a>
                     </li>

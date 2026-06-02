@@ -1,83 +1,82 @@
 ﻿using System.Collections.Concurrent;
 using Autofac;
 
-namespace Smartstore.Scheduling
+namespace Smartstore.Scheduling;
+
+public class TaskActivator : ITaskActivator
 {
-    public class TaskActivator : ITaskActivator
+    private readonly static Dictionary<string, string> _legacyTypeNamesMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        private readonly static Dictionary<string, string> _legacyTypeNamesMap = new(StringComparer.OrdinalIgnoreCase)
+        { "FileImportTask", "BMEcatImportTask" },
+        { "PaymentStatusPollingTask", "SantanderStatusPollingTask" },
+        { "CleanupTask", "CleanupPersonalPromoTask" },
+        { "DeleteObsoleteRecordsTask", "CleanupCartApprovalTask" }
+    };
+
+    private readonly static ConcurrentDictionary<string, string> _normalizedTypeNames = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly IComponentContext _componentContext;
+
+    public TaskActivator(IComponentContext componentContext)
+    {
+        _componentContext = componentContext;
+    }
+
+    public virtual string GetNormalizedTypeName(TaskDescriptor task)
+    {
+        Guard.NotNull(task);
+
+        if (task.Type.IsEmpty())
         {
-            { "FileImportTask", "BMEcatImportTask" },
-            { "PaymentStatusPollingTask", "SantanderStatusPollingTask" },
-            { "CleanupTask", "CleanupPersonalPromoTask" },
-            { "DeleteObsoleteRecordsTask", "CleanupCartApprovalTask" }
-        };
-
-        private readonly static ConcurrentDictionary<string, string> _normalizedTypeNames = new(StringComparer.OrdinalIgnoreCase);
-
-        private readonly IComponentContext _componentContext;
-
-        public TaskActivator(IComponentContext componentContext)
-        {
-            _componentContext = componentContext;
+            return null;
         }
 
-        public virtual string GetNormalizedTypeName(TaskDescriptor task)
+        return _normalizedTypeNames.GetOrAdd(task.Type, name =>
         {
-            Guard.NotNull(task);
-
-            if (task.Type.IsEmpty())
+            if (name.IndexOf(',') > -1)
             {
-                return null;
-            }
+                // Type name is legacy and fully qualified, e.g.: "SmartStore.Services.Customers.DeleteGuestsTask, SmartStore.Services".
+                // We need to extract "DeleteGuestsTask".
+                name = name
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)[0].Trim()
+                    .Split('.')
+                    .Last();
 
-            return _normalizedTypeNames.GetOrAdd(task.Type, name =>
-            {
-                if (name.IndexOf(',') > -1)
+                if (_legacyTypeNamesMap.TryGetValue(name, out var mappedName))
                 {
-                    // Type name is legacy and fully qualified, e.g.: "SmartStore.Services.Customers.DeleteGuestsTask, SmartStore.Services".
-                    // We need to extract "DeleteGuestsTask".
-                    name = name
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries)[0].Trim()
-                        .Split('.')
-                        .Last();
-
-                    if (_legacyTypeNamesMap.TryGetValue(name, out var mappedName))
-                    {
-                        // E.g.: map FileImportTask --> BMEcatImportTask
-                        name = mappedName;
-                    }
+                    // E.g.: map FileImportTask --> BMEcatImportTask
+                    name = mappedName;
                 }
+            }
 
-                return name;
-            });
+            return name;
+        });
+    }
+
+    public virtual Type GetTaskClrType(string normalizedTypeName, bool throwOnError = false)
+    {
+        Guard.NotEmpty(normalizedTypeName);
+
+        var lazyTask = _componentContext.ResolveOptionalNamed<Lazy<ITask, TaskMetadata>>(normalizedTypeName);
+        if (throwOnError && lazyTask == null)
+        {
+            throw new TaskActivationException($"No task registered for '{normalizedTypeName}'.");
         }
 
-        public virtual Type GetTaskClrType(string normalizedTypeName, bool throwOnError = false)
+        return lazyTask?.Metadata?.Type;
+    }
+
+    public virtual ITask Activate(string normalizedTypeName)
+    {
+        Guard.NotEmpty(normalizedTypeName);
+
+        try
         {
-            Guard.NotEmpty(normalizedTypeName);
-
-            var lazyTask = _componentContext.ResolveOptionalNamed<Lazy<ITask, TaskMetadata>>(normalizedTypeName);
-            if (throwOnError && lazyTask == null)
-            {
-                throw new TaskActivationException($"No task registered for '{normalizedTypeName}'.");
-            }
-
-            return lazyTask?.Metadata?.Type;
+            return _componentContext.ResolveNamed<Lazy<ITask, TaskMetadata>>(normalizedTypeName).Value;
         }
-
-        public virtual ITask Activate(string normalizedTypeName)
+        catch (Exception ex)
         {
-            Guard.NotEmpty(normalizedTypeName);
-
-            try
-            {
-                return _componentContext.ResolveNamed<Lazy<ITask, TaskMetadata>>(normalizedTypeName).Value;
-            }
-            catch (Exception ex)
-            {
-                throw new TaskActivationException($"Error while activating task '{normalizedTypeName}'.", ex);
-            }
+            throw new TaskActivationException($"Error while activating task '{normalizedTypeName}'.", ex);
         }
     }
 }

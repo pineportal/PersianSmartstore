@@ -21,14 +21,16 @@
             return false;
         });
 
-        $('.new-address-next-step-button').on('click', function () {
+        $('.new-address-next-step-button').on('click', () => {
             $('#nextstep').trigger('click');
             return false;
         });
 
-        $('.add-new-address').on('click', function (e) {
+        $('.add-new-address').on('click', (e) => {
             e.preventDefault();
-            $('.cnt-add-new-address').slideDown();
+            $(e.currentTarget).aria("expanded", "true");
+            const cntNewAddress = $('#cnt-add-new-address');
+            cntNewAddress.slideDown(() => cntNewAddress.find(".address-form input:first").focus());
             return false;
         });
 

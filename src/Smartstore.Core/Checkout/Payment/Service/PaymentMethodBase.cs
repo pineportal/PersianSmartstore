@@ -4,83 +4,102 @@ using Smartstore.Core.Checkout.Orders;
 using Smartstore.Core.Localization;
 using Smartstore.Core.Widgets;
 
-namespace Smartstore.Core.Checkout.Payment
+namespace Smartstore.Core.Checkout.Payment;
+
+/// <summary>
+/// Base class to implement payment methods.
+/// </summary>
+public abstract class PaymentMethodBase : IPaymentMethod
 {
-    /// <summary>
-    /// Base class to implement payment methods.
-    /// </summary>
-    public abstract class PaymentMethodBase : IPaymentMethod
-    {
-        public Localizer T { get; set; } = NullLocalizer.Instance;
+    public Localizer T { get; set; } = NullLocalizer.Instance;
 
-        #region Properties
+    #region Provider capabilities
 
-        public virtual bool RequiresInteraction => false;
+    public virtual bool SupportCapture => false;
 
-        public virtual bool RequiresPaymentSelection => true;
+    public virtual bool SupportPartiallyRefund => false;
 
-        public virtual bool SupportCapture => false;
+    public virtual bool SupportRefund => false;
 
-        public virtual bool SupportPartiallyRefund => false;
+    public virtual bool SupportVoid => false;
 
-        public virtual bool SupportRefund => false;
+    public virtual RecurringPaymentType RecurringPaymentType
+        => RecurringPaymentType.NotSupported;
 
-        public virtual bool SupportVoid => false;
+    public virtual Task<(decimal FixedFeeOrPercentage, bool UsePercentage)> GetPaymentFeeInfoAsync(ShoppingCart cart)
+        => Task.FromResult((decimal.Zero, false));
 
-        public virtual RecurringPaymentType RecurringPaymentType
-            => RecurringPaymentType.NotSupported;
+    #endregion
 
-        public virtual PaymentMethodType PaymentMethodType
-            => PaymentMethodType.Unknown;
 
-        #endregion
+    #region Checkout integration
 
-        #region Methods
+    public virtual bool RequiresInteraction => false;
 
-        public abstract Widget GetPaymentInfoWidget();
+    public virtual bool RequiresPaymentSelection => true;
 
-        public virtual Task<(decimal FixedFeeOrPercentage, bool UsePercentage)> GetPaymentFeeInfoAsync(ShoppingCart cart)
-            => Task.FromResult((decimal.Zero, false));
+    public abstract Widget GetPaymentInfoWidget();
 
-        public virtual Task<ProcessPaymentRequest> GetPaymentInfoAsync(IFormCollection form)
-            => Task.FromResult(new ProcessPaymentRequest());
+    public virtual Task<ProcessPaymentRequest> GetPaymentInfoAsync(IFormCollection form)
+        => Task.FromResult(new ProcessPaymentRequest());
 
-        public virtual Task<PaymentValidationResult> ValidatePaymentDataAsync(IFormCollection form)
-            => Task.FromResult(new PaymentValidationResult());
+    public virtual Task<PaymentValidationResult> ValidatePaymentDataAsync(IFormCollection form)
+        => Task.FromResult(new PaymentValidationResult());
 
-        public virtual Task<string> GetPaymentSummaryAsync()
-            => Task.FromResult<string>(null);
+    public virtual Task<string> GetPaymentSummaryAsync()
+        => Task.FromResult<string>(null);
 
-        public virtual Task<ProcessPaymentRequest> CreateProcessPaymentRequestAsync(ShoppingCart cart)
-            => Task.FromResult(new ProcessPaymentRequest { OrderGuid = Guid.NewGuid() });
+    public virtual Task<ProcessPaymentRequest> CreateProcessPaymentRequestAsync(ShoppingCart cart)
+        => Task.FromResult(new ProcessPaymentRequest { OrderGuid = Guid.NewGuid() });
 
-        public virtual Task<PreProcessPaymentResult> PreProcessPaymentAsync(ProcessPaymentRequest request)
-            => Task.FromResult(new PreProcessPaymentResult());
+    #endregion
 
-        public abstract Task<ProcessPaymentResult> ProcessPaymentAsync(ProcessPaymentRequest processPaymentRequest);
 
-        public virtual Task PostProcessPaymentAsync(PostProcessPaymentRequest postProcessPaymentRequest)
-            => Task.CompletedTask;
+    #region Payment confirmation (called after "buy now" button click, before order placement)
 
-        public virtual Task<bool> CanRePostProcessPaymentAsync(Order order)
-            => Task.FromResult(false);
+    public virtual bool RequiresConfirmation => false;
 
-        public virtual Task<CapturePaymentResult> CaptureAsync(CapturePaymentRequest capturePaymentRequest)
-            => throw new PaymentException(T("Common.Payment.NoCaptureSupport"));
+    public virtual Task<string> GetConfirmationUrlAsync(ProcessPaymentRequest request, CheckoutContext context)
+        => Task.FromResult<string>(null);
 
-        public virtual Task<RefundPaymentResult> RefundAsync(RefundPaymentRequest refundPaymentRequest)
-            => throw new PaymentException(T("Common.Payment.NoRefundSupport"));
+    public virtual Task<bool> CompletePaymentAsync(ProcessPaymentRequest request, CheckoutContext context)
+        => Task.FromResult(true);
 
-        public virtual Task<VoidPaymentResult> VoidAsync(VoidPaymentRequest voidPaymentRequest)
-            => throw new PaymentException(T("Common.Payment.NoVoidSupport"));
+    #endregion
 
-        public virtual Task<ProcessPaymentResult> ProcessRecurringPaymentAsync(ProcessPaymentRequest processPaymentRequest)
-            => throw new PaymentException(T("Common.Payment.NoRecurringPaymentSupport"));
 
-        /// <inheritdoc/>
-        public virtual Task<CancelRecurringPaymentResult> CancelRecurringPaymentAsync(CancelRecurringPaymentRequest cancelPaymentRequest)
-            => throw new PaymentException(T("Common.Payment.NoRecurringPaymentSupport"));
+    #region Payment processing (called during order placement)
 
-        #endregion
-    }
+    public virtual Task<PreProcessPaymentResult> PreProcessPaymentAsync(ProcessPaymentRequest request)
+        => Task.FromResult(new PreProcessPaymentResult());
+
+    public abstract Task<ProcessPaymentResult> ProcessPaymentAsync(ProcessPaymentRequest processPaymentRequest);
+
+    public virtual Task PostProcessPaymentAsync(PostProcessPaymentRequest postProcessPaymentRequest)
+        => Task.CompletedTask;
+
+    #endregion
+
+
+    #region After-sales operations (called after order has been placed)
+
+    public virtual Task<bool> CanRePostProcessPaymentAsync(Order order)
+        => Task.FromResult(false);
+
+    public virtual Task<CapturePaymentResult> CaptureAsync(CapturePaymentRequest capturePaymentRequest)
+        => throw new PaymentException(T("Common.Payment.NoCaptureSupport"));
+
+    public virtual Task<RefundPaymentResult> RefundAsync(RefundPaymentRequest refundPaymentRequest)
+        => throw new PaymentException(T("Common.Payment.NoRefundSupport"));
+
+    public virtual Task<VoidPaymentResult> VoidAsync(VoidPaymentRequest voidPaymentRequest)
+        => throw new PaymentException(T("Common.Payment.NoVoidSupport"));
+
+    public virtual Task<ProcessPaymentResult> ProcessRecurringPaymentAsync(ProcessPaymentRequest processPaymentRequest)
+        => throw new PaymentException(T("Common.Payment.NoRecurringPaymentSupport"));
+
+    public virtual Task<CancelRecurringPaymentResult> CancelRecurringPaymentAsync(CancelRecurringPaymentRequest cancelPaymentRequest)
+        => throw new PaymentException(T("Common.Payment.NoRecurringPaymentSupport"));
+
+    #endregion
 }

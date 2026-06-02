@@ -40,6 +40,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
 
 .pd-description {
     color: $text-muted;
+    color: var(--gray-600);
     line-height: 1.3;
 }
 
@@ -119,18 +120,23 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
     display: inline-block;
     max-width: 100%;
     height: auto;
-    max-height: 32px;
+    max-height: 24px;
+
+    .pd-info-mobile & {
+        max-width: 96px;
+    }
 }
 
 .pd-attrs {
-    td { 
-        padding: 0.2rem 0; 
-        vertical-align: middle; 
+    :is(td, th[scope=row]) {
+        padding: 0.2rem 0;
+        vertical-align: middle;
         line-height: $pd-line-height;
-    }
-    td:first-child { 
-        padding-inline-end: 1rem; 
-        font-weight: $font-weight-medium; 
+
+        &:first-child {
+            padding-inline-end: 1rem;
+            font-weight: $font-weight-medium;
+        }
     }
 }
 
@@ -139,7 +145,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
         color: darken($success, 10%);
     }
     &.pd-outofstock {
-        font-weight: bold;
+        font-weight: $font-weight-bold;
         color: $danger;
     } 
 }
@@ -147,12 +153,18 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
 // Specification attributes
 // =====================================================
 
-.pd-specs-table tr:first-child td {
+.pd-specs-group .pd-specs-table {
+    //font-size: 90%;
+    font-size: $font-size-sm;
+}
+
+.pd-specs-table tr:first-child > :is(td, th) {
     border-top-width: 0;
 }
 
 .pd-spec-name {
     font-weight: $font-weight-medium;
+    padding-inline-start: 0 !important;
     width: 20%;
 
     @include media-breakpoint-down(md) {
@@ -160,26 +172,28 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
     }
 }
 
+.pd-spec-value {
+    padding-inline-end: 0 !important;
+}
+
 // Reviews
 // =====================================================
 
 .pd-review-summary {
-    line-height: $pd-line-height;
-    > * { display: inline-block; }
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
 
-    .pd-rating-box .rating {
-        vertical-align: sub;
+    > .pd-rating-box {
+        display: flex;
+        align-items: center;
+        gap: 3px;
     }
 
-    .pd-review-link {
+    > .pd-review-link {
         position: relative;
         font-weight: $font-weight-medium;
-        &:before {
-            content: '|';
-            display: inline-block;
-            padding: 0 0.5rem;
-            color: $text-muted;
-        }
     }
 }
 
@@ -344,7 +358,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
 }
 
 .pd-promoprice-tip {
-    padding-inline-start: 0.5rem;
+    margin-inline-start: 0.5rem;
     color: $gray-600 !important;
 }
 
@@ -374,7 +388,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
         font-size: $font-size-sm;
         overflow-x: auto;
 
-        th, td { padding-left: 0.5rem; padding-right: 0.5rem; }
+        :is(th, td) { padding-inline: 0.5rem; }
         th { font-weight: $font-weight-medium; }
         .pd-tierprice-qty { font-weight: bold }
     }
@@ -466,7 +480,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
 // ------------------------------------------------------
 
 .table-compare {
-    td, th {
+    :is(td, th) {
         width: 20%;
     }
     
@@ -543,20 +557,28 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
         text-align: center;
         border-inline-end: 1px solid rgba(#000, 0.15);
         padding-top: 6px; // for the transform
-        &:last-child { border-color: transparent; }
-
+        padding-bottom: $focus-ring-width; // For visual focus
+        &:last-child {
+            border-color: transparent;
+        }
         // When more than 4 action items are available,
         // .col is used instead of .col-(x). These need special care
         // concerning responsiveness.
         &.col .pd-action-label, &.col-2 .pd-action-label {
             display: none !important;
-            @include media-breakpoint-only(sm) { display: block !important;  }
-            @include media-breakpoint-up(xl) { display: block !important;  }
+
+            @include media-breakpoint-only(sm) {
+                display: block !important;
+            }
+
+            @include media-breakpoint-up(xl) {
+                display: block !important;
+            }
         }
     }
 
     .pd-action-link {
-        display: flex;
+        display: inline-flex;
         flex-direction: column;
         text-decoration: none;
         color: inherit;
@@ -579,7 +601,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
             text-overflow: ellipsis;
         }
 
-        &:hover .pd-action-icon { 
+        &:hover .pd-action-icon {
             color: inherit;
             transform: scale(1.14);
         }
@@ -658,8 +680,7 @@ $pd-offer-spacing:              $grid-gutter-width / 2;
         overflow: initial;
     }
 
-    .numberinput,
-    .qty-input-dropdown {
+    :is(.numberinput, .qty-input-dropdown) {
         box-shadow: var(--box-shadow-xs);
     }
 }

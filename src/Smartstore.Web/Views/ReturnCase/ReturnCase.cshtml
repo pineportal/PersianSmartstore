@@ -1,0 +1,110 @@
+﻿@using Smartstore.Web.Models.Orders
+
+@model AddReturnCaseModel
+
+@{
+    Assets.AppendTitleParts(T("PageTitle.ReturnItems"));
+
+    var hasItemsToReturn = Model.Items?.HasItemsToReturn == true;
+    var hasSingleItemToReturn = Model.Items?.HasSingleItemToReturn == true;
+
+    var itemsViewData = new ViewDataDictionary(ViewData);
+    itemsViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.Items);
+
+    var returnReasons = ViewBag.AvailableReturnReasons as List<SelectListItem>;
+    var returnActions = ViewBag.AvailableReturnActions as List<SelectListItem>;
+}
+
+<div class="page returncase-page">
+    <div class="page-title">
+        <h1 id="returncase-title" class="h3">@T("ReturnRequests.Title", Model.OrderId)</h1>
+    </div>
+
+    @if (Model.Items?.Items?.IsNullOrEmpty() ?? true)
+    {
+        <div class="alert alert-info" role="alert">
+            @T("ReturnRequests.ReturnsNotPossible")
+        </div>
+        return;
+    }
+
+    <div class="page-body">
+        <form asp-action="ReturnCase">
+            <input type="hidden" asp-for="OrderId" />
+
+            <h2 sm-if="hasItemsToReturn && !hasSingleItemToReturn" class="h4 fwn text-muted mb-4">@T("ReturnRequests.SelectProduct(s)")</h2>
+            <zone name="returnrequest_wish_before" />
+
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <fieldset class="form-group">
+                <legend sm-if="hasItemsToReturn && !hasSingleItemToReturn" class="sr-only">@T("ReturnRequests.SelectProduct(s)")</legend>
+                <div class="cart-container">
+                    <partial name="ReturnCase.Items" model="Model.Items" view-data="itemsViewData" />
+                </div>
+            </fieldset>
+
+            <div sm-if="hasItemsToReturn" class="mt-4">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label id="return-reason-label" asp-for="ReturnReason" class="col-form-label"></label>
+                    </div>
+                    <div class="col-md-9">
+                        <select asp-for="ReturnReason" 
+                                asp-items="ViewBag.AvailableReturnReasons" 
+                                sm-required="true" 
+                                class="return-reasons"
+                                aria-label="return-reason-label"
+                                placeholder="@T("Common.PleaseSelect")">
+                            <option value=""></option>
+                            @foreach (var item in returnReasons)
+                            {
+                                <option value="@item.Value" data-hint-class="fwm">@item.Text</option>
+                            }
+                        </select>
+                        <span asp-validation-for="ReturnReason"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label id="return-action-label" asp-for="ReturnAction" class="col-form-label"></label>
+                    </div>
+                    <div class="col-md-9">
+                        <select asp-for="ReturnAction" 
+                                asp-items="ViewBag.AvailableReturnActions" 
+                                sm-required="true" 
+                                class="return-actions"
+                                aria-labelledby="return-action-label"
+                                placeholder="@T("Common.PleaseSelect")">
+                            <option value=""></option>
+                            @foreach (var item in returnActions)
+                            {
+                                <option value="@item.Value" data-hint-class="fwm">@item.Text</option>
+                            }
+                        </select>
+                        <span asp-validation-for="ReturnAction"></span>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label asp-for="Comments" class="col-form-label"></label>
+                    </div>
+                    <div class="col-md-9">
+                        <textarea asp-for="Comments" class="comment"></textarea>
+                        <span asp-validation-for="Comments"></span>
+                    </div>
+                </div>
+            </div>
+
+            <zone name="returnrequest_wish_after" />
+
+            <div sm-if="hasItemsToReturn" class="buttons row justify-content-end">
+                <div class="col-md-9">
+                    <button type="submit" name="submit-returncase" value="save" class="btn btn-primary btn-lg">
+                        @T("ReturnRequests.Submit")
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

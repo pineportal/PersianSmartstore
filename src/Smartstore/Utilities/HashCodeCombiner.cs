@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System.Buffers;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Hashing;
@@ -8,227 +9,301 @@ using System.Text;
 using Microsoft.Extensions.FileProviders;
 using Smartstore.IO;
 
-namespace Smartstore.Utilities
+namespace Smartstore.Utilities;
+
+/// <summary>
+/// Deterministic hash code combiner.
+/// </summary>
+[DebuggerDisplay("{CombinedHashString}")]
+public struct HashCodeCombiner
 {
-    /// <summary>
-    /// Deterministic hash code combiner.
-    /// </summary>
-    [DebuggerDisplay("{CombinedHashString}")]
-    public struct HashCodeCombiner
+    private const long _globalSeed = 0x1505L;
+
+    private long _combinedHash64;
+
+    public HashCodeCombiner()
     {
-        const long _globalSeed = 0x1505L;
+    }
 
-        private long _combinedHash64;
+    public HashCodeCombiner(long seed)
+    {
+        _combinedHash64 = seed;
+    }
 
-        /// <summary>
-        /// Initializes the <see cref="HashCodeCombiner"/> with zero seed.
-        /// </summary>
-        public HashCodeCombiner()
-        {
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HashCodeCombiner Start()
+        => new(_globalSeed);
 
-        /// <summary>
-        /// Initializes the <see cref="HashCodeCombiner"/> with the given <paramref name="seed"/>.
-        /// </summary>
-        public HashCodeCombiner(long seed)
-        {
-            _combinedHash64 = seed;
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HashCodeCombiner StartNonDeterministic()
+        => new(CurrentSeed);
 
-        /// <summary>
-        /// Initializes a deterministic <see cref="HashCodeCombiner"/>.
-        /// </summary>
+    public long CombinedHashL
+    {
+        get => _combinedHash64;
+    }
+
+    public int CombinedHash
+    {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static HashCodeCombiner Start()
-        {
-            return new HashCodeCombiner(_globalSeed);
-        }
+        get => _combinedHash64.GetHashCode();
+    }
 
-        /// <summary>
-        /// Initializes a non-deterministic <see cref="HashCodeCombiner"/>.
-        /// </summary>
+    public string CombinedHashString
+    {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static HashCodeCombiner StartNonDeterministic()
+        get => _combinedHash64.GetHashCode().ToString("x", CultureInfo.InvariantCulture);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator int(HashCodeCombiner self)
+        => self.CombinedHash;
+
+    internal static long GlobalSeed { get; } = _globalSeed;
+    internal static long CurrentSeed { get; } = CommonHelper.GenerateRandomInteger(min: int.MinValue);
+
+    public HashCodeCombiner AddSequence<T>(IEnumerable<T> sequence, IEqualityComparer<T>? comparer = null)
+        where T : notnull
+    {
+        if (sequence is null)
         {
-            return new HashCodeCombiner(CurrentSeed);
-        }
-
-        public int CombinedHash
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _combinedHash64.GetHashCode(); }
-        }
-
-        public string CombinedHashString
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _combinedHash64.GetHashCode().ToString("x", CultureInfo.InvariantCulture); }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator int(HashCodeCombiner self)
-        {
-            return self.CombinedHash;
-        }
-
-        internal static long GlobalSeed { get; } = _globalSeed;
-        internal static long CurrentSeed { get; } = CommonHelper.GenerateRandomInteger(min: int.MinValue);
-
-        public HashCodeCombiner AddSequence<T>(IEnumerable<T> sequence, IEqualityComparer<T>? comparer = null) 
-            where T : notnull
-        {
-            if (sequence is not null)
-            {
-                var count = 0;
-                foreach (var o in sequence)
-                {
-                    Add(o, comparer);
-                    count++;
-                }
-
-                Append(count);
-            }
-
             return this;
         }
 
-        public HashCodeCombiner AddDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dictionary)
-            where TKey : notnull
-            where TValue : notnull
+        var count = 0;
+        foreach (var o in sequence)
         {
-            if (dictionary is not null)
-            {
-                foreach (var kvp in dictionary.OrderBy(x => x.Key))
-                {
-                    Add(kvp.Key);
-                    Add(kvp.Value);
-                }
-            }
+            Add(o, comparer);
+            count++;
+        }
 
+        Append(count);
+        return this;
+    }
+
+    public HashCodeCombiner AddDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> dictionary)
+        where TKey : notnull
+        where TValue : notnull
+    {
+        if (dictionary is null)
+        {
             return this;
         }
 
-        public HashCodeCombiner Add(IFileEntry entry, bool deep = true)
+        if (dictionary is ICollection<KeyValuePair<TKey, TValue>> col && col.Count == 0)
         {
-            Guard.NotNull(entry);
-
-            if (!entry.Exists)
-            {
-                return this;
-            } 
-
-            Add(entry.PhysicalPath?.ToLower());
-            Append(entry.LastModified.GetHashCode());
-
-            if (entry is IFile file)
-            {
-                Append(file.Length.GetHashCode());
-            }
-
-            if (entry is IDirectory dir)
-            {
-                foreach (IFileEntry e in dir.EnumerateFiles(deep: deep))
-                {
-                    Add(e, false);
-                }
-            }
-
             return this;
         }
 
-        public HashCodeCombiner Add(IFileInfo entry)
+        var list = new List<KeyValuePair<TKey, TValue>>();
+        foreach (var kvp in dictionary)
         {
-            Guard.NotNull(entry);
+            list.Add(kvp);
+        }
 
-            if (!entry.Exists)
-            {
-                return this;
-            }
-
-            Add(entry.PhysicalPath?.ToLower());
-            Append(entry.LastModified.GetHashCode());
-
-            if (!entry.IsDirectory)
-            {
-                Append(entry.Length.GetHashCode());
-            }
-
+        if (list.Count == 0)
+        {
             return this;
         }
 
-        public HashCodeCombiner Add(FileSystemInfo fi, bool deep = true)
+        list.Sort(static (a, b) => Comparer<TKey>.Default.Compare(a.Key, b.Key));
+
+        for (var i = 0; i < list.Count; i++)
         {
-            Guard.NotNull(fi);
+            var kvp = list[i];
+            Add(kvp.Key);
+            Add(kvp.Value);
+        }
 
-            if (!fi.Exists)
-            {
-                return this;
-            }
+        return this;
+    }
 
-            Add(fi.FullName.ToLower());
-            Append(fi.CreationTimeUtc.GetHashCode());
-            Append(fi.LastWriteTimeUtc.GetHashCode());
+    public HashCodeCombiner Add(IFileEntry entry, bool deep = true)
+    {
+        Guard.NotNull(entry);
 
-            if (fi is FileInfo file)
-            {
-                Append(file.Length.GetHashCode());
-            }
-
-            if (fi is DirectoryInfo dir)
-            {
-                var options = deep ? LocalDirectory.DeepEnumerationOptions : LocalDirectory.FlatEnumerationOptions;
-                
-                foreach (FileSystemInfo f in dir.GetFiles("*", options))
-                {
-                    Add(f, false);
-                }
-            }
-
+        if (!entry.Exists)
+        {
             return this;
         }
 
-        public HashCodeCombiner Add<TStruct>(TStruct? value) 
-            where TStruct : struct
-        {
-            // Optimization: for value types, we can avoid boxing "value" by skipping the null check
-            if (value.HasValue)
-            {
-                Append(value.GetHashCode());
-            }
+        Append(HashPathIgnoreCase(entry.PhysicalPath));
+        Append(entry.LastModified.GetHashCode());
 
+        if (entry is IFile file)
+        {
+            Append(file.Length.GetHashCode());
+        }
+
+        if (entry is IDirectory dir)
+        {
+            foreach (IFileEntry e in dir.EnumerateFiles(deep: deep))
+            {
+                Add(e, false);
+            }
+        }
+
+        return this;
+    }
+
+    public HashCodeCombiner Add(IFileInfo entry)
+    {
+        Guard.NotNull(entry);
+
+        if (!entry.Exists)
+        {
             return this;
         }
 
-        public HashCodeCombiner Add<TStruct>(TStruct value)
-            where TStruct : struct
+        Append(HashPathIgnoreCase(entry.PhysicalPath));
+        Append(entry.LastModified.GetHashCode());
+
+        if (!entry.IsDirectory)
         {
-            // Optimization: for value types, we can avoid boxing "value" by skipping the null check
+            Append(entry.Length.GetHashCode());
+        }
+
+        return this;
+    }
+
+    public HashCodeCombiner Add(FileSystemInfo fi, bool deep = true)
+    {
+        Guard.NotNull(fi);
+
+        if (!fi.Exists)
+        {
+            return this;
+        }
+
+        Append(HashPathIgnoreCase(fi.FullName));
+        Append(fi.CreationTimeUtc.GetHashCode());
+        Append(fi.LastWriteTimeUtc.GetHashCode());
+
+        if (fi is FileInfo file)
+        {
+            Append(file.Length.GetHashCode());
+        }
+
+        if (fi is DirectoryInfo dir)
+        {
+            var options = deep ? LocalDirectory.DeepEnumerationOptions : LocalDirectory.FlatEnumerationOptions;
+
+            foreach (FileSystemInfo f in dir.GetFiles("*", options))
+            {
+                Add(f, false);
+            }
+        }
+
+        return this;
+    }
+
+    public HashCodeCombiner Add<TStruct>(TStruct? value)
+        where TStruct : struct
+    {
+        if (value.HasValue)
+        {
             Append(value.GetHashCode());
+        }
 
+        return this;
+    }
+
+    public HashCodeCombiner Add<TStruct>(TStruct value)
+        where TStruct : struct
+    {
+        Append(value.GetHashCode());
+        return this;
+    }
+
+    public HashCodeCombiner Add<T>(T value, IEqualityComparer<T>? comparer = null)
+    {
+        if (value is null)
+        {
             return this;
         }
 
-        public HashCodeCombiner Add<T>(T value, IEqualityComparer<T>? comparer = null)
+        // Strings are case-sensitive here (do NOT change semantics).
+        if (value is string s)
         {
-            if (value is string str)
-            {
-                // XxHash3 is faster than Marvin
-                Append((long)XxHash3.HashToUInt64(Encoding.UTF8.GetBytes(str)));
-            }
-            else if (value is not null)
-            {
-                Append(comparer?.GetHashCode(value) ?? value.GetHashCode());
-            }
-            
+            Append(HashString(s));
             return this;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Append(long hash)
+        Append(comparer?.GetHashCode(value) ?? value.GetHashCode());
+        return this;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Append(long hash)
+    {
+        if (hash != 0)
         {
-            if (hash != 0)
+            _combinedHash64 = ((_combinedHash64 << 5) + _combinedHash64) ^ hash;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static long HashString(string value)
+        => HashUtf8(value, ignoreCase: false);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static long HashPathIgnoreCase(string? path)
+        => string.IsNullOrEmpty(path) ? 0 : HashUtf8(path, ignoreCase: true);
+
+    /// <summary>
+    /// Hashes a string using XxHash3 without allocating for UTF-8 bytes in the common case.
+    /// For paths, optional ASCII-only case folding can be applied (A-Z -> a-z) before hashing.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static long HashUtf8(string value, bool ignoreCase)
+    {
+        const int StackLimit = 256; // bytes
+        var maxByteCount = Encoding.UTF8.GetMaxByteCount(value.Length);
+
+        if (maxByteCount <= StackLimit)
+        {
+            Span<byte> buffer = stackalloc byte[StackLimit];
+            var len = Encoding.UTF8.GetBytes(value, buffer);
+            var slice = buffer.Slice(0, len);
+
+            if (ignoreCase)
             {
-                _combinedHash64 = ((_combinedHash64 << 5) + _combinedHash64) ^ hash;
+                AsciiToLowerInPlace(slice);
+            }
+
+            return (long)XxHash3.HashToUInt64(slice);
+        }
+        else
+        {
+            var rented = ArrayPool<byte>.Shared.Rent(maxByteCount);
+            try
+            {
+                var len = Encoding.UTF8.GetBytes(value, 0, value.Length, rented, 0);
+                var span = new Span<byte>(rented, 0, len);
+
+                if (ignoreCase)
+                {
+                    AsciiToLowerInPlace(span);
+                }
+
+                return (long)XxHash3.HashToUInt64(span);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rented);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AsciiToLowerInPlace(Span<byte> utf8Bytes)
+    {
+        for (var i = 0; i < utf8Bytes.Length; i++)
+        {
+            var b = utf8Bytes[i];
+            if ((uint)(b - (byte)'A') <= ('Z' - 'A'))
+            {
+                utf8Bytes[i] = (byte)(b | 0x20);
             }
         }
     }

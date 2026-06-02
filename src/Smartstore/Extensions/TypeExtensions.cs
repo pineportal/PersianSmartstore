@@ -1,83 +1,90 @@
+#nullable enable
+
 using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Razor.Hosting;
 using Smartstore.Domain;
 
-namespace Smartstore
+namespace Smartstore;
+
+public static class TypeExtensions
 {
-    public static class TypeExtensions
+    extension(Type type)
     {
-        #region Common
-
-        public static string AssemblyQualifiedNameWithoutVersion(this Type type)
-        {
-            return type.AssemblyQualifiedName != null
-                ? type.FullName + ", " + type.Assembly.GetName().Name
-                : null;
-        }
-
         /// <summary>
-        /// Creates a <see cref="MethodInvoker"/> instance for the given <paramref name="method"/>>.
+        /// Returns the assembly-qualified name of the type without including version, culture, or public key token
+        /// information.
         /// </summary>
-        public static MethodInvoker CreateInvoker(this MethodBase method)
-            => MethodInvoker.Create(method);
-
-        /// <summary>
-        /// Given a MethodBase for a property's get or set method,
-        /// return the corresponding property info.
-        /// </summary>
-        /// <param name="method">MethodBase for the property's get or set method.</param>
-        /// <returns>PropertyInfo for the property, or null if method is not part of a property.</returns>
-        public static PropertyInfo GetPropertyFromMethod(this MethodBase method)
+        /// <remarks>For generic types, the returned string includes the generic type definition and
+        /// recursively omits version, culture, and public key token information from all generic type arguments. This
+        /// format is useful for scenarios where type identity is required without binding to a specific assembly
+        /// version.</remarks>
+        /// <returns>A string containing the assembly-qualified name of the type, omitting version, culture, and public key token
+        /// details; or null if the type information is unavailable.</returns>
+        public string? AssemblyQualifiedNameWithoutVersion()
         {
-            Guard.NotNull(method);
-            
-            PropertyInfo property = null;
+            // Get the assembly name without version, culture, and public key token
+            var assemblyName = type.Assembly.GetName().Name!;
 
-            if (method.IsSpecialName)
+            if (type.IsGenericType)
             {
-                Type containingType = method.DeclaringType;
-                if (containingType != null)
-                {
-                    if (method.Name.StartsWith("get_", StringComparison.InvariantCulture) ||
-                        method.Name.StartsWith("set_", StringComparison.InvariantCulture))
-                    {
-                        string propertyName = method.Name[4..];
-                        property = containingType.GetProperty(propertyName);
-                    }
-                }
+                // Get the generic type definition (e.g., System.Collections.Generic.List`1)
+                var genericDefinition = type.GetGenericTypeDefinition().FullName!;
+
+                // Recursively clean all generic type arguments
+                var genericArguments = type.GetGenericArguments()
+                    .Select(t => $"[{t.AssemblyQualifiedNameWithoutVersion()}]");
+
+                var args = string.Join(",", genericArguments);
+
+                // Construct the cleaned generic string format
+                return $"{genericDefinition}[{args}], {assemblyName}";
             }
 
-            return property;
+            // Return the simple name for non-generic types
+            return $"{type.FullName}, {assemblyName}";
         }
 
-        public static bool HasDefaultConstructor(this Type type)
+        public bool HasDefaultConstructor()
         {
             return type.IsValueType || type.GetConstructor(Type.EmptyTypes) != null;
         }
 
-        public static bool IsCompatibleWith(this Type source, Type target)
+        public bool IsAny(params Type[] checkTypes)
         {
-            if (source == target)
+            return checkTypes.Any(possibleType => possibleType == type);
+        }
+
+        /// <summary>
+        /// Determines whether the current type is compatible with the specified target type for assignment or
+        /// conversion.
+        /// </summary>
+        /// <remarks>This method checks for compatibility based on standard .NET assignment rules,
+        /// including reference type assignability and implicit numeric conversions for value types. For nullable types,
+        /// compatibility is determined using their underlying non-nullable types.</remarks>
+        public bool IsCompatibleWith(Type target)
+        {
+            if (type == target)
                 return true;
 
             if (!target.IsValueType)
-                return target.IsAssignableFrom(source);
+                return target.IsAssignableFrom(type);
 
-            var nonNullableType = source.GetNonNullableType();
-            var type = target.GetNonNullableType();
+            var nonNullableType = type.GetNonNullableType();
+            var targetNonNullableType = target.GetNonNullableType();
 
-            if ((nonNullableType == source) || (type != target))
+            if ((nonNullableType == type) || (targetNonNullableType != target))
             {
                 var code = nonNullableType.IsEnum ? TypeCode.Object : Type.GetTypeCode(nonNullableType);
-                var code2 = type.IsEnum ? TypeCode.Object : Type.GetTypeCode(type);
+                var targetCode = targetNonNullableType.IsEnum ? TypeCode.Object : Type.GetTypeCode(targetNonNullableType);
 
                 switch (code)
                 {
                     case TypeCode.SByte:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.SByte:
                             case TypeCode.Int16:
@@ -90,7 +97,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.Byte:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.Byte:
                             case TypeCode.Int16:
@@ -106,7 +113,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.Int16:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.Int16:
                             case TypeCode.Int32:
@@ -118,7 +125,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.UInt16:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.UInt16:
                             case TypeCode.Int32:
@@ -132,7 +139,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.Int32:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.Int32:
                             case TypeCode.Int64:
@@ -143,7 +150,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.UInt32:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.UInt32:
                             case TypeCode.Int64:
@@ -155,7 +162,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.Int64:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.Int64:
                             case TypeCode.Single:
@@ -165,7 +172,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.UInt64:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.UInt64:
                             case TypeCode.Single:
@@ -175,7 +182,7 @@ namespace Smartstore
                         }
                         break;
                     case TypeCode.Single:
-                        switch (code2)
+                        switch (targetCode)
                         {
                             case TypeCode.Single:
                             case TypeCode.Double:
@@ -183,52 +190,52 @@ namespace Smartstore
                         }
                         break;
                     default:
-                        if (nonNullableType == type)
+                        if (nonNullableType == targetNonNullableType)
                         {
                             return true;
                         }
                         break;
                 }
             }
+
             return false;
         }
 
         /// <summary>
-        /// Gets all types that are assignable from <paramref name="source"/>, except for <see cref="typeof(object)"/>
+        /// Returns a sequence of types that the current type implements or derives from, including all implemented
+        /// interfaces and base types up to but not including System.Object.
         /// </summary>
-        /// <param name="source">The type to get assignable types for.</param>
-        /// <returns>
-        /// All interface types in the hierarchy chain, 
-        /// all base types (except <see cref="typeof(object)"/>) and the source type itself.
-        /// </returns>
-        public static IEnumerable<Type> GetTypesAssignableFrom(this Type source)
+        /// <remarks>The returned sequence includes all interfaces implemented by the type, followed by
+        /// the type itself and its base types, in order from most derived to least derived. System.Object is not
+        /// included in the result.</remarks>
+        public IEnumerable<Type> GetTypesAssignableFrom()
         {
-            var interfaces = source.GetInterfaces();
+            var interfaces = type.GetInterfaces();
 
             for (var i = 0; i < interfaces.Length; i++)
             {
                 yield return interfaces[i];
             }
 
-            while (source != null && source != typeof(object))
+            var current = type;
+            while (current != null && current != typeof(object))
             {
-                yield return source;
-                source = source.BaseType;
+                yield return current;
+                current = current.BaseType;
             }
         }
 
-        #endregion
-
-        #region Is...Type
-
         /// <summary>
-        /// Checks whether given type is primitive, enum, <see cref="typeof(string)"/>, 
-        /// <see cref="typeof(decimal)"/>, <see cref="typeof(DateTime)"/>, 
-        /// <see cref="typeof(TimeSpan)"/>, <see cref="typeof(Guid)"/>, 
-        /// <see cref="typeof(byte[])"/>.
+        /// Determines whether the current type is considered a basic .NET type, such as a primitive, string, or common
+        /// value type.
         /// </summary>
+        /// <remarks>Basic types are commonly used for serialization, data transfer, and value
+        /// representation. This method can be used to identify types that are typically handled as simple values rather
+        /// than complex objects.</remarks>
+        /// <returns>true if the type is a primitive, enumeration, string, decimal, DateTime, DateTimeOffset, DateOnly, TimeOnly,
+        /// TimeSpan, Guid, or byte array; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsBasicType(this Type type)
+        public bool IsBasicType()
         {
             return
                 type.IsPrimitive ||
@@ -236,37 +243,53 @@ namespace Smartstore
                 type == typeof(string) ||
                 type == typeof(decimal) ||
                 type == typeof(DateTime) ||
+                type == typeof(DateTimeOffset) ||
+                type == typeof(DateOnly) ||
+                type == typeof(TimeOnly) ||
                 type == typeof(TimeSpan) ||
                 type == typeof(Guid) ||
                 type == typeof(byte[]);
         }
 
         /// <summary>
-        /// Checks whether given type is a predefined basic type or a nullable type. 
+        /// Determines whether the current type is a basic type or a nullable basic type.
         /// </summary>
-        public static bool IsBasicOrNullableType(this Type type)
+        public bool IsBasicOrNullableType()
         {
-            return
-                IsBasicType(type) ||
-                Nullable.GetUnderlyingType(type) != null;
+            return type.IsBasicType() || Nullable.GetUnderlyingType(type) != null;
         }
 
+        /// <summary>
+        /// Determines whether the current type is a nullable value type.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullableType(this Type type)
+        public bool IsNullableType()
         {
             return Nullable.GetUnderlyingType(type) != null;
         }
 
+        /// <summary>
+        /// Determines whether the current type is a nullable value type and retrieves its underlying type.
+        /// </summary>
+        /// <param name="underlyingType">When this method returns, contains the underlying type if the current type is a nullable value type;
+        /// otherwise, contains the current type. This parameter is passed uninitialized.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullableType(this Type type, out Type underlyingType)
+        public bool IsNullableType(out Type underlyingType)
         {
             underlyingType = Nullable.GetUnderlyingType(type) ?? type;
             return underlyingType != type;
         }
 
-        public static bool IsNumericType(this Type type)
+        /// <summary>
+        /// Determines whether the current type represents a numeric value, including integer and floating-point types.
+        /// </summary>
+        /// <remarks>This method considers both standard numeric types and their nullable counterparts as
+        /// numeric. Types such as enums, booleans, and non-numeric objects are not considered numeric.</remarks>
+        /// <returns>true if the type is a numeric type such as an integer, decimal, double, or single, or a nullable numeric
+        /// type; otherwise, false.</returns>
+        public bool IsNumericType()
         {
-            if (IsIntegerType(type))
+            if (type.IsIntegerType())
             {
                 return true;
             }
@@ -284,7 +307,13 @@ namespace Smartstore
             }
         }
 
-        public static bool IsIntegerType(this Type type)
+        /// <summary>
+        /// Determines whether the underlying type is a built-in integer type.
+        /// </summary>
+        /// <remarks>This method considers the following types as integer types: SByte, Byte, Int16,
+        /// UInt16, Int32, UInt32, Int64, and UInt64. Other numeric types, such as Decimal, Single, Double, and
+        /// BigInteger, are not considered integer types by this method.</remarks>
+        public bool IsIntegerType()
         {
             switch (Type.GetTypeCode(type))
             {
@@ -302,74 +331,63 @@ namespace Smartstore
             }
         }
 
-        /// <summary>
-        /// Checks whether given type or its underlying nullable type is an enumeration type.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static bool IsEnumType(this Type type)
+        public bool IsEnumType()
         {
             return type.GetNonNullableType().IsEnum;
         }
 
-        public static bool IsStructType(this Type type)
+        public bool IsStructType()
         {
             return type.IsValueType && !type.IsBasicType();
         }
 
-        public static bool IsPlainObjectType(this Type type)
+        /// <summary>
+        /// Determines whether the current type represents a plain object type, excluding sequences and basic or
+        /// nullable types.
+        /// </summary>
+        public bool IsPlainObjectType()
         {
             return type.IsClass && !type.IsSequenceType() && !type.IsBasicOrNullableType();
         }
 
         /// <summary>
-        /// Checks whether a type is compiler generated.
+        /// Determines whether the represented type is marked with the <see cref="CompilerGeneratedAttribute"/>.
         /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <returns>True if the type is compiler generated; False otherwise.</returns>
+        /// <remarks>This method can be used to identify types that are generated by the compiler, such as
+        /// anonymous types, iterator state machines, or closure classes. Compiler-generated types are typically not
+        /// intended for direct use in application code.</remarks>
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCompilerGenerated(this Type type)
+        public bool IsCompilerGenerated()
         {
             return type.IsDefined(typeof(CompilerGeneratedAttribute), false);
         }
 
-        /// <summary>
-        /// Checks whether a type is a pre-compiled razor view.
-        /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <returns>True if the type is a pre-compiled razor view; False otherwise.</returns>
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsRazorCompiledItem(this Type type)
+        public bool IsRazorCompiledItem()
         {
             return type.IsDefined(typeof(RazorCompiledItemAttribute), false);
         }
 
-        /// <summary>
-        /// Checks whether a given type is a delegate type.
-        /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <returns>True if the type is a delegate; false otherwise.</returns>
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsDelegate(this Type type)
+        public bool IsDelegate()
         {
             return type.IsSubclassOf(typeof(Delegate));
         }
 
         [DebuggerStepThrough]
-        public static bool IsAnonymousType(this Type type)
+        public bool IsAnonymousType()
         {
             if (type.IsGenericType)
             {
-                var d = type.GetGenericTypeDefinition();
-                if (d.IsClass && d.IsSealed && d.Attributes.HasFlag(TypeAttributes.NotPublic))
+                var definition = type.GetGenericTypeDefinition();
+                if (definition.IsClass && definition.IsSealed && definition.Attributes.HasFlag(TypeAttributes.NotPublic))
                 {
-                    var attributes = d.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false);
-                    if (attributes != null && attributes.Length > 0)
+                    var attributes = definition.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false);
+                    if (attributes?.Length > 0)
                     {
-                        // WOW! We have an anonymous type!!!
                         return true;
                     }
                 }
@@ -379,34 +397,31 @@ namespace Smartstore
         }
 
         /// <summary>
-        /// Checks whether the given type is an array or implements <see cref="IEnumerable"/>.
+        /// Determines whether the current type represents a sequence type, such as an array or a type that implements
+        /// <see cref="IEnumerable"/>.
         /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <returns>True if the type is a sequence type; False otherwise.</returns>
-        public static bool IsSequenceType(this Type type)
+        /// <remarks>A sequence type is any type that can be enumerated, including arrays and types that
+        /// implement <see cref="IEnumerable"/>. Basic types and nullable types are not considered sequence
+        /// types.</remarks>
+        /// <returns>true if the type is an array, implements <see cref="IEnumerable"/>, or is <see cref="Array"/>; otherwise,
+        /// false.</returns>
+        public bool IsSequenceType()
         {
             if (type.IsBasicOrNullableType())
             {
                 return false;
             }
 
-            return
+            return (
                 type.IsArray ||
                 typeof(IEnumerable).IsAssignableFrom(type) ||
-                // i.e., a direct ref to System.Array
-                type == typeof(Array);
+                type == typeof(Array));
         }
 
-        /// <summary>
-        /// Checks whether the given type is an array or implements <see cref="IEnumerable"/>.
-        /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <param name="elementType">
-        /// The generic argument type of the sequence, or <see cref="typeof(object)"/>
-        /// if the sequence is non-generic.
-        /// </param>
-        /// <returns>True if the type is a sequence type; False otherwise.</returns>
-        public static bool IsSequenceType(this Type type, out Type elementType)
+        /// <inheritdoc cref="IsSequenceType(Type)" />
+        /// <param name="elementType">When this method returns <see langword="true"/>, contains the type of the elements in the sequence;
+        /// otherwise, <see langword="null"/>.</param>
+        public bool IsSequenceType([NotNullWhen(true)] out Type? elementType)
         {
             elementType = null;
 
@@ -419,7 +434,7 @@ namespace Smartstore
             {
                 elementType = type.GetElementType();
             }
-            else if (type.IsClosedGenericTypeOf(typeof(IEnumerable<>), out var closedType))
+            else if (type.TryGetClosedGenericTypeOf(typeof(IEnumerable<>), out var closedType))
             {
                 elementType = closedType.GetGenericArguments()[0];
             }
@@ -432,12 +447,15 @@ namespace Smartstore
         }
 
         /// <summary>
-        /// Checks whether the given type implements <see cref="IEnumerable{}"/>.
+        /// Determines whether the current type implements a closed generic IEnumerable<T> interface and retrieves the
+        /// element type if it does.
         /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <param name="elementType">The generic argument type of the sequence.</param>
-        /// <returns>True if the type is an enumerable type; False otherwise.</returns>
-        public static bool IsEnumerableType(this Type type, out Type elementType)
+        /// <remarks>This method excludes basic and nullable types from being considered enumerable. If
+        /// the type implements multiple IEnumerable<T> interfaces, the first matching generic argument is
+        /// returned.</remarks>
+        /// <param name="elementType">When this method returns <see langword="true"/>, contains the element type of the IEnumerable; otherwise,
+        /// <see langword="null"/>.</param>
+        public bool IsEnumerableType([NotNullWhen(true)] out Type? elementType)
         {
             elementType = null;
 
@@ -446,7 +464,7 @@ namespace Smartstore
                 return false;
             }
 
-            if (type.IsClosedGenericTypeOf(typeof(IEnumerable<>), out var closedType))
+            if (type.TryGetClosedGenericTypeOf(typeof(IEnumerable<>), out var closedType))
             {
                 elementType = closedType.GetGenericArguments()[0];
             }
@@ -455,12 +473,10 @@ namespace Smartstore
         }
 
         /// <summary>
-        /// Checks whether the given type implements <see cref="ICollection{}"/>.
+        /// Determines whether the current type implements the IAsyncEnumerable<T> interface and retrieves the element
+        /// type if it does.
         /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <param name="elementType">The generic argument type of the collection.</param>
-        /// <returns>True if the type is a collection type; False otherwise.</returns>
-        public static bool IsCollectionType(this Type type, out Type elementType)
+        public bool IsAsyncEnumerableType([NotNullWhen(true)] out Type? elementType)
         {
             elementType = null;
 
@@ -469,7 +485,7 @@ namespace Smartstore
                 return false;
             }
 
-            if (type.IsClosedGenericTypeOf(typeof(ICollection<>), out var closedType))
+            if (type.TryGetClosedGenericTypeOf(typeof(IAsyncEnumerable<>), out var closedType))
             {
                 elementType = closedType.GetGenericArguments()[0];
             }
@@ -477,18 +493,80 @@ namespace Smartstore
             return elementType != null;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsDictionaryType(this Type type)
+        /// <summary>
+        /// Determines whether the current type represents a collection type and retrieves its element type if
+        /// applicable.
+        /// </summary>
+        /// <remarks>This method does not consider basic or nullable types as collections. If the type is
+        /// a closed generic implementation of <see cref="ICollection{T}"/> or <see cref="IReadOnlyCollection{T}"/>, the
+        /// element type is provided via the <paramref name="elementType"/> parameter.</remarks>
+        public bool IsCollectionType([NotNullWhen(true)] out Type? elementType)
         {
-            return type.IsClosedGenericTypeOf(typeof(IDictionary<,>));
+            elementType = null;
+
+            if (type.IsBasicOrNullableType())
+            {
+                return false;
+            }
+
+            if (
+                type.TryGetClosedGenericTypeOf(typeof(ICollection<>), out var closedType) ||
+                type.TryGetClosedGenericTypeOf(typeof(IReadOnlyCollection<>), out closedType))
+            {
+                elementType = closedType.GetGenericArguments()[0];
+            }
+
+            return elementType != null;
         }
 
-        public static bool IsDictionaryType(this Type type, out Type keyType, out Type valueType)
+        /// <summary>
+        /// Determines whether the current type represents a set type and retrieves its element type if applicable.
+        /// </summary>
+        /// <remarks>This method considers both <see cref="ISet{T}"/> and <see cref="IReadOnlySet{T}"/> as
+        /// valid set types. Basic types and nullable types are not considered set types.</remarks>
+        public bool IsSetType([NotNullWhen(true)] out Type? elementType)
+        {
+            elementType = null;
+
+            if (type.IsBasicOrNullableType())
+            {
+                return false;
+            }
+
+            if (
+                type.TryGetClosedGenericTypeOf(typeof(ISet<>), out var closedType) ||
+                type.TryGetClosedGenericTypeOf(typeof(IReadOnlySet<>), out closedType))
+            {
+                elementType = closedType.GetGenericArguments()[0];
+            }
+
+            return elementType != null;
+        }
+
+        /// <inheritdoc cref="IsDictionaryType(Type, out Type?, out Type?)" />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsDictionaryType()
+        {
+            return typeof(IDictionary).IsAssignableFrom(type) ||
+                type.TryGetClosedGenericTypeOf(typeof(IDictionary<,>), out _) ||
+                type.TryGetClosedGenericTypeOf(typeof(IReadOnlyDictionary<,>), out _);
+        }
+
+        /// <summary>
+        /// Determines whether the current type is a dictionary type and retrieves its key and value types if
+        /// applicable.
+        /// </summary>
+        /// <remarks>This method supports both mutable and read-only generic dictionary interfaces. If the
+        /// type implements either interface, the corresponding generic type arguments are provided in <paramref
+        /// name="keyType"/> and <paramref name="valueType"/>.</remarks>
+        public bool IsDictionaryType([NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valueType)
         {
             keyType = null;
             valueType = null;
 
-            if (type.IsClosedGenericTypeOf(typeof(IDictionary<,>), out var closedType))
+            if (
+                type.TryGetClosedGenericTypeOf(typeof(IDictionary<,>), out var closedType) ||
+                type.TryGetClosedGenericTypeOf(typeof(IReadOnlyDictionary<,>), out closedType))
             {
                 var args = closedType.GetGenericArguments();
                 keyType = args[0];
@@ -500,180 +578,297 @@ namespace Smartstore
             return false;
         }
 
-        #endregion
-
-        #region Generics
-
         /// <summary>
-        /// Gets either the underlying type of a <see cref="Nullable{T}" /> type
-        /// or the given type itself if it is not nullable.
+        /// Returns the underlying non-nullable type if the current type is a nullable value type; otherwise, returns
+        /// the current type.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Type GetNonNullableType(this Type type)
+        public Type GetNonNullableType()
         {
             return Nullable.GetUnderlyingType(type) ?? type;
         }
 
         /// <summary>
-        /// Determine whether a given type is an open generic.
+        /// Determines whether the current type represents an open generic type.
         /// </summary>
-        /// <param name="source">The input type, e.g. <see cref="IEnumerable{}"/></param>
-        /// <returns>True if the type is an open generic; false otherwise.</returns>
+        /// <returns>true if the type is a generic type definition or contains unassigned generic parameters; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsOpenGeneric(this Type source)
+        public bool IsOpenGeneric()
         {
-            return source.IsGenericTypeDefinition || source.ContainsGenericParameters;
+            return type.IsGenericTypeDefinition || type.ContainsGenericParameters;
+        }
+
+        /// <inheritdoc cref="IsClosedGenericTypeOf(Type, Type, out Type?)" />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsClosedGenericTypeOf(Type openGeneric)
+        {
+            return type.TryGetClosedGenericTypeOf(openGeneric, out _);
         }
 
         /// <summary>
-        /// Checks whether given type is a closed type of a given open generic type.
+        /// Determines whether the current type is a closed constructed type of the specified open generic type.
         /// </summary>
-        /// <param name="source">The source type to check.</param>
-        /// <param name="openGeneric">The open generic type to validate against.</param>
-        /// <returns>True if <paramref name="source"/> is a closed type of <paramref name="openGeneric"/>. False otherwise.</returns>
+        /// <param name="openGeneric">The open generic type definition to compare with. Must be a generic type definition; for example,
+        /// typeof(List<>).</param>
+        /// <param name="closedGeneric">When this method returns, contains the closed constructed type if the current type is a closed generic type
+        /// of the specified open generic; otherwise, null. This parameter is passed uninitialized.</param>
+        /// <returns>true if the current type is a closed constructed type of the specified open generic type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsClosedGenericTypeOf(this Type source, Type openGeneric)
+        public bool IsClosedGenericTypeOf(Type openGeneric, [NotNullWhen(true)] out Type? closedGeneric)
         {
-            return GetClosedGenericTypesOf(source, openGeneric).Any();
-        }
-
-        /// <inheritdoc cref="IsClosedGenericTypeOf(Type, Type)"/>
-        /// <param name="closedGeneric">The first matching closed type.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsClosedGenericTypeOf(this Type source, Type openGeneric, out Type closedGeneric)
-        {
-            closedGeneric = GetClosedGenericTypesOf(source, openGeneric).FirstOrDefault();
-            return closedGeneric != null;
+            return type.TryGetClosedGenericTypeOf(openGeneric, out closedGeneric);
         }
 
         /// <summary>
-        /// Looks for interfaces on the <paramref name="source"/> type that closes the given <paramref name="openGeneric"/> interface type.
+        /// Returns all closed generic types that are constructed from the specified open generic type.
         /// </summary>
-        /// <param name="source">The type that is being checked for the interface.</param>
-        /// <param name="openGeneric">The open generic service type to locate.</param>
-        /// <returns>Matching closed implementation types.</returns>
-        public static IEnumerable<Type> GetClosedGenericTypesOf(this Type source, Type openGeneric)
+        /// <param name="openGeneric">The open generic type definition to search for. Must be an open generic type; otherwise, an empty collection
+        /// is returned.</param>
+        public IEnumerable<Type> GetClosedGenericTypesOf(Type openGeneric)
         {
             if (!openGeneric.IsOpenGeneric())
             {
-                return Enumerable.Empty<Type>();
+                return [];
             }
 
-            return GetTypesAssignableFrom(source)
-                .Where(t => !t.ContainsGenericParameters && t.IsGenericType && t.GetGenericTypeDefinition() == openGeneric);
+            return type.GetClosedGenericTypesOfCore(openGeneric);
         }
 
-        #endregion
-
-        #region Attributes
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryGetAttribute<TAttribute>(this ICustomAttributeProvider target, bool inherits, out TAttribute attribute) where TAttribute : Attribute
+        private IEnumerable<Type> GetClosedGenericTypesOfCore(Type openGeneric)
         {
-            attribute = GetAttribute<TAttribute>(target, inherits);
-            return attribute != null;
-        }
-
-        /// <summary>
-        /// Returns single attribute from the type
-        /// </summary>
-        /// <typeparam name="TAttribute">Attribute to use</typeparam>
-        /// <param name="target">Attribute provider</param>
-        ///<param name="inherits"><see cref="MemberInfo.GetCustomAttributes(Type,bool)"/></param>
-        /// <returns><em>Null</em> if the attribute is not found</returns>
-        /// <exception cref="InvalidOperationException">If there are 2 or more attributes</exception>
-        public static TAttribute GetAttribute<TAttribute>(this ICustomAttributeProvider target, bool inherits) where TAttribute : Attribute
-        {
-            if (target.IsDefined(typeof(TAttribute), inherits))
+            foreach (var t in type.GetTypesAssignableFrom())
             {
-                var attributes = target.GetCustomAttributes(typeof(TAttribute), inherits);
-                if (attributes.Length > 1)
+                if (!t.ContainsGenericParameters && t.IsGenericType && t.GetGenericTypeDefinition() == openGeneric)
                 {
-                    throw Error.MoreThanOneElement();
+                    yield return t;
                 }
+            }
+        }
 
-                return (TAttribute)attributes[0];
+        private bool TryGetClosedGenericTypeOf(Type openGeneric, [NotNullWhen(true)] out Type? closedGeneric)
+        {
+            closedGeneric = null;
+
+            if (!openGeneric.IsOpenGeneric())
+            {
+                return false;
             }
 
-            return null;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool HasAttribute<TAttribute>(this ICustomAttributeProvider target, bool inherits) where TAttribute : Attribute
-        {
-            return target.IsDefined(typeof(TAttribute), inherits);
-        }
-
-        /// <summary>
-        /// Given a particular MemberInfo, return the custom attributes of the
-        /// given type on that member.
-        /// </summary>
-        /// <typeparam name="TAttribute">Type of attribute to retrieve.</typeparam>
-        /// <param name="target">The member to look at.</param>
-        /// <param name="inherits">True to include attributes inherited from base classes.</param>
-        /// <returns>Array of found attributes.</returns>
-        public static TAttribute[] GetAttributes<TAttribute>(this ICustomAttributeProvider target, bool inherits) where TAttribute : Attribute
-        {
-            if (target.IsDefined(typeof(TAttribute), inherits))
+            foreach (var t in type.GetTypesAssignableFrom())
             {
-                var attributes = target
-                    .GetCustomAttributes(typeof(TAttribute), inherits)
-                    .Cast<TAttribute>();
-
-                return SortAttributesIfPossible(attributes).ToArray();
-            }
-
-            return Array.Empty<TAttribute>();
-        }
-
-        /// <summary>
-        /// Given a particular MemberInfo, find all the attributes that apply to this
-        /// member. Specifically, it returns the attributes on the type, then (if it's a
-        /// property accessor) on the property, then on the member itself.
-        /// </summary>
-        /// <typeparam name="TAttribute">Type of attribute to retrieve.</typeparam>
-        /// <param name="member">The member to look at.</param>
-        /// <param name="inherits">true to include attributes inherited from base classes.</param>
-        /// <returns>Array of found attributes.</returns>
-        public static TAttribute[] GetAllAttributes<TAttribute>(this MemberInfo member, bool inherits)
-            where TAttribute : Attribute
-        {
-            List<TAttribute> attributes = new();
-
-            if (member.DeclaringType != null)
-            {
-                attributes.AddRange(GetAttributes<TAttribute>(member.DeclaringType, inherits));
-
-                MethodBase methodBase = member as MethodBase;
-                if (methodBase != null)
+                if (!t.ContainsGenericParameters && t.IsGenericType && t.GetGenericTypeDefinition() == openGeneric)
                 {
-                    PropertyInfo prop = GetPropertyFromMethod(methodBase);
-                    if (prop != null)
+                    closedGeneric = t;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    extension(MethodBase method)
+    {
+        public MethodInvoker CreateInvoker()
+            => MethodInvoker.Create(method);
+
+        public PropertyInfo? GetPropertyFromMethod()
+        {
+            Guard.NotNull(method);
+
+            PropertyInfo? property = null;
+
+            if (method.IsSpecialName)
+            {
+                var containingType = method.DeclaringType;
+                if (containingType != null)
+                {
+                    if (method.Name.StartsWith("get_", StringComparison.Ordinal) ||
+                        method.Name.StartsWith("set_", StringComparison.Ordinal))
                     {
-                        attributes.AddRange(GetAttributes<TAttribute>(prop, inherits));
+                        var propertyName = method.Name[4..];
+                        property = containingType.GetProperty(propertyName);
                     }
                 }
             }
 
-            attributes.AddRange(GetAttributes<TAttribute>(member, inherits));
-            return attributes.ToArray();
+            return property;
         }
-
-        internal static IEnumerable<TAttribute> SortAttributesIfPossible<TAttribute>(IEnumerable<TAttribute> attributes)
-            where TAttribute : Attribute
-        {
-            if (typeof(IOrdered).IsAssignableFrom(typeof(TAttribute)))
-            {
-                return attributes
-                    .Cast<IOrdered>()
-                    .OrderBy(x => x.Ordinal)
-                    .Cast<TAttribute>();
-            }
-
-            return attributes;
-        }
-
-        #endregion
     }
 
+    extension(ICustomAttributeProvider target)
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetAttribute<TAttribute>(bool inherits, [NotNullWhen(true)] out TAttribute? attribute) where TAttribute : Attribute
+        {
+            attribute = target.GetAttribute<TAttribute>(inherits);
+            return attribute != null;
+        }
+
+        /// <summary>
+        /// Retrieves a custom attribute of type <typeparamref name="TAttribute"/> that is applied to the target
+        /// element, optionally searching the inheritance chain.
+        /// </summary>
+        /// <remarks>If multiple attributes of the specified type are applied to the target element, an
+        /// exception is thrown. If no such attribute is found, the method returns null. When <paramref
+        /// name="inherits"/> is true, the method searches base classes or interfaces as appropriate for inherited
+        /// attributes.</remarks>
+        /// <param name="inherits">true to search the inheritance chain for the attribute; otherwise, false.</param>
+        /// <exception cref="InvalidOperationException">Thrown if more than one attribute of type <typeparamref name="TAttribute"/> is found on the target element.</exception>
+        public TAttribute? GetAttribute<TAttribute>(bool inherits) where TAttribute : Attribute
+        {
+            // 1. Fast Path: Direct check (IsDefined is cheaper than GetCustomAttributes)
+            var attrs = target.GetCustomAttributes(typeof(TAttribute), inherits);
+
+            if (attrs.Length == 0 && inherits && target is MemberInfo mi)
+            {
+                // 2. Slow Path: Manual hierarchy crawl for overrides/shadows
+                return GetAttributeFromHierarchy<TAttribute>(mi);
+            }
+
+            if (attrs.Length == 0) return null;
+            if (attrs.Length > 1) throw new InvalidOperationException("More than one attribute found.");
+
+            return (TAttribute)attrs[0];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasAttribute<TAttribute>(bool inherits) where TAttribute : Attribute
+        {
+            // Best performance: IsDefined uses internal CLR metadata pointers
+            if (target.IsDefined(typeof(TAttribute), inherits)) return true;
+
+            if (inherits && target is MemberInfo mi)
+            {
+                // Fallback for shadowed/overridden members
+                return GetAttributeFromHierarchy<TAttribute>(mi) != null;
+            }
+
+            return false;
+        }
+
+        public IEnumerable<TAttribute> GetAttributes<TAttribute>(bool inherits) where TAttribute : Attribute
+        {
+            var attrs = target.GetCustomAttributes(typeof(TAttribute), inherits);
+
+            // If nothing found but inheritance requested, check base members
+            if (attrs.Length == 0 && inherits && target is MemberInfo mi)
+            {
+                var fromBase = GetAttributeFromHierarchy<TAttribute>(mi);
+                if (fromBase != null) return [fromBase];
+                return [];
+            }
+
+            if (attrs.Length == 0) return [];
+
+            // Optimized sort for IOrdered
+            if (typeof(IOrdered).IsAssignableFrom(typeof(TAttribute)))
+            {
+                var list = new List<TAttribute>(attrs.Length);
+                for (int i = 0; i < attrs.Length; i++) list.Add((TAttribute)attrs[i]);
+                list.Sort((x, y) => ((IOrdered)x!).Ordinal.CompareTo(((IOrdered)y!).Ordinal));
+                return list;
+            }
+
+            // Avoid IEnumerable overhead by returning a typed array
+            var result = new TAttribute[attrs.Length];
+            Array.Copy(attrs, result, attrs.Length);
+            return result;
+        }
+    }
+
+    extension(MemberInfo member)
+    {
+        /// <summary>
+        /// Determines if the member overrides a definition from a base class.
+        /// </summary>
+        /// <returns>True if the member is an override; otherwise, false.</returns>
+        public bool IsOverride()
+        {
+            if (member is PropertyInfo pi)
+            {
+                // Properties are overridden via their accessor methods (get/set).
+                var accessor = pi.GetMethod ?? pi.SetMethod;
+                if (accessor == null) return false;
+
+                // GetBaseDefinition returns the method where the implementation was first declared.
+                // If the declaring type differs from the base definition's type, it's an override.
+                return accessor.GetBaseDefinition().DeclaringType != accessor.DeclaringType;
+            }
+
+            if (member is MethodInfo method)
+            {
+                return method.GetBaseDefinition().DeclaringType != method.DeclaringType;
+            }
+
+            // Fields, Events, or Types cannot be "overridden" in the classical IL sense.
+            return false;
+        }
+
+        public TAttribute[] GetAllAttributes<TAttribute>(bool inherits)
+            where TAttribute : Attribute
+        {
+            List<TAttribute> attributes = [];
+
+            if (member.DeclaringType != null)
+            {
+                attributes.AddRange(member.DeclaringType.GetCustomAttributes<TAttribute>(inherits));
+
+                if (member is MethodBase methodBase)
+                {
+                    var prop = methodBase.GetPropertyFromMethod();
+                    if (prop != null)
+                    {
+                        attributes.AddRange(prop.GetCustomAttributes<TAttribute>(inherits));
+                    }
+                }
+            }
+
+            attributes.AddRange(member.GetCustomAttributes<TAttribute>(inherits));
+            return attributes.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Crawls up the inheritance chain to find attributes on overridden or shadowed members.
+    /// This is only called if the standard provider fails.
+    /// </summary>
+    private static TAttribute? GetAttributeFromHierarchy<TAttribute>(MemberInfo mi) where TAttribute : Attribute
+    {
+        // GUARD: Check if the member is actually an override.
+        // If the base definition is declared in the same type, it's NOT an override.
+        if (!mi.IsOverride())
+        {
+            return null;
+        }
+
+        // Only proceed to expensive hierarchy crawl if it's an actual override.
+        var currentType = mi.DeclaringType?.BaseType;
+        var memberName = mi.Name;
+        var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+        while (currentType != null && currentType != typeof(object))
+        {
+            MemberInfo? baseMember = (mi is PropertyInfo)
+                ? currentType.GetProperty(memberName, flags)
+                : (MemberInfo?)currentType.GetMethod(memberName, flags);
+
+            if (baseMember != null)
+            {
+                // We check with inherits:false because we are already iterating through the types.
+                var attr = baseMember.GetCustomAttributes(typeof(TAttribute), false);
+                if (attr.Length > 0) return (TAttribute)attr[0];
+
+                // Optimization: Stop if we reached the root definition of the override chain.
+                if (baseMember is MethodInfo mb && mb.GetBaseDefinition() == mb) break;
+                if (baseMember is PropertyInfo pb)
+                {
+                    var acc = pb.GetMethod ?? pb.SetMethod;
+                    if (acc != null && acc.GetBaseDefinition() == acc) break;
+                }
+            }
+            currentType = currentType.BaseType;
+        }
+        return null;
+    }
 }

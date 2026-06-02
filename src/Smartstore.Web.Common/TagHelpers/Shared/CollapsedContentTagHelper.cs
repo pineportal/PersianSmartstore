@@ -1,42 +1,49 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Smartstore.Core.Catalog;
+using Smartstore.Utilities;
 
-namespace Smartstore.Web.TagHelpers.Shared
+namespace Smartstore.Web.TagHelpers.Shared;
+
+[HtmlTargetElement("collapsed-content")]
+public class CollapsedContentTagHelper : TagHelper
 {
-    [HtmlTargetElement("collapsed-content")]
-    public class CollapsedContentTagHelper : TagHelper
+    const string MaxHeightAttributeName = "sm-max-height";
+
+    private readonly CatalogSettings _catalogSettings;
+
+    public CollapsedContentTagHelper(CatalogSettings catalogSettings)
     {
-        const string MaxHeightAttributeName = "sm-max-height";
+        _catalogSettings = catalogSettings;
+    }
 
-        private readonly CatalogSettings _catalogSettings;
+    [HtmlAttributeName(MaxHeightAttributeName)]
+    public int? MaxHeight { get; set; }
 
-        public CollapsedContentTagHelper(CatalogSettings catalogSettings)
+    public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+    {
+        if (context.ShouldSuppressChildContent())
         {
-            _catalogSettings = catalogSettings;
+            return;
         }
 
-        [HtmlAttributeName(MaxHeightAttributeName)]
-        public int? MaxHeight { get; set; }
+        output.TagName = null;
+        await output.LoadAndSetChildContentAsync();
 
-        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        if (_catalogSettings.EnableHtmlTextCollapser && (MaxHeight.HasValue && MaxHeight > 0))
         {
-            output.TagName = null;
-            await output.LoadAndSetChildContentAsync();
+            var maxHeight = MaxHeight ?? _catalogSettings.HtmlTextCollapsedHeight;
+            var classes = output.Attributes.TryGetAttribute("class", out var attr) ? $"more-less {attr.Value}" : "more-less";
 
-            if (_catalogSettings.EnableHtmlTextCollapser)
-            {
-                var maxHeight = MaxHeight ?? _catalogSettings.HtmlTextCollapsedHeight;
+            var outer = new TagBuilder("div");
+            outer.MergeAttribute("id", "more-less" + CommonHelper.GenerateRandomInteger());
+            outer.Attributes.Add("class", classes);
+            outer.Attributes.Add("data-max-height", maxHeight.ToString());
 
-                var outer = new TagBuilder("div");
-                outer.Attributes.Add("class", "more-less");
-                outer.Attributes.Add("data-max-height", maxHeight.ToString());
+            var inner = new TagBuilder("div");
+            inner.Attributes.Add("class", "more-block");
 
-                var inner = new TagBuilder("div");
-                inner.Attributes.Add("class", "more-block");
-
-                output.WrapContentWith(outer, inner);
-            }
+            output.WrapContentWith(outer, inner);
         }
     }
 }

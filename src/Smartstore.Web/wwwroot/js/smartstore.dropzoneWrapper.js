@@ -46,6 +46,14 @@
             // Init dropzone.
             elDropzone.addClass("dropzone");
 
+            // Make dropzone accessible by keyboard.
+            elDropzone.on('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    elDropzone.find('.dz-clickable:first').trigger('click');
+                }
+            });
+
             // Dropzone init params.
             var opts = {
                 url: $el.data('upload-url'),
@@ -494,6 +502,7 @@
                                         .addClass("dz-success dz-complete")
                                         .removeClass("d-none dz-processing");
 
+                                    elPreview.find(".file-figure").attr("data-type", file.type);
                                     elPreview.find(".fu-file-info-name").html(value.Name);
 
                                     elPreview
@@ -974,7 +983,7 @@
 
         icon = icon || Smartstore.media.getIconHint({});
 
-        var html = '<i class="file-icon show fa-2x ' + icon.name + '"></i>';
+        var html = '<i class="file-icon show fa-2x ' + icon.name + '" aria-hidden="true"></i>';
         fuContainer.find('.fu-thumb').addClass("empty").html(html);
         fuContainer.find('.fu-message').addClass("empty");
     }

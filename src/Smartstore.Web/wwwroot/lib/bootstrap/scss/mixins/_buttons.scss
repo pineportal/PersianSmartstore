@@ -123,3 +123,8 @@
   --btn-border-radius: #{$border-radius};
   @include rfs($font-size, --btn-font-size);
 }
+
+@mixin button-focus-visible() {
+  outline: 0;
+  box-shadow: #{$btn-focus-box-shadow};
+}

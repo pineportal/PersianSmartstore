@@ -4,18 +4,22 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Smartstore
+namespace Smartstore;
+
+public static partial class StringExtensions
 {
-    public static partial class StringExtensions
+    public const string NotAvailable = "n/a";
+
+    const string DumpStr = "------------------------------------------------";
+    const string TrueString = "true";
+    const string FalseString = "false";
+
+    private delegate void ActionLine(TextWriter textWriter, string line);
+
+    extension(string? value)
     {
-        private const string DumpStr = "------------------------------------------------";
-
-        public const string NotAvailable = "n/a";
-
-        private delegate void ActionLine(TextWriter textWriter, string line);
-
         [DebuggerStepThrough]
-        public static string ToSafe(this string? value, string? defaultValue = null)
+        public string ToSafe(string? defaultValue = null)
         {
             if (!string.IsNullOrEmpty(value))
             {
@@ -28,14 +32,15 @@ namespace Smartstore
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull(nameof(value))]
-        public static string? TrimSafe(this string? value)
+        public string? TrimSafe()
         {
             return !string.IsNullOrEmpty(value) ? value.Trim() : value;
         }
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string EmptyNull(this string? value)
+        [return: NotNullIfNotNull(nameof(value))]
+        public string EmptyNull()
         {
             return value ?? string.Empty;
         }
@@ -43,14 +48,14 @@ namespace Smartstore
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull(nameof(value))]
-        public static string? NullEmpty(this string? value)
+        public string? NullEmpty()
         {
             return string.IsNullOrEmpty(value) ? null : value;
         }
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Dump(this string? value, bool appendMarks = false)
+        public void Dump(bool appendMarks = false)
         {
             Debug.WriteLine(value);
             Debug.WriteLineIf(appendMarks, DumpStr);
@@ -61,7 +66,7 @@ namespace Smartstore
         /// </summary>
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string NaIfEmpty(this string? value)
+        public string NaIfEmpty()
         {
             return string.IsNullOrWhiteSpace(value) ? NotAvailable : value;
         }
@@ -71,9 +76,17 @@ namespace Smartstore
         /// </summary>
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrDefault(this string? value, string defaultValue)
+        public string OrDefault(string defaultValue)
         {
             return string.IsNullOrEmpty(value) ? defaultValue : value;
         }
+    }
+
+    extension(bool value)
+    {
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ToStringLower()
+            => value ? TrueString : FalseString;
     }
 }

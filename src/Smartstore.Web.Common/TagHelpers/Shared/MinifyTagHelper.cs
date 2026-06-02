@@ -1,85 +1,93 @@
-﻿using DouglasCrockford.JsMin;
-using Microsoft.AspNetCore.Razor.TagHelpers;
+﻿using Microsoft.AspNetCore.Razor.TagHelpers;
 using Smartstore.Caching;
 using Smartstore.Utilities;
+using Smartstore.Web.Bundling.Processors;
 
-namespace Smartstore.Web.TagHelpers.Shared
+namespace Smartstore.Web.TagHelpers.Shared;
+
+/// <summary>
+/// Minifies an inline script in debug mode, but only if the corresponding theming option is activated.
+/// Inline script minification is an opt-in feature and is disabled by default, 
+/// because inline scripts may contain dynamic content.
+/// </summary>
+[HtmlTargetElement("script", Attributes = MinifyAttributeName)]
+public class MinifyTagHelper : TagHelper
 {
-    /// <summary>
-    /// Minifies an inline script in debug mode, but only if the corresponding theming option is activated.
-    /// Inline script minification is an opt-in feature and is disabled by default, 
-    /// because inline scripts may contain dynamic content.
-    /// </summary>
-    [HtmlTargetElement("script", Attributes = MinifyAttributeName)]
-    public class MinifyTagHelper : TagHelper
+    const string MinifyAttributeName = "sm-minify";
+
+    private readonly ICacheFactory _cacheFactory;
+
+    public MinifyTagHelper(ICacheFactory cacheFactory)
     {
-        const string MinifyAttributeName = "sm-minify";
+        _cacheFactory = cacheFactory;
+    }
 
-        private readonly ICacheFactory _cacheFactory;
+    /// <summary>
+    /// Minifies the inline script in debug mode, but only if the corresponding theming option is activated. Default = false.
+    /// </summary>
+    [HtmlAttributeName(MinifyAttributeName)]
+    public virtual bool Minify { get; set; }
 
-        public MinifyTagHelper(ICacheFactory cacheFactory)
+    public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+    {
+        if (context.ShouldSuppressChildContent())
         {
-            _cacheFactory = cacheFactory;
+            return;
         }
 
-        /// <summary>
-        /// Minifies the inline script in debug mode, but only if the corresponding theming option is activated. Default = false.
-        /// </summary>
-        [HtmlAttributeName(MinifyAttributeName)]
-        public virtual bool Minify { get; set; }
-
-        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        if (!Minify || CommonHelper.IsDevEnvironment)
         {
-            if (!Minify /*|| CommonHelper.IsDevEnvironment*/)
+            // Proceed only if enabled or in release mode
+            return;
+        }
+
+        if (output.Attributes.ContainsName("src"))
+        {
+            // Proceed only if the script is inline
+            return;
+        }
+
+        if (output.Attributes.TryGetAttribute("type", out var typeAttribute) && typeAttribute.ValueAsString() != "text/javascript")
+        {
+            // Proceed only if the script is text/javascript
+            return;
+        }
+
+        // Get the content of the script tag
+        var childContent = await output.GetChildContentAsync();
+        var originalContent = childContent.GetContent();
+
+        // Generate a cache key using XxHash
+        var contentHash = originalContent.XxHash64();
+        var cacheKey = $"InlineScript:{contentHash}";
+
+        var minifiedResult = _cacheFactory.GetMemoryCache().Get(cacheKey, o =>
+        {
+            o.SetSlidingExpiration(TimeSpan.FromHours(1));
+
+            try
             {
-                // Proceed only if enabled or in release mode
-                return;
+                // Return the minified JavaScript code
+                //var minContent = NUglifyJsMinProcessor.Instance.MinifyCore(originalContent);
+                //return minContent.Code;
+                var minContent = JsMinProcessor.Minifier.Minify(originalContent);
+                return minContent;
             }
-
-            if (output.Attributes.ContainsName("src"))
+            catch
             {
-                // Proceed only if the script is inline
-                return;
+                return null;
             }
+        }, independent: true);
 
-            if (output.Attributes.TryGetAttribute("type", out var typeAttribute) && typeAttribute.ValueAsString() != "text/javascript")
-            {
-                // Proceed only if the script is text/javascript
-                return;
-            }
-
-            // Get the content of the script tag
-            var childContent = await output.GetChildContentAsync();
-            var originalContent = childContent.GetContent();
-
-            // Generate a cache key using XxHash
-            var contentHash = originalContent.XxHash64();
-            var cacheKey = $"InlineScript:{contentHash}";
-
-            var minifiedResult = _cacheFactory.GetMemoryCache().Get(cacheKey, o => {
-                o.SetSlidingExpiration(TimeSpan.FromHours(1));
-
-                try
-                {
-                    // Return the minified the JavaScript code
-                    return new JsMinifier().Minify(originalContent);
-                }
-                catch
-                {
-                    return null;
-                }
-            }, independent: true);
-
-            if (minifiedResult is null)
-            {
-                // Set the original content on failure
-                output.Content.SetHtmlContent(originalContent);
-            }
-            else
-            {
-                // Set the minified content
-                output.Content.SetHtmlContent(minifiedResult);
-            }
+        if (minifiedResult is null)
+        {
+            // Set the original content on failure
+            output.Content.SetHtmlContent(originalContent);
+        }
+        else
+        {
+            // Set the minified content
+            output.Content.SetHtmlContent(minifiedResult);
         }
     }
 }

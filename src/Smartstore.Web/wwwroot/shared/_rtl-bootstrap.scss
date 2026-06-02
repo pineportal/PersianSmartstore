@@ -16,6 +16,10 @@
 	// Forms
 	// ----------------------------------------------
 
+    .form-control {
+        --validation-icon-xpos: left;
+    }
+
     select.form-control {
         &:not([multiple], [size]:not([size="1"])) {
             background-position-x: 0.75rem;
@@ -27,20 +31,20 @@
 	// ----------------------------------------------
 
 	.custom-select {
-	  &[multiple],
-	  &[size]:not([size="1"]) {
-		padding-left: $custom-select-padding-x;
-		padding-right: 0;
-	  }
+	    &[multiple],
+	    &[size]:not([size="1"]) {
+	        padding-left: $custom-select-padding-x;
+	        padding-right: 0;
+	    }
 	}
 	
 	.custom-file-label { 
-	  &::after {
-		left: 0;
-		right: initial;
+	    &::after {
+	        left: 0;
+	        right: initial;
 	
-		border-right: $custom-file-border-width solid $custom-file-border-color;
-		border-left: none;
-	  }
+	        border-right: $custom-file-border-width solid $custom-file-border-color;
+	        border-left: none;
+	    }
 	}
 }

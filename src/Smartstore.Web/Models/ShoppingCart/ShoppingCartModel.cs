@@ -1,101 +1,109 @@
 ﻿using Smartstore.Core.Checkout.Attributes;
 using Smartstore.Web.Rendering.Choices;
 
-namespace Smartstore.Web.Models.Cart
-{
-    public partial class ShoppingCartModel : CartModelBase
-    {
-        public override IEnumerable<ShoppingCartItemModel> Items { get; } = new List<ShoppingCartItemModel>();
+namespace Smartstore.Web.Models.Cart;
 
-        public void AddItems(params ShoppingCartItemModel[] models)
+public partial class ShoppingCartModel : CartModelBase
+{
+    public override IEnumerable<ShoppingCartItemModel> Items { get; } = new List<ShoppingCartItemModel>();
+
+    public void AddItems(params ShoppingCartItemModel[] models)
+    {
+        ((List<ShoppingCartItemModel>)Items).AddRange(models);
+    }
+
+    public string CheckoutAttributeInfo { get; set; }
+    public List<CheckoutAttributeModel> CheckoutAttributes { get; set; } = [];
+
+    public EstimateShippingModel EstimateShipping { get; set; } = new();
+    public DiscountBoxModel DiscountBox { get; set; } = new();
+    public GiftCardBoxModel GiftCardBox { get; set; } = new();
+    public RewardPointsBoxModel RewardPoints { get; set; } = new();
+    public int MediaDimensions { get; set; }
+    public ButtonPaymentMethodModel ButtonPaymentMethods { get; set; } = new();
+    public string CustomerComment { get; set; }
+    public bool DisplayBasePrice { get; set; }
+    public bool DisplayCommentBox { get; set; }
+    public bool DisplayEsdRevocationWaiverBox { get; set; }
+    public bool DisplayMoveToWishlistButton { get; set; }
+    public string CheckoutNotAllowedWarning { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the shopping cart contains items with recurring payment.
+    /// In this case we don't display quick checkout buttons (e.g. PayPal, Amazon).
+    /// </summary>
+    public bool HasItemsWithRecurringPayment { get; set; }
+
+    public partial class ShoppingCartItemModel : CartEntityModelBase
+    {
+        public bool IsShippingEnabled { get; set; }
+        public bool IsDownload { get; set; }
+        public bool HasUserAgreement { get; set; }
+        public bool IsEsd { get; set; }
+        public int? DurabilityGuaranteeDurationYears { get; set; }
+        public string ManufacturerPartNumber { get; set; }
+
+        public override IEnumerable<ShoppingCartItemModel> ChildItems { get; } = new List<ShoppingCartItemModel>();
+
+        public void AddChildItems(params ShoppingCartItemModel[] models)
         {
-            ((List<ShoppingCartItemModel>)Items).AddRange(models);
+            ((List<ShoppingCartItemModel>)ChildItems).AddRange(models);
         }
 
-        public string CheckoutAttributeInfo { get; set; }
-        public List<CheckoutAttributeModel> CheckoutAttributes { get; set; } = [];
-
-        public EstimateShippingModel EstimateShipping { get; set; } = new();
-        public DiscountBoxModel DiscountBox { get; set; } = new();
-        public GiftCardBoxModel GiftCardBox { get; set; } = new();
-        public RewardPointsBoxModel RewardPoints { get; set; } = new();
-        public int MediaDimensions { get; set; }
-        public ButtonPaymentMethodModel ButtonPaymentMethods { get; set; } = new();
-        public string CustomerComment { get; set; }
-        public bool DisplayBasePrice { get; set; }
-        public bool DisplayCommentBox { get; set; }
-        public bool DisplayEsdRevocationWaiverBox { get; set; }
-        public bool DisplayMoveToWishlistButton { get; set; }
-        public string CheckoutNotAllowedWarning { get; set; }
+        public bool DisableWishlistButton { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the shopping cart contains items with recurring payment.
-        /// In this case we don't display quick checkout buttons (e.g. PayPal, Amazon).
+        /// Gets or sets a value indicating whether the item is an auto-added, required product.
+        /// It can only be removed from the cart when the parent product is removed, if <c>true</c>.
         /// </summary>
-        public bool HasItemsWithRecurringPayment { get; set; }
+        public bool IsRequired { get; set; }
+        public bool DisableQuantityControl { get; set; }
+    }
 
-        public partial class ShoppingCartItemModel : CartEntityModelBase
+    public partial class CheckoutAttributeModel : ChoiceModel
+    {
+        public override string BuildControlId()
+            => CheckoutAttributeQueryItem.CreateKey(Id);
+
+        public override string GetFileUploadUrl(IUrlHelper url)
+            => url.Action("UploadFileCheckoutAttribute", "ShoppingCart", new { controlId = BuildControlId() });
+    }
+
+    public partial class CheckoutAttributeValueModel : ChoiceItemModel
+    {
+        public override string GetItemLabel()
         {
-            public bool IsShippingEnabled { get; set; }
-            public bool IsDownload { get; set; }
-            public bool HasUserAgreement { get; set; }
-            public bool IsEsd { get; set; }
+            var label = Name;
 
-            public override IEnumerable<ShoppingCartItemModel> ChildItems { get; } = new List<ShoppingCartItemModel>();
-
-            public void AddChildItems(params ShoppingCartItemModel[] models)
+            if (PriceAdjustment.HasValue())
             {
-                ((List<ShoppingCartItemModel>)ChildItems).AddRange(models);
+                label += " ({0})".FormatCurrent(PriceAdjustment);
             }
 
-            public bool DisableWishlistButton { get; set; }
+            return label;
         }
+    }
 
-        public partial class CheckoutAttributeModel : ChoiceModel
-        {
-            public override string BuildControlId()
-                => CheckoutAttributeQueryItem.CreateKey(Id);
+    public partial class DiscountBoxModel : ModelBase
+    {
+        public bool Display { get; set; }
+        public string Message { get; set; }
+        public string CurrentCode { get; set; }
+        public bool IsWarning { get; set; }
+    }
 
-            public override string GetFileUploadUrl(IUrlHelper url)
-                => url.Action("UploadFileCheckoutAttribute", "ShoppingCart", new { controlId = BuildControlId() });
-        }
+    public partial class GiftCardBoxModel : ModelBase
+    {
+        public bool Display { get; set; }
+        public string Message { get; set; }
+        public bool IsWarning { get; set; }
+    }
 
-        public partial class CheckoutAttributeValueModel : ChoiceItemModel
-        {
-            public override string GetItemLabel()
-            {
-                var label = Name;
-
-                if (PriceAdjustment.HasValue())
-                {
-                    label += " ({0})".FormatCurrent(PriceAdjustment);
-                }
-
-                return label;
-            }
-        }
-
-        public partial class DiscountBoxModel : ModelBase
-        {
-            public bool Display { get; set; }
-            public string Message { get; set; }
-            public string CurrentCode { get; set; }
-            public bool IsWarning { get; set; }
-        }
-
-        public partial class GiftCardBoxModel : ModelBase
-        {
-            public bool Display { get; set; }
-            public string Message { get; set; }
-            public bool IsWarning { get; set; }
-        }
-
-        public partial class RewardPointsBoxModel : ModelBase
-        {
-            public bool DisplayRewardPoints { get; set; }
-            public int RewardPointsBalance { get; set; }
-            public string RewardPointsAmount { get; set; }
-            public bool UseRewardPoints { get; set; }
-        }
+    public partial class RewardPointsBoxModel : ModelBase
+    {
+        public bool DisplayRewardPoints { get; set; }
+        public int RewardPointsBalance { get; set; }
+        public Money RewardPointsAmount { get; set; }
+        public bool UseRewardPoints { get; set; }
     }
 }

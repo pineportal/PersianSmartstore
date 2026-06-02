@@ -1,0 +1,68 @@
+﻿@model ReturnCaseModel
+
+@{
+    var parentModel = ViewData["Parent"] as ReturnCaseListModel;
+    var isSingleStoreMode = (bool)ViewBag.IsSingleStoreMode;
+}
+
+<datagrid id="returncases-grid"
+          version="2"
+          allow-resize="true"
+          preserve-grid-state="true" preserve-command-state="true"
+          allow-column-reordering="true">
+    <datasource read="@Url.Action("ReturnCaseList")" />
+    <paging position="Bottom" show-size-chooser="true" />
+    <sorting allow-unsort="true" allow-multisort="false">
+        <sort by="CreatedOn" by-entity-member="CreatedOnUtc" descending="true" />
+    </sorting>
+    <toolbar>
+        <toolbar-group>
+            <button datagrid-action="DataGridToolAction.ToggleSearchPanel" type="button" class="btn btn-light btn-icon">
+                <i class="fa fa-fw fa-filter"></i>
+            </button>
+        </toolbar-group>
+        <zone name="datagrid_toolbar_omega"></zone>
+    </toolbar>
+    <search-panel>
+        <partial name="_Grid.ReturnCases.Search" model="parentModel" />
+    </search-panel>
+    <columns>
+        <column for="Id" halign="center" hideable="false">
+            <display-template>
+                <span class="badge rounded-pill px-2 mr-1" :class="item.row.KindLabelClass" style="width: 78px; max-width: 78px">{{ item.row.KindStr }}</span>
+                <div class="text-truncate"><a :href="item.row.EditUrl" class="text-truncate fwm">{{ item.value }}</a></div>
+            </display-template>
+        </column>
+        <column for="ProductName" width="2fr" sortable="false">
+            <display-template>
+                @Html.LabeledProductName(urlExpression: "item.row.ProductEditUrl", valueExpression: "item.row.ProductName")
+            </display-template>
+        </column>
+        <column for="Quantity" halign="center" />
+        <column for="CustomerId" sortable="false">
+            <display-template>
+                <div class="text-truncate"><a :href="item.row.CustomerEditUrl" class="text-truncate">{{ item.row.CustomerName }}</a></div>
+            </display-template>
+        </column>
+        <column for="CustomerEmail" sortable="false" />
+        <column for="OrderId" sortable="false" halign="center">
+            <display-template>
+                <div class="text-truncate"><a :href="item.row.OrderEditUrl" class="text-truncate">{{ item.row.OrderNumber }}</a></div>
+            </display-template>
+        </column>
+        <column for="ReturnCaseStatusStr" entity-member="ReturnCaseStatusId">
+            <display-template>
+                <span v-bind:class="item.row.ReturnCaseStatusLabelClass" class="text-truncate">{{ item.row.ReturnCaseStatusStr }}</span>
+            </display-template>
+        </column>
+        <column for="CreatedOn" entity-member="CreatedOnUtc" />
+        <column for="UpdatedOn" entity-member="UpdatedOnUtc" visible="false" />
+        <column for="StoreName" sortable="false" sm-if="!isSingleStoreMode" />
+        <column for="StaffNotes" visible="false" wrap="true" />
+        <column for="AdminComment" visible="false" wrap="true" />
+        <column for="CustomerComments" visible="false" wrap="true" />
+    </columns>
+    <row-commands>
+        <a datarow-action="DataRowAction.Custom" :href="item.row.EditUrl">@T("Common.Edit")</a>
+    </row-commands>
+</datagrid>

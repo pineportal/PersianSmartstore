@@ -37,6 +37,7 @@
 
                     if (link.hasClass("dropdown-toggle")) {
                         link.closest("li").removeClass("active");
+                        link.attr("aria-expanded", "false");
                     }
 
                     zoomContainer.css("z-index", "999");
@@ -55,11 +56,11 @@
                     }
                     else {
                         clearTimeout(openTimeout);
-
                         $(link.data("target")).addClass("show");
 
                         if (link.hasClass("dropdown-toggle")) {
                             link.closest("li").addClass("active");
+                            link.attr("aria-expanded", "true");
                         }
 
                         initRotator(link.data("target"));
@@ -131,7 +132,6 @@
                 }
 
                 function alignDrop(popper, drop, container) {
-
                     var nav = $(".navbar-nav", container),
                         left,
                         right,
@@ -196,7 +196,6 @@
                     var event = window.touchable ? "click" : "mouseenter";
 
                     navElems.on(event, function (e) {
-
                         var navItem = $(this);
                         var targetSelector = navItem.find(".nav-link").data("target");
                         if (!targetSelector)
@@ -212,7 +211,7 @@
 
                 megamenuContainer.evenIfHidden(function (el) {
 
-                    megamenuContainer.find('ul').wrap('<div class="nav-slider" style="overflow:hidden; position:relative;" />');
+                    megamenuContainer.find('ul').wrap('<div class="nav-slider position-relative" style="overflow-x: hidden" />');
 
                     var navSlider = $(".nav-slider", megamenu);
                     var nav = $(".navbar-nav", navSlider);
@@ -357,7 +356,7 @@
                             megamenuContainer.removeClass("show-scroll-buttons");
                         }
 
-                        megamenuDropdownContainer.find('.mega-menu-product-rotator > .artlist-grid').each(function (i, el) {
+                        megamenuDropdownContainer.find('.megamenu-product-rotator > .artlist-grid').each(function (i, el) {
                             try {
                                 $(this).slick('unslick');
                                 $(this).attr('data-slick', '{"dots": false, "autoplay": true}');
@@ -383,7 +382,7 @@
                     var displayRotator = container.data("display-rotator");
 
                     // reinit slick product rotator
-                    container.find('.mega-menu-product-rotator > .artlist-grid').each(function (i, el) {
+                    container.find('.megamenu-product-rotator > .artlist-grid').each(function (i, el) {
                         try {
                             $(this).slick('unslick');
                             $(this).attr('data-slick', '{"dots": false, "autoplay": true}');
@@ -414,7 +413,7 @@
                                     // add html view
                                     rotatorColumn.find(".rotator-content").html(data);
 
-                                    var list = container.find('.mega-menu-product-rotator > .artlist-grid');
+                                    var list = container.find('.megamenu-product-rotator > .artlist-grid');
                                     list.attr('data-slick', '{"dots": false, "autoplay": true}');
 
                                     // Init carousel
@@ -430,6 +429,42 @@
                     else {
                         container.find(".placeholder").addClass("empty");
                     }
+                }
+
+                // TODO: (mh) (wcag) Bad API design. These callback handlers should call methods that already exist here and not introduce new code and flow.
+                // Accessibility event handling
+                // Main nav elements
+                megamenu.on("expand.ak", '.navbar-nav .nav-item', (e) => {
+                    e.stopPropagation();
+                    const el = $(e.detail.trigger);
+
+                    if (isSimple) {
+                        alignDrop(el.parent(), $(e.detail.target).find(".dropdown-menu"), megamenu);
+                    }
+                    tryOpen(el);
+                });
+
+                megamenu.on("collapse.ak", '.navbar-nav .nav-item', (e) => {
+                    e.stopPropagation();
+                    closeNow($(e.detail.trigger));
+                });
+
+                // Submenus (only available in simple menu)
+                if (isSimple) {
+                    megamenuDropdownContainer.on("expand.ak", '[role="menuitem"]', (e) => {
+                        e.stopPropagation();
+                        showDrop($(e.detail.trigger).parent());
+                        $(e.detail.target).find('[role="menuitem"]:visible').first().trigger('focus');
+                    });
+
+                    megamenuDropdownContainer.on("collapse.ak", '[role="menuitem"]', (e) => {
+                        e.stopPropagation();
+                        if ($(e.detail.target).length) {
+                            const currentItem = $(e.detail.trigger);
+                            closeDrop(currentItem.parent());
+                            currentItem.trigger('focus');
+                        }
+                    });
                 }
             })
         }

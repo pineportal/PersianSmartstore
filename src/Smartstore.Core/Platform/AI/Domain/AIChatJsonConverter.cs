@@ -1,102 +1,114 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Smartstore.Json.Polymorphy;
 
-namespace Smartstore.Core.AI
+namespace Smartstore.Core.AI;
+
+internal sealed class AIChatJsonConverter : JsonConverter<AIChat>
 {
-    internal sealed class AIChatJsonConverter : JsonConverter
+    public override AIChat Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override bool CanConvert(Type objectType)
-            => objectType == typeof(AIChat);
+        IReadOnlyList<AIChatMessage> messages = null;
+        var topic = AIChatTopic.Text;
+        string modelName = null;
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        IDictionary<string, object> metadata = null;
+        var initialUserMessageHash = 0;
+
+        if (reader.TokenType != JsonTokenType.StartObject)
         {
-            IReadOnlyList<AIChatMessage> messages = null;
-            var topic = AIChatTopic.Text;
-            string modelName = null;
-            Dictionary<string, object> metadata = null;
-            var initialUserMessageHash = 0;
+            throw new JsonException();
+        }
 
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject)
+            {
+                break;
+            }
+
+            if (reader.TokenType != JsonTokenType.PropertyName)
+            {
+                throw new JsonException();
+            }
+
+            var propertyName = reader.GetString();
             reader.Read();
-            while (reader.TokenType == JsonToken.PropertyName)
+
+            if (string.Equals(propertyName, nameof(AIChat.Topic), StringComparison.OrdinalIgnoreCase))
             {
-                var name = reader.Value.ToString();
-
-                if (string.Equals(name, nameof(AIChat.Topic), StringComparison.OrdinalIgnoreCase))
-                {
-                    reader.Read();
-                    topic = serializer.Deserialize<AIChatTopic>(reader);
-                }
-                else if (string.Equals(name, nameof(AIChat.ModelName), StringComparison.OrdinalIgnoreCase))
-                {
-                    reader.Read();
-                    modelName = serializer.Deserialize<string>(reader);
-                }
-                else if (string.Equals(name, nameof(AIChat.Messages), StringComparison.OrdinalIgnoreCase))
-                {
-                    reader.Read();
-                    messages = serializer.Deserialize(reader, typeof(IReadOnlyList<AIChatMessage>)) as IReadOnlyList<AIChatMessage>;
-                }
-                else if (string.Equals(name, nameof(AIChat.Metadata), StringComparison.OrdinalIgnoreCase))
-                {
-                    reader.Read();
-                    metadata = serializer.Deserialize<Dictionary<string, object>>(reader);
-                }
-                else if (string.Equals(name, nameof(AIChat.InitialUserMessage) + "Hash", StringComparison.OrdinalIgnoreCase))
-                {
-                    reader.Read();
-                    initialUserMessageHash = serializer.Deserialize<int>(reader);
-                }
-                else
-                {
-                    reader.Skip();
-                }
-
-                reader.Read();
+                topic = JsonSerializer.Deserialize<AIChatTopic>(ref reader, options);
             }
-
-            var chat = (AIChat)Activator.CreateInstance(objectType, topic);
-            chat.UseModel(modelName)
-                .AddMessages([.. messages]);
-
-            if (metadata != null && metadata.Count > 0)
+            else if (string.Equals(propertyName, nameof(AIChat.ModelName), StringComparison.OrdinalIgnoreCase))
             {
-                chat.Metadata = metadata;
+                modelName = reader.GetString();
             }
-
-            if (initialUserMessageHash != 0)
+            else if (string.Equals(propertyName, nameof(AIChat.Messages), StringComparison.OrdinalIgnoreCase))
             {
-                chat.InitialUserMessage = messages.FirstOrDefault(x => x.GetHashCode() == initialUserMessageHash);
+                messages = JsonSerializer.Deserialize<IReadOnlyList<AIChatMessage>>(ref reader, options);
             }
-
-            return chat;
+            else if (string.Equals(propertyName, nameof(AIChat.Metadata), StringComparison.OrdinalIgnoreCase))
+            {
+                //metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(ref reader, options);
+                metadata = options.DeserializePolymorphic<IDictionary<string, object>>(ref reader);
+            }
+            else if (string.Equals(propertyName, nameof(AIChat.InitialUserMessage) + "Hash", StringComparison.OrdinalIgnoreCase))
+            {
+                initialUserMessageHash = reader.GetInt32();
+            }
+            else
+            {
+                reader.Skip();
+            }
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        var chat = (AIChat)Activator.CreateInstance(typeToConvert, topic);
+        chat.UseModel(modelName)
+            .AddMessages([.. messages]);
+
+        if (metadata != null && metadata.Count > 0)
         {
-            writer.WriteStartObject();
-            {
-                writer.WritePropertyName(nameof(AIChat.Topic));
-                serializer.Serialize(writer, GetPropValue(nameof(AIChat.Topic), value));
-
-                writer.WritePropertyName(nameof(AIChat.ModelName));
-                serializer.Serialize(writer, GetPropValue(nameof(AIChat.ModelName), value));
-
-                writer.WritePropertyName(nameof(AIChat.Messages));
-                serializer.Serialize(writer, GetPropValue(nameof(AIChat.Messages), value));
-
-                var initialMessage = GetPropValue(nameof(AIChat.InitialUserMessage), value) as AIChatMessage;
-                writer.WritePropertyName(nameof(AIChat.InitialUserMessage) + "Hash");
-                serializer.Serialize(writer, initialMessage?.GetHashCode() ?? 0);
-
-                if (GetPropValue(nameof(AIChat.Metadata), value) is IDictionary<string, object> dict && dict.Count > 0)
-                {
-                    writer.WritePropertyName(nameof(AIChat.Metadata));
-                    serializer.SerializeObjectDictionary(writer, dict);
-                }
-            }
-            writer.WriteEndObject();
+            chat.Metadata = metadata;
         }
 
-        private static object GetPropValue(string name, object instance)
-            => instance.GetType().GetProperty(name).GetValue(instance);
+        if (initialUserMessageHash != 0)
+        {
+            chat.InitialUserMessage = messages.FirstOrDefault(x => x.GetHashCode() == initialUserMessageHash);
+        }
+
+        return chat;
+    }
+
+    public override void Write(Utf8JsonWriter writer, AIChat value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        {
+            writer.WritePropertyName(nameof(AIChat.Topic));
+            JsonSerializer.Serialize(writer, value.Topic, options);
+
+            writer.WriteString(
+                nameof(AIChat.ModelName),
+                value.ModelName);
+
+            writer.WritePropertyName(nameof(AIChat.Messages));
+            JsonSerializer.Serialize(writer, value.Messages, options);
+
+            var initialMessageHash = value.InitialUserMessage?.GetHashCode() ?? 0;
+            if (initialMessageHash != 0)
+            {
+                writer.WriteNumber(
+                    nameof(AIChat.InitialUserMessage) + "Hash",
+                    initialMessageHash);
+            }
+
+            if (value.Metadata is IDictionary<string, object> dict && dict.Count > 0)
+            {
+                writer.WritePropertyName(nameof(AIChat.Metadata));
+                //JsonSerializer.Serialize(writer, dict, options);
+                options.SerializePolymorphic(writer, dict);
+            }
+        }
+
+        writer.WriteEndObject();
     }
 }

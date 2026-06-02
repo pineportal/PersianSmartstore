@@ -1,72 +1,116 @@
-﻿namespace Smartstore.Core.AI
+﻿namespace Smartstore.Core.AI;
+
+[Flags]
+public enum AIProviderFeatures
 {
-    [Flags]
-    public enum AIProviderFeatures
-    {
-        None = 0,
-        TextCreation = 1 << 0,
-        TextTranslation = 1 << 1,
-        ImageCreation = 1 << 2,
-        ImageAnalysis = 1 << 3,
-        ThemeVarCreation = 1 << 4,
-        Assistence = 1 << 5
-    }
+    None = 0,
 
     /// <summary>
-    /// Represents the topic of an AI chat.
+    /// Generate new text content (e.g. product descriptions, articles).
     /// </summary>
-    public enum AIChatTopic
-    {
-        /// <summary>
-        /// Chat to generate simple text.
-        /// </summary>
-        Text,
-
-        /// <summary>
-        /// Chat to generate rich text.
-        /// </summary>
-        RichText,
-
-        /// <summary>
-        /// Chat to translate text.
-        /// </summary>
-        Translation,
-
-        /// <summary>
-        /// Chat to generate suggestions.
-        /// </summary>
-        Suggestion,
-
-        /// <summary>
-        /// Chat to generate images.
-        /// </summary>
-        Image
-    }
+    TextGeneration = 1 << 0,
 
     /// <summary>
-    /// Represents the AI image creation type.
+    /// Translate text between different languages.
     /// </summary>
-    public enum AIImageFormat
-    {
-        Horizontal,
-        Vertical,
-        Square
-    }
+    Translation = 1 << 1,
 
     /// <summary>
-    /// Represents the AI role.
+    /// Generate images from text prompts.
     /// </summary>
-    public enum AIRole
-    {
-        Translator,
-        Copywriter,
-        Marketer,
-        SEOExpert,
-        Blogger,
-        Journalist,
-        SalesPerson,
-        ProductExpert,
-        HtmlEditor,
-        ImageAnalyzer
-    }
+    ImageGeneration = 1 << 2,
+
+    /// <summary>
+    /// Analyze and interpret images (vision capabilities).
+    /// </summary>
+    ImageAnalysis = 1 << 3,
+
+    /// <summary>
+    /// Generate theme variables.
+    /// </summary>
+    ThemeVarGeneration = 1 << 4,
+
+    /// <summary>
+    /// Provide general assistant functionality (QA, reasoning, planning).
+    /// </summary>
+    Assistance = 1 << 5
+}
+
+/// <summary>
+/// Represents the topic of an AI chat.
+/// </summary>
+public enum AIChatTopic
+{
+    /// <summary>
+    /// Chat to generate simple text.
+    /// </summary>
+    Text,
+
+    /// <summary>
+    /// Chat to generate rich text.
+    /// </summary>
+    RichText,
+
+    /// <summary>
+    /// Chat to translate text.
+    /// </summary>
+    Translation,
+
+    /// <summary>
+    /// Chat to generate suggestions.
+    /// </summary>
+    Suggestion,
+
+    /// <summary>
+    /// Chat to generate images.
+    /// </summary>
+    Image
+}
+
+/// <summary>
+/// Represents the AI role.
+/// </summary>
+public enum AIRole
+{
+    Translator,
+    Copywriter,
+    Marketer,
+    SEOExpert,
+    Blogger,
+    Journalist,
+    SalesPerson,
+    ProductExpert,
+    HtmlEditor,
+    ImageAnalyzer
+}
+
+/// <summary>
+/// Specifies the location or context in which an AI command is rendered.
+/// </summary>
+public enum AICommandLocation
+{
+    /// <summary>
+    /// Command rendering location is unknown.
+    /// </summary>
+    Unknown,
+
+    /// <summary>
+    /// The command is rendered in a simple text or textarea field.
+    /// </summary>
+    TextInput,
+
+    /// <summary>
+    /// The command is rendered in the text chat dialog.
+    /// </summary>
+    ChatDialog,
+
+    /// <summary>
+    /// The command is rendered in a readonly HTML input preview control.
+    /// </summary>
+    HtmlPreview,
+
+    /// <summary>
+    /// The command is rendered as an HTML editor tool.
+    /// </summary>
+    HtmlEditor
 }

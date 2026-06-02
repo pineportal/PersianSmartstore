@@ -1,0 +1,60 @@
+﻿@using Smartstore.Web.Models.Catalog
+
+@model ProductDetailsModel
+
+@{
+    var brand = Model.Brands == null ? null : Model.Brands.FirstOrDefault();
+    var hasBrandImage = brand?.Image?.HasImage() ?? false;
+}
+
+<div class="pd-info pd-info-mobile pd-group mb-0">
+    @* Brand *@
+    <div sm-if="brand != null" class="pd-brand-block" itemprop="brand">
+        <a class="pd-brand" asp-route="Manufacturer" asp-route-SeName="@brand.SeName" attr-aria-label='(hasBrandImage, brand.Image?.Title)'>
+            @if (hasBrandImage)
+            {
+                <img sm-model="brand.Image" class="pd-brand-picture" />
+            }
+            else
+            {
+                <span sm-language-attributes-for="brand.Name">@brand.Name</span>
+            }
+        </a>
+    </div>
+
+    @* Title *@
+    <div class="page-title">
+        <div sm-language-attributes-for="Model.Name" class="pd-name fs-h5 mb-1">
+            @if (Model.IsAssociatedProduct && Model.VisibleIndividually)
+            {
+                <a asp-route="Product" asp-route-SeName="@Model.SeName" title="@T("Products.Details")">@Html.Raw(Model.Name)</a>
+            }
+            else
+            {
+                @Html.Raw(Model.Name)
+            }
+        </div>
+    </div>
+
+    @* Short description *@
+    @if (Model.ShortDescription.Value.HasValue())
+    {
+        <div sm-language-attributes-for="Model.ShortDescription" class="pd-description text-body fs-xs mb-1">
+            @Html.Raw(Model.ShortDescription)
+        </div>
+    }
+
+    @* Promo badges *@
+    <div sm-if="Model.Price.Badges.Count > 0" class="pd-promobadges mb-1">
+        @foreach (var badge in Model.Price.Badges.OrderBy(x => x.DisplayOrder))
+        {
+            <span class="badge badge-@badge.Style">@Html.Raw(badge.Label)</span>
+        }
+    </div>
+</div>
+
+@* Review Overview *@
+@if (!Model.IsAssociatedProduct && Model.DisplayProductReviews)
+{
+    <partial name="Product.ReviewSummary" model="Model.ReviewOverview" />
+}

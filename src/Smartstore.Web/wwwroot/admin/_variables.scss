@@ -128,13 +128,14 @@ $small-font-size:               90%;
 $badge-font-size:               (12 / 14) * 1em;
 $badge-font-weight:             $font-weight-medium;
 $badge-border-radius:           $border-radius-sm;
+$badge-content-shift:           -1px;
 
 // Tables
 
 $table-cell-padding:            .75rem;
 $table-cell-padding-sm:         .3rem;
 $table-border-color:            $gray-300;
-$table-head-bg:                 #f6f8fa;
+$table-head-bg:                 $gray-100;
 $table-head-color:              $gray-700;
 
 
@@ -158,7 +159,6 @@ $input-disabled-bg:             $gray-100;
 $btn-font-weight:               $font-weight-medium;
 $btn-focus-width:               $input-btn-focus-width;
 $btn-box-shadow:                0 1px 0 rgba($gray-900, 0.04), inset 0 1px 0 rgba($white, 0.25);
-$btn-focus-box-shadow:          inset 0 0 0 $btn-focus-width $white;
 $btn-border-radius:             $input-border-radius;
 $btn-border-radius-lg:          $input-border-radius-lg;
 $btn-border-radius-sm:          $input-border-radius-sm;
@@ -210,7 +210,7 @@ $component-active-color:        inherit;
 
 $custom-range-track-height:         0.315rem;
 $custom-range-track-bg:             rgba($black, 0.12);
-$custom-range-track-border-radius:  0;
+$custom-range-track-border-radius:  50em;
 $custom-range-track-box-shadow:     none;
 
 $custom-range-thumb-width:                  0.925rem;

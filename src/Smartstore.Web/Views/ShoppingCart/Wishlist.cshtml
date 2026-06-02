@@ -6,34 +6,34 @@
     Assets.BodyAttributes.AppendCssClass("no-offcanvas-cart");
     Assets.AppendTitleParts(T("PageTitle.Wishlist").Value);
     Assets.AddMetaRobots();
-
-    var modelHasItems = Model.Items.Any();
+    
+    var hasItems = Model.Items.Any();
 }
 
 <div class="page wishlist-page">
     <div class="page-title">
-        <h1 class="mb-0">@(Model.IsEditable ? T("Wishlist") : T("Wishlist.WishlistOf", Model.CustomerFullname))</h1>
+        <h1 id="page-title" class="mb-0">@(Model.IsEditable ? T("Wishlist") : T("Wishlist.WishlistOf", Model.CustomerFullname))</h1>
     </div>
     <div class="page-body">
         <div class="wishlist-content cart-content" 
-             data-update-item-url="@Url.Action("UpdateCartItem", "ShoppingCart")"
+             data-update-item-url="@Url.Action("UpdateCartItem", "ShoppingCart", new { origin = (int)UpdateCartItemOrigin.Wishlist })"
              data-empty-text=@T("Wishlist.CartIsEmpty").JsValue>
             <zone name="wishlist_items_top" />
 
-            @if (modelHasItems)
+            @if (hasItems)
             {
-                <div sm-if="Model.Warnings.Count > 0" class="alert alert-danger">
+                <div sm-if="Model.Warnings.Count > 0" class="alert alert-danger" role="alert">
                     @foreach (var warning in Model.Warnings)
                     {
                         <p>@Html.Raw(warning)</p>
                     }
                 </div>
 
-                <form asp-route="Wishlist" method="post">
+                <form asp-route="Wishlist" method="post" aria-labelledby="page-title">
                     <div class="cart-container mb-3">
                         @* Cart Items *@
                         <div id="cart-items" class="cart cart-editable">
-                            <div class="cart-body">
+                            <div role="list" class="cart-body" aria-labelledby="page-title">
                                 <partial name="WishlistItems" model="Model" />
                             </div>
                         </div>
@@ -43,14 +43,14 @@
                         @if (Model.IsEditable && Model.EmailWishlistEnabled)
                         {
                             <a asp-action="EmailWishlist" rel="nofollow" class="btn btn-secondary">
-                                <i class="fa fa-share"></i>
+                                <i class="fa fa-share" aria-hidden="true"></i>
                                 <span>@T("Wishlist.EmailAFriend")</span>
                             </a>
                         }
                         @if (!Model.IsEditable && Model.DisplayAddToCart)
                         {
                             <button type="submit" name="addtocartbutton" value="addtocartbutton" class="btn btn-primary">
-                                <i class="fa fa-cart-arrow-down"></i>
+                                <i class="fa fa-cart-arrow-down" aria-hidden="true"></i>
                                 <span>@T("ShoppingCart.AddToCart")</span>
                             </button>
                         }
@@ -59,18 +59,18 @@
             }
             else
             {
-                <div class="alert alert-warning fade show">
+                <div class="alert alert-warning fade show" role="alert">
                     @T("Wishlist.CartIsEmpty")
                 </div>
             }
         </div>
 
-        <div sm-if="Model.IsEditable && modelHasItems" class="share-info my-4">
-            <h5 class="share-label mb-1">
-                <i class="far fa-share-square"></i>
-                @T("Wishlist.YourWishlistURL")
-            </h5>
-            <a asp-route="Wishlist" asp-route-customerGuid="@Model.CustomerGuid" class="share-link">
+        <div sm-if="Model.IsEditable && hasItems" class="share-info my-4">
+            <div id="your-wishlist-url" class="share-label mb-1 h5">
+                <i class="far fa-share-square" aria-hidden="true"></i>
+                <span>@T("Wishlist.YourWishlistURL")</span>
+            </div>
+            <a asp-route="Wishlist" asp-route-customerGuid="@Model.CustomerGuid" class="share-link" aria-labelledby="your-wishlist-url">
                 @Url.RouteUrl("Wishlist", new { customerGuid = Model.CustomerGuid }, Context.Request.IsHttps ? "https" : "http", Context.Request.Host.Value)
             </a>
         </div>

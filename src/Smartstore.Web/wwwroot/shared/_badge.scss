@@ -32,14 +32,13 @@
 // Badge closer
 // -----------------------------------------------------
 
-.badge > .close,
-.badge > .btn-close {
+.badge > :is(.close, .btn-close) {
     position: relative;
     box-sizing: border-box;
     transform: scale(0.85);
 }
 
-.badge:not(.badge-subtle, .badge-outline, .badge-light) > .btn-close {
+.badge:not(:is(.badge-subtle, .badge-outline, .badge-light)) > .btn-close {
     @extend .btn-close-white;
 }
 
@@ -60,8 +59,7 @@
 }
 
 @each $color, $value in $theme-colors {
-    .badge-subtle.badge-#{$color},
-    .badge-outline.badge-#{$color} {
+    :is(.badge-subtle, .badge-outline).badge-#{$color} {
         --badge-bg: var(--#{$color}-bg-subtle);
         --badge-bg-rgb: var(--#{$color}-bg-subtle-rgb);
         --badge-color: var(--#{$color}-text-emphasis);
@@ -96,6 +94,7 @@
     --badge-padding-x: 0.125rem !important;
     --badge-padding-y: 0.125rem !important;
     --badge-font-size: 0.6875rem;
+    --badge-content-shift: 0px;
     font-size: var(--badge-font-size);
     line-height: var(--badge-line-height);
     min-width: var(--badge-height);
@@ -178,4 +177,13 @@
     &.edge-bottom-end {
         transform: translate(calc(-100% - var(--edge-offset-x)), calc(-100% - var(--edge-offset-y)));
     }
+}
+
+
+//
+// Misc
+// -----------------------------------------------------
+
+.badge-shift-0 {
+    --badge-content-shift: 0px;
 }

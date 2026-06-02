@@ -151,27 +151,27 @@
             // the slick dots were not aligned correctly before. If there is a layout problem, 
             // maybe uncomment again.
             //gal.height(gal.width());
-            EventBroker.subscribe("page.resized", function (msg, viewport) {
+            EventBroker.subscribe("page.resized", (msg, viewport) => {
                 //gal.height(gal.width());
                 self.initNav();
             });
 
-            gal.on('beforeChange', function (e, slick, curIdx, nextIdx) {
+            gal.on('beforeChange', (e, slick, curIdx, nextIdx) => {
                 if (!self.nav.data('glimpse')) {
                     // Sync with thumb nav
                     self._selectNavItem(nextIdx, false);
                 }
             });
 
-            gal.on('afterChange', function (e, slick, currentSlide) {
+            gal.on('afterChange', (e, slick, currentSlide) => {
                 self.currentIndex = currentSlide;
                 self.currentImage = gal.find('.gal-item.slick-current img').first();
             });
 
             if (!isTouch) {
                 gal
-                    .on('mouseenter.gal', function (e) { gal.slick("slickSetOption", "speed", 250); })
-                    .on('mouseleave.gal', function (e) { gal.slick("slickSetOption", "speed", 0); });
+                    .on('mouseenter.gal', () => { gal.slick("slickSetOption", "speed", 250); })
+                    .on('mouseleave.gal', () => { gal.slick("slickSetOption", "speed", 0); });
             }
         },
 
@@ -200,15 +200,37 @@
 
             if (items.length > self.options.thumbsToShow) {
                 if (!isInitialized) {
-                    self.navPrevArrow = $('<button type="button" class="btn btn-secondary btn-no-border btn-icon rounded-circle btn-sm gal-arrow gal-prev gal-disabled"><i class="fa fa-chevron-up" style="vertical-align: top"></i></button>').prependTo(nav);
-                    self.navNextArrow = $('<button type="button" class="btn btn-secondary btn-no-border btn-icon rounded-circle btn-sm gal-arrow gal-next gal-disabled"><i class="fa fa-chevron-down"></i></button>').appendTo(nav);
+                    const cssClass = 'btn btn-secondary btn-no-border btn-icon rounded-circle btn-sm gal-arrow gal-disabled';
+                    self.navPrevArrow = $(`<button type="button" class="${cssClass} gal-prev" aria-label="${Res['Common.MoveUp']}" aria-disabled="true"><i class="fa fa-chevron-up" style="vertical-align: top" aria-hidden="true"></i></button>`).prependTo(nav);
+                    self.navNextArrow = $(`<button type="button" class="${cssClass} gal-next" aria-label="${Res['Common.MoveDown']}" aria-disabled="true"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>`).appendTo(nav);
                 }
 
                 list.height(itemHeight * self.options.thumbsToShow);
 
+                list.on('scroll', function (e) {
+                    // We only handle native tab key scrolling here
+                    if (list.data('sliding')) return;
+
+                    e.preventDefault();
+
+                    // Get the index of the currently focused thumb item
+                    const activeItemIndex = parseInt($(document.activeElement).parent().data('gal-index'));
+                    if (isNaN(activeItemIndex)) {
+                        return;
+                    }
+
+                    // Find the page of the focused item...
+                    let attemptedPage = self._findPageByItemIndex(activeItemIndex);
+
+                    // ...and slide to target page to stay in sync
+                    self._slideToNavPage(attemptedPage);
+
+                    return false;
+                });
+
                 nav.on('click.gal', '.gal-arrow', function (e) {
                     e.preventDefault();
-                    var btn = $(this);
+                    const btn = $(this);
 
                     if (btn.hasClass('gal-disabled')) {
                         return;
@@ -226,14 +248,14 @@
 
             self._selectNavItem(self.options.startIndex, isInitialized);
 
-            nav.on('mouseenter.gal click.gal', '.gal-item', function (e) {
+            nav.on('mouseenter.gal click.gal', '.gal-item-viewport', function (e) {
                 e.preventDefault();
 
                 if (e.type === "mouseenter") {
                     nav.data("glimpse", true);
                 }
 
-                var toIdx = $(this).data('gal-index');
+                var toIdx = $(this.parentElement).data('gal-index');
                 self.goTo(toIdx);
 
                 if (e.type === "click") {
@@ -244,28 +266,32 @@
 
                 return false;
             })
-                .on('mouseleave.gal', function (e) {
-                    // Restore actual selected image
-                    var actualIdx = nav.find('.gal-current').data('gal-index');
-                    self.goTo(actualIdx);
-                    nav.data("glimpse", false);
-                });
+            .on('mouseleave.gal', function () {
+                // Restore actual selected image
+                var actualIdx = nav.find('.gal-current').data('gal-index');
+                self.goTo(actualIdx);
+                nav.data("glimpse", false);
+            });
 
             nav.addClass("gal-initialized");
         },
 
+        _findPageByItemIndex: function (idx) {
+            return Math.floor(idx / this.options.thumbsToShow);
+        },
+
         _selectNavItem: function (idx, sync) {
-            var self = this;
-            var curItem = self.nav.find('.gal-current');
-            var curIdx = curItem.data('gal-index');
+            let self = this;
+            let curItem = self.nav.find('.gal-current');
+            let curIdx = curItem.data('gal-index');
             if (curIdx === idx)
                 return;
 
-            curItem.removeClass('gal-current');
+            curItem.removeClass('gal-current').find("> a").aria('selected', false);
             curItem = self.nav.find('[data-gal-index=' + idx + ']');
-            curItem.addClass('gal-current');
+            curItem.addClass('gal-current').find("> a").aria('selected', true);
 
-            var page = Math.floor(idx / self.options.thumbsToShow);
+            let page = self._findPageByItemIndex(idx);
             self._slideToNavPage(page);
 
             if (sync) {
@@ -274,12 +300,12 @@
         },
 
         _slideToPrevNavPage: function () {
-            var curPage = this.nav.data('current-page');
+            const curPage = this.nav.data('current-page');
             this._slideToNavPage(curPage - 1);
         },
 
         _slideToNextNavPage: function () {
-            var curPage = this.nav.data('current-page');
+            const curPage = this.nav.data('current-page');
             this._slideToNavPage(curPage + 1);
         },
 
@@ -287,22 +313,26 @@
             if (this.nav.data('current-page') !== page) {
                 this.nav.data('current-page', page);
 
-                var hasArrows = !!(this.navPrevArrow) && !!(this.navNextArrow);
+                const hasArrows = !!(this.navPrevArrow) && !!(this.navNextArrow);
                 if (page === 0 && hasArrows) {
-                    this.navPrevArrow.addClass('gal-disabled');
-                    this.navNextArrow.removeClass('gal-disabled');
+                    this.navPrevArrow.addClass('gal-disabled').aria('disabled', true);
+                    this.navNextArrow.removeClass('gal-disabled').aria('disabled', false);
                 }
                 else if (page > 0 && hasArrows) {
-                    this.navPrevArrow.removeClass('gal-disabled');
+                    this.navPrevArrow.removeClass('gal-disabled').aria('disabled', false);
                     var totalPages = Math.ceil(this.navItemsCount / this.options.thumbsToShow);
                     var isLastPage = page >= totalPages - 1;
-                    this.navNextArrow.toggleClass('gal-disabled', isLastPage);
+                    this.navNextArrow.toggleClass('gal-disabled', isLastPage).aria('disabled', isLastPage);
                 }
 
-                var navListHeight = this.navList.height();
-                var maxOffsetY = (this.navTrack.height() - navListHeight) * -1;
-                var offsetY = navListHeight * page * -1;
-                this.navTrack.css('transform', 'translate3d(0, ' + Math.max(offsetY, maxOffsetY) + 'px, 0)');
+                const navListHeight = this.navList.height();
+                const maxOffsetY = (this.navTrack.height() - navListHeight);
+                const offsetY = navListHeight * page;
+
+                const scrollTop = Math.min(offsetY, maxOffsetY);
+                this.navList.data('sliding', true);
+                this.navList[0].scrollTo({ top: scrollTop, behavior: 'smooth' });
+                setTimeout(() => this.navList.data('sliding', false), 1000);
             }
         },
 
@@ -312,13 +342,13 @@
 
             var self = this;
 
-            self.gallery.on('beforeChange.gal', function (e, slick, curIdx, nextIdx) {
+            self.gallery.on('beforeChange.gal', (e, slick, curIdx, nextIdx) => {
                 // destroy zoom
                 if (self.nav.data('glimpse')) return;
                 self.destroyZoom(curIdx);
             });
 
-            self.gallery.on('afterChange.gal', function (e, slick, idx) {
+            self.gallery.on('afterChange.gal', (e, slick, idx) => {
                 // apply zoom
                 if (self.nav.data('glimpse')) return;
                 applyZoom(self.gallery.find('.gal-item').eq(idx));
@@ -395,7 +425,7 @@
             if (this.nav) {
                 this.nav.off('.gal');
                 this.nav.data('current-page', null);
-                this.nav.find('.gal-item').removeClass('gal-current').removeAttr('data-gal-index');
+                this.nav.find('.gal-item').removeClass('gal-current').removeAttr('data-gal-index').removeAttr('aria-selected');
             }
 
             if (this.pswp) this.pswp.off('.gal');
@@ -457,27 +487,27 @@
             }
 
             function pauseVideos() {
-                pswpContainer.find('.video-item').each(function (i, el) {
+                pswpContainer.find('.video-item').each((_, el) => {
                     el.pause();
                 });
             }
 
-            $(pswpEl).on('keydown.gal', function (e) {
+            $(pswpEl).on('keydown.gal', (e) => {
                 // Handle arrow left/right press
                 setTransition(e);
             });
 
-            $(pswpEl).on('mousedown.gal', '.pswp-arrow', function (e) {
+            $(pswpEl).on('mousedown.gal', '.pswp__arrow', (e) => {
                 // Handle arrow left/right click
                 e.stopPropagation();
                 setTransition(e);
             });
 
-            $(pswpEl).on('mousedown.gal', '.pswp__scroll-wrap', function (e) {
+            $(pswpEl).on('mousedown.gal', '.pswp__scroll-wrap', (e) => {
                 pswpContainer.removeClass('sliding');
             });
 
-            $(pswpEl).on('dblclick.gal', '.pswp-arrow', function (e) {
+            $(pswpEl).on('dblclick.gal', '.pswp__arrow', function (e) {
                 // Suppress annoying script exceptions in console 
                 e.stopPropagation();
                 e.preventDefault();
@@ -514,7 +544,7 @@
                         }
                         else {
                             var src = a.attr('href');
-                            var html = '<div class="video-container d-flex align-items-center justify-content-center"><video class="video-item" src="' + src + '" controls preload="metadata" /></div>';
+                            var html = `<div class="video-container d-flex align-items-center justify-content-center"><video class="video-item" src="${src}" controls preload="metadata" /></div>`;
                             items.push({ html: html, el: $this });
                         }
                     });
@@ -523,34 +553,45 @@
                         var options = $.extend({}, self.options.zoom, {
                             index: self.currentIndex,
                             showHideOpacity: true,
-                            captionEl: false,
+                            //captionEl: false,
                             shareEl: false,
-                            getThumbBoundsFn: function (index) {
+                            barsSize: { top: 0, bottom: 'auto' },
+                            getThumbBoundsFn: (index) => {
                                 var img = self.currentImage[0],
-                                    pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
+                                    pageYScroll = window.scrollY || document.documentElement.scrollTop,
                                     rect = img.getBoundingClientRect();
 
                                 return { x: rect.left, y: rect.top + pageYScroll, w: rect.width };
                             }
                         });
 
-                        var pswp = new PhotoSwipe(pswpEl, PhotoSwipeUI_Default, items, options);
+                        const pswp = new PhotoSwipe(pswpEl, PhotoSwipeUI_Default, items, options);
 
-                        pswp.listen('destroy', pauseVideos);
+                        pswp.listen('destroy', () => {
+                            AccessKitFocusTrap.deactivate();
+                            pauseVideos();
+                        });
                         pswp.listen('beforeChange', pauseVideos);
-                        pswp.listen('afterChange', function () {
-                            pswpContainer.one('transitionend', function (e) {
+                        pswp.listen('afterChange', () => {
+                            pswpContainer.one('transitionend', () => {
                                 pswpContainer.removeClass('sliding');
                             });
-                            var idx = pswp.getCurrentIndex();
+
+                            const idx = pswp.getCurrentIndex();
                             if (idx !== self.currentIndex) {
                                 self.goTo(idx);
                             }
+
+                            // WCAG
+                            $(pswp.container).children().aria('hidden', true);
+                            $(pswp.currItem.container).closest('.pswp__item').aria('hidden', false);
                         });
 
                         $(pswpEl).data('pswp', pswp);
 
                         pswp.init();
+
+                        AccessKitFocusTrap.activate(pswpEl);
                     }
 
                     return false;
@@ -571,7 +612,7 @@
         },
 
         fireCallback: function (fn) {
-            if ($.isFunction(fn)) {
+            if (_.isFunction(fn)) {
                 return fn.call(this);
             };
         }

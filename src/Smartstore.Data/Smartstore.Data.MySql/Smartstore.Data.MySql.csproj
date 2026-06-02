@@ -1,18 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <Product>Smartstore MySql Data Provider</Product>
     </PropertyGroup>
 
-	<ItemGroup>
-        <PackageReference Include="MySqlConnector" Version="2.4.0" GeneratePathProperty="true" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.2.efcore.9.0.0" GeneratePathProperty="true" />
-        <None Include="$(PkgMySqlConnector)\lib\net8.0\*.dll" CopyToOutputDirectory="PreserveNewest">
+    <ItemGroup>
+        <PackageReference Include="MySqlConnector" Version="2.5.0" GeneratePathProperty="true" />
+        <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.5" GeneratePathProperty="true" />
+        <None Include="$(PkgMySqlConnector)\lib\net10.0\*.dll" CopyToOutputDirectory="PreserveNewest">
             <Visible>false</Visible>
         </None>
-        <None Include="$(PkgPomelo_EntityFrameworkCore_MySql)\lib\net8.0\*.dll" CopyToOutputDirectory="PreserveNewest">
+        <None Include="$(PkgMicroting_EntityFrameworkCore_MySql)\lib\net10.0\*.dll" CopyToOutputDirectory="PreserveNewest">
             <Visible>false</Visible>
         </None>
-	</ItemGroup>
-
+    </ItemGroup>
 </Project>

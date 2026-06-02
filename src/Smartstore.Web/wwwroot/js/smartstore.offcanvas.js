@@ -89,6 +89,12 @@
             }
         });
 
+        this.el.on('keydown.offcanvas', (e) => {
+            if (e.key === 'Escape') {
+                this.hide();
+            }    
+        });
+
         requestAnimationFrame(() => {
             // Animations are allowed from here on
             this.el.removeClass("no-anims");
@@ -119,7 +125,6 @@
         disableScrolling: false,
         blocker: true
     };
-
 
     // OFFCANVAS internal
     // ======================================================

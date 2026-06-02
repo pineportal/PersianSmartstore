@@ -103,7 +103,6 @@ var AjaxCart = (function ($, window, document, undefined) {
                 url: cmd.href,
                 data: cmd.data,
                 type: 'POST',
-
                 success: function (response) {
                     if (response.redirect) {
                         // when the controller sets the "redirect"
@@ -114,37 +113,33 @@ var AjaxCart = (function ($, window, document, undefined) {
                     }
 
                     // success is optional and therefore true by default
-                    var isSuccess = response.success === undefined ? true : response.success;
+                    const isSuccess = response.success === undefined ? true : response.success;
+                    const msg = cmd.action === "add" || cmd.action === "addfromwishlist" || cmd.action === "addfromcart"
+                        ? "ajaxcart.item.added"
+                        : "ajaxcart.item.removed";
 
-                    var msg = cmd.action === "add" || cmd.action === "addfromwishlist" || cmd.action === "addfromcart" ? "ajaxcart.item.added" : "ajaxcart.item.removed";
                     EventBroker.publish(
-                        isSuccess
-                            ? msg
-                            : "ajaxcart.error",
-                        $.extend(cmd, { response: response })
-                    );
+                        isSuccess ? msg : "ajaxcart.error",
+                        $.extend(cmd, { response: response }));
 
                     if (isSuccess && (cmd.action === "addfromwishlist" || cmd.action === "addfromcart")) {
                         // special case when item was copied/moved from wishlist
                         if (response.wasMoved) {
                             // if an item was MOVED from Wishlist to cart,
                             // we must also set the wishlist dropdown dirty
-                            var clonedCmd = $.extend({}, cmd, { type: "wishlist" });
                             EventBroker.publish(
                                 "ajaxcart.item.removed",
-                                clonedCmd
+                                $.extend({}, cmd, { type: "wishlist" })
                             );
                         }
                     }
                 },
-
                 error: function (jqXHR, textStatus, errorThrown) {
                     EventBroker.publish(
                         "ajaxcart.error",
                         $.extend(cmd, { response: { success: false, message: errorThrown } })
                     );
                 },
-
                 complete: function () {
                     // never say never ;-)
                     busy = false;
@@ -204,33 +199,41 @@ $(function () {
 
         updatingCart = true;
         var el = $(this);
-        
+
         $.ajax({
             cache: false,
             type: "POST",
             url: el.data("update-url"),
             data: {
                 "cartItemId": el.data("sci-id"),
-                "newQuantity": el.val(),
-                "isCartPage": true
+                "newQuantity": el.val()
             },
             success: function (data) {
                 if (data.success == true) {
-                    var type = el.data("type");
-                    ShopBar.loadSummary(type, true);
+                    const type = el.data("type");
+                    let $container = el.closest('.offcanvas-items-container');
+                    let $priceContainer = el.closest('.tab-pane').find('.sub-total');
 
-                    el.closest('.tab-pane').find('.sub-total').html(data.SubTotal);
-                    if (data.newItemPrice != "") {
-                        el.closest(".offcanvas-cart-item").find(".unit-price").html(data.newItemPrice);
-                    }
+                    // Update cart items.
+                    $container.html(data.cartHtml);
+
+                    // Update subtotal.
+                    $priceContainer.attr('value', data.SubTotalValue);
+                    $priceContainer.html(data.SubTotal);
+
+                    // Re-init quantity inputs.
+                    $container.find('.qty-input > .numberinput-group').each((_, el) => {
+                        $(el).numberInput();
+                    });
+
+                    // Update bubbles with the item counts.
+                    ShopBar.loadSummary(type, true);
 
                     // Fire update event.
                     EventBroker.publish("ajaxcart.updated", data);
                 }
                 else {
-                    $(data.message).each(function (index, value) {
-                        displayNotification(value, "error", false);
-                    });
+                    displayNotification(data.message, "error", false);
                 }
             },
             complete: function () {
@@ -270,21 +273,29 @@ var ShopBar = (function ($) {
     });
 
     EventBroker.subscribe("ajaxcart.item.added", function (msg, data) {
-        var tool = tools[data.type];
-        var button = buttons[data.type];
-        var badge = $("span.label", button);
+        let tool = tools[data.type];
+        let button = buttons[data.type];
+        let badge = $("span.label", button);
 
         if (badge.hasClass("d-none")) {
             badge.removeClass("d-none");
         }
 
-        ShopBar.loadHtml(tool, function () {
+        ShopBar.loadHtml(tool, () => {
             ShopBar.hideThrobber();
+            _.delay(() => {
+                let cnt = $(".tab-content " + tool.attr("href"), offcanvasCart);
+                let scrollable = cnt.find('.offcanvas-scrollable');
+                //scrollable.scrollTop(scrollable[0].scrollHeight);
+                scrollable.scrollTo(cnt.find(".offcanvas-cart-item:last"), {
+                    behavior: 'smooth'
+                });
+            }, 400);
         });
 
         ShopBar.loadSummary(data.type, true /*fade*/, function (resultData) { });
 
-        var action = data.action;
+        let action = data.action;
 
         if (action == "addfromwishlist" || action == "addfromcart") {
             $('.nav-tabs ' + (action == "addfromcart" ? "#wishlist-tab" : "#cart-tab")).tab('show');
@@ -299,16 +310,16 @@ var ShopBar = (function ($) {
     });
 
     EventBroker.subscribe("ajaxcart.item.removed", function (msg, data) {
-        var tool = tools[data.type];
+        let tool = tools[data.type];
 
-        ShopBar.loadHtml(tool, function () {
+        ShopBar.loadHtml(tool, () => {
             ShopBar.hideThrobber();
         });
 
-        ShopBar.loadSummary(data.type, true /*fade*/, function (resultData) { });
+        ShopBar.loadSummary(data.type, true /*fade*/, (_resultData) => { });
     });
 
-    EventBroker.subscribe("ajaxcart.error", function (msg, data) {
+    EventBroker.subscribe("ajaxcart.error", function (_msg, data) {
         notify(data.response);
         ShopBar.hideThrobber();
     });

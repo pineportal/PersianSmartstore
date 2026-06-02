@@ -1,10 +1,11 @@
-﻿@model IIcon
-
-@inject IIconExplorer IconExplorer
-
-@using Newtonsoft.Json
+﻿@using System.Text.Json
+@using Smartstore.Json
 @using Smartstore.Core.Content.Menus
 @using Smartstore.Core.Content.Media.Icons
+
+@model IIcon
+
+@inject IIconExplorer IconExplorer
 
 <script src="~/admin/js/smartstore.iconchooser.js" sm-target-zone="scripts"></script>
 
@@ -13,14 +14,13 @@
         <select class="fa-icon-chooser noskin"
                 id="@Html.IdFor(x => x.Icon)"
                 name="@Html.NameFor(x => x.Icon)"
-                data-explorer-url="@Url.Action("SearchIcons", "Theme", new { area = "admin" })"
+                data-explorer-url="@Url.Action("SearchIcons", "Theme", new { area = "Admin" })"
                 data-icon-cols="2"
                 data-placeholder="@T("Common.Unspecified")">
             <option></option>
             @if (Model.Icon.HasValue())
             {
                 var selectedIcon = IconExplorer.GetIconByName(Model.Icon);
-
                 var icon = new
                 {
                     id = selectedIcon.Name,
@@ -31,7 +31,7 @@
                     isCustom = selectedIcon.IsPro
                 };
 
-                <option value="@Model.Icon" data-icon='@JsonConvert.SerializeObject(icon)' selected="selected">
+                <option value="@Model.Icon" data-icon='@JsonSerializer.Serialize(icon, SmartJsonOptions.DefaultIgnoreDefaults)' selected="selected">
                     @Model.Icon
                 </option>
             }

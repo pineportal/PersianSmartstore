@@ -2,7 +2,10 @@
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Smartstore.Caching;
+using Smartstore.Core.AI;
+using Smartstore.Core.Checkout.Payment;
 using Smartstore.Core.Content.Media;
+using Smartstore.Core.Content.Menus;
 using Smartstore.Core.Identity;
 using Smartstore.Core.Localization;
 using Smartstore.Core.Localization.Routing;
@@ -16,257 +19,302 @@ using Smartstore.Web.Infrastructure.Hooks;
 using Smartstore.Web.Models.Common;
 using Smartstore.Web.Rendering;
 
-namespace Smartstore.Web.Controllers
+namespace Smartstore.Web.Controllers;
+
+public class CommonController : PublicController
 {
-    public class CommonController : PublicController
+    private readonly SmartDbContext _db;
+    private readonly ICookieConsentManager _cookieConsentManager;
+    private readonly Lazy<IMediaService> _mediaService;
+    private readonly ILanguageService _languageService;
+    private readonly IThemeContext _themeContext;
+    private readonly IThemeRegistry _themeRegistry;
+    private readonly ICacheManager _cache;
+    private readonly ThemeSettings _themeSettings;
+    private readonly SeoSettings _seoSettings;
+    private readonly LocalizationSettings _localizationSettings;
+    private readonly IRouteHelper _routeHelper;
+    private readonly Lazy<ILlmsGenerator> _llmsGenerator;
+
+    public CommonController(
+        SmartDbContext db,
+        ICookieConsentManager cookieConsentManager,
+        Lazy<IMediaService> mediaService,
+        ILanguageService languageService,
+        IThemeContext themeContext,
+        IThemeRegistry themeRegistry,
+        ICacheManager cache,
+        ThemeSettings themeSettings,
+        SeoSettings seoSettings,
+        LocalizationSettings localizationSettings,
+        IRouteHelper routeHelper,
+        Lazy<ILlmsGenerator> llmsGenerator)
     {
-        private readonly SmartDbContext _db;
-        private readonly ICookieConsentManager _cookieConsentManager;
-        private readonly Lazy<IMediaService> _mediaService;
-        private readonly ILanguageService _languageService;
-        private readonly IThemeContext _themeContext;
-        private readonly IThemeRegistry _themeRegistry;
-        private readonly ICacheManager _cache;
-        private readonly ThemeSettings _themeSettings;
-        private readonly SeoSettings _seoSettings;
-        private readonly LocalizationSettings _localizationSettings;
-        private readonly IRouteHelper _routeHelper;
+        _db = db;
+        _cookieConsentManager = cookieConsentManager;
+        _mediaService = mediaService;
+        _languageService = languageService;
+        _themeContext = themeContext;
+        _themeRegistry = themeRegistry;
+        _cache = cache;
+        _themeSettings = themeSettings;
+        _seoSettings = seoSettings;
+        _localizationSettings = localizationSettings;
+        _routeHelper = routeHelper;
+        _llmsGenerator = llmsGenerator;
+    }
 
-        public CommonController(
-            SmartDbContext db,
-            ICookieConsentManager cookieConsentManager,
-            Lazy<IMediaService> mediaService,
-            ILanguageService languageService,
-            IThemeContext themeContext,
-            IThemeRegistry themeRegistry,
-            ICacheManager cache,
-            ThemeSettings themeSettings,
-            SeoSettings seoSettings,
-            LocalizationSettings localizationSettings,
-            IRouteHelper routeHelper)
-        {
-            _db = db;
-            _cookieConsentManager = cookieConsentManager;
-            _mediaService = mediaService;
-            _languageService = languageService;
-            _themeContext = themeContext;
-            _themeRegistry = themeRegistry;
-            _cache = cache;
-            _themeSettings = themeSettings;
-            _seoSettings = seoSettings;
-            _localizationSettings = localizationSettings;
-            _routeHelper = routeHelper;
-        }
+    [CheckStoreClosed(false)]
+    [Route("browserconfig.xml"), CrawlerEndpoint]
+    public async Task<IActionResult> BrowserConfigXmlFile()
+    {
+        var store = Services.StoreContext.CurrentStore;
 
-        [CheckStoreClosed(false)]
-        [Route("browserconfig.xml"), CrawlerEndpoint]
-        public async Task<IActionResult> BrowserConfigXmlFile()
-        {
-            var store = Services.StoreContext.CurrentStore;
+        if (store.MsTileImageMediaFileId == 0 || store.MsTileColor.IsEmpty())
+            return new EmptyResult();
 
-            if (store.MsTileImageMediaFileId == 0 || store.MsTileColor.IsEmpty())
-                return new EmptyResult();
+        var mediaService = _mediaService.Value;
+        var msTileImage = await mediaService.GetFileByIdAsync(Convert.ToInt32(store.MsTileImageMediaFileId), MediaLoadFlags.AsNoTracking);
+        if (msTileImage == null)
+            return new EmptyResult();
 
-            var mediaService = _mediaService.Value;
-            var msTileImage = await mediaService.GetFileByIdAsync(Convert.ToInt32(store.MsTileImageMediaFileId), MediaLoadFlags.AsNoTracking);
-            if (msTileImage == null)
-                return new EmptyResult();
-
-            XElement root = new(
-                "browserconfig",
+        XElement root = new(
+            "browserconfig",
+            new XElement
+            (
+                "msapplication",
                 new XElement
                 (
-                    "msapplication",
-                    new XElement
-                    (
-                        "tile",
-                        new XElement("square70x70logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeSm, host: string.Empty))),
-                        new XElement("square150x150logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeMd, host: string.Empty))),
-                        new XElement("square310x310logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeLg, host: string.Empty))),
-                        new XElement("wide310x150logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeMd, host: string.Empty))),
-                        new XElement("TileColor", store.MsTileColor)
-                    )
+                    "tile",
+                    new XElement("square70x70logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeSm, host: string.Empty))),
+                    new XElement("square150x150logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeMd, host: string.Empty))),
+                    new XElement("square310x310logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeLg, host: string.Empty))),
+                    new XElement("wide310x150logo", new XAttribute("src", mediaService.GetUrl(msTileImage, MediaSettings.ThumbnailSizeMd, host: string.Empty))),
+                    new XElement("TileColor", store.MsTileColor)
                 )
-            );
+            )
+        );
 
-            var doc = new XDocument(root);
-            var xml = doc.ToString(SaveOptions.DisableFormatting);
-            return Content(xml, "text/xml");
-        }
+        var doc = new XDocument(root);
+        var xml = doc.ToString(SaveOptions.DisableFormatting);
+        return Content(xml, "text/xml");
+    }
 
-        [CheckStoreClosed(false)]
-        [Route("robots.txt"), CrawlerEndpoint]
-        public async Task<IActionResult> RobotsTextFile()
+    [CheckStoreClosed(false)]
+    [Route("robots.txt"), CrawlerEndpoint]
+    public async Task<IActionResult> RobotsTextFile()
+    {
+        #region DisallowPaths
+
+        var disallowPaths = SeoSettings.DefaultRobotDisallows;
+        var localizableDisallowPaths = _routeHelper.EnumerateDisallowedRobotPaths();
+
+        #endregion
+
+        var sitemapUrl = WebHelper.GetAbsoluteUrl(Url.Content("sitemap.xml"), Request, true, Services.StoreContext.CurrentStore.SupportsHttps() ? "https" : "http");
+        using var psb = StringBuilderPool.Instance.Get(out var sb);
+        sb.Append("User-agent: *");
+        sb.AppendLine();
+        sb.AppendFormat("Sitemap: {0}", sitemapUrl);
+        sb.AppendLine();
+
+        var disallows = disallowPaths.Concat(localizableDisallowPaths);
+
+        if (_localizationSettings.SeoFriendlyUrlsForLanguagesEnabled)
         {
-            #region DisallowPaths
+            var languages = await _db.Languages
+                .AsNoTracking()
+                .ApplyStandardFilter(storeId: Services.StoreContext.CurrentStore.Id)
+                .ToListAsync();
 
-            var disallowPaths = SeoSettings.DefaultRobotDisallows;
-            var localizableDisallowPaths = _routeHelper.EnumerateDisallowedRobotPaths();
+            var masterLanguageId = await _languageService.GetMasterLanguageIdAsync();
 
-            #endregion
-
-            var sitemapUrl = WebHelper.GetAbsoluteUrl(Url.Content("sitemap.xml"), Request, true, Services.StoreContext.CurrentStore.SupportsHttps() ? "https" : "http");
-            using var psb = StringBuilderPool.Instance.Get(out var sb);
-            sb.Append("User-agent: *");
-            sb.AppendLine();
-            sb.AppendFormat("Sitemap: {0}", sitemapUrl);
-            sb.AppendLine();
-
-            var disallows = disallowPaths.Concat(localizableDisallowPaths);
-
-            if (_localizationSettings.SeoFriendlyUrlsForLanguagesEnabled)
+            // URLs are localizable. Append SEO code.
+            foreach (var language in languages)
             {
-                var languages = await _db.Languages
-                    .AsNoTracking()
-                    .ApplyStandardFilter(storeId: Services.StoreContext.CurrentStore.Id)
-                    .ToListAsync();
-
-                var masterLanguageId = await _languageService.GetMasterLanguageIdAsync();
-
-                // URLs are localizable. Append SEO code.
-                foreach (var language in languages)
+                if (!(_localizationSettings.DefaultLanguageRedirectBehaviour == DefaultLanguageRedirectBehaviour.StripSeoCode && language.Id == masterLanguageId))
                 {
-                    if (!(_localizationSettings.DefaultLanguageRedirectBehaviour == DefaultLanguageRedirectBehaviour.StripSeoCode && language.Id == masterLanguageId))
-                    {
-                        disallows = disallows.Concat(localizableDisallowPaths.Select(x => $"/{language.UniqueSeoCode}{x}"));
-                    }
+                    disallows = disallows.Concat(localizableDisallowPaths.Select(x => $"/{language.UniqueSeoCode}{x}"));
                 }
             }
-
-            // Append extra allows & disallows.
-            disallows = disallows.Concat(_seoSettings.ExtraRobotsDisallows.Select(x => x.Trim()));
-
-            AddRobotsLines(sb, disallows, false);
-            AddRobotsLines(sb, _seoSettings.ExtraRobotsAllows.Select(x => x.Trim()), true);
-
-            // Append custom lines
-            if (_seoSettings.ExtraRobotsLines.HasValue())
-            {
-                sb.Append(_seoSettings.ExtraRobotsLines);
-            }
-
-            return Content(sb.ToString(), "text/plain");
         }
 
-        /// <summary>
-        /// Adds Allow & Disallow lines to robots.txt
-        /// </summary>
-        /// <param name="lines">Lines to add.</param>
-        /// <param name="allow">Specifies whether new lines are Allows or Disallows.</param>
-        private static void AddRobotsLines(StringBuilder sb, IEnumerable<string> lines, bool allow)
+        // Append extra allows & disallows.
+        disallows = disallows.Concat(_seoSettings.ExtraRobotsDisallows.Select(x => x.Trim()));
+
+        AddRobotsLines(sb, disallows, false);
+        AddRobotsLines(sb, _seoSettings.ExtraRobotsAllows.Select(x => x.Trim()), true);
+
+        // Append custom lines
+        if (_seoSettings.ExtraRobotsLines.HasValue())
         {
-            // Append all lowercase variants (at least Google is case sensitive).
-            lines = lines.Union(lines.Select(x => x.ToLower()));
-
-            foreach (var line in lines)
-            {
-                sb.AppendFormat($"{(allow ? "Allow" : "Disallow")}: {line}");
-                sb.AppendLine();
-            }
+            sb.Append(_seoSettings.ExtraRobotsLines);
         }
 
-        [HttpPost]
-        public IActionResult ChangeTheme(string themeName, string returnUrl = null)
+        return Content(sb.ToString(), "text/plain");
+    }
+
+    /// <summary>
+    /// Adds Allow & Disallow lines to robots.txt
+    /// </summary>
+    /// <param name="lines">Lines to add.</param>
+    /// <param name="allow">Specifies whether new lines are Allows or Disallows.</param>
+    private static void AddRobotsLines(StringBuilder sb, IEnumerable<string> lines, bool allow)
+    {
+        if (lines == null)
         {
-            if (!_themeSettings.AllowCustomerToSelectTheme || (themeName.HasValue() && !_themeRegistry.ContainsTheme(themeName)))
-            {
-                return NotFound();
-            }
-
-            _themeContext.WorkingThemeName = themeName;
-
-            if (HttpContext.Request.IsAjax())
-            {
-                return Json(new { Success = true });
-            }
-
-            return RedirectToReferrer(returnUrl);
+            return;
         }
 
-        [DisallowRobot]
-        [LocalizedRoute("/currency-selected/{customerCurrency:int}", Name = "ChangeCurrency")]
-        public async Task<IActionResult> CurrencySelected(int customerCurrency, string returnUrl = null)
+        var directive = allow ? "Allow" : "Disallow";
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var line in lines)
         {
-            var currency = await _db.Currencies.FindByIdAsync(customerCurrency);
-            if (currency == null || !currency.Published)
+            var normalized = line?.Trim();
+
+            if (!normalized.HasValue() || !seen.Add(normalized))
             {
-                return NotFound();
+                continue;
             }
 
-            Services.WorkContext.WorkingCurrency = currency;
+            sb.Append(directive);
+            sb.Append(": ");
+            sb.AppendLine(normalized);
 
-            return RedirectToReferrer(returnUrl);
+            // Append lowercase variant (at least Google is case sensitive)
+            var lowerNormalized = normalized.ToLowerInvariant();
+
+            if (lowerNormalized != normalized && seen.Add(lowerNormalized))
+            {
+                sb.Append(directive);
+                sb.Append(": ");
+                sb.AppendLine(lowerNormalized);
+            }
         }
+    }
 
-        [CheckStoreClosed(false)]
-        [DisallowRobot]
-        [LocalizedRoute("/set-language/{langid:int}", Name = "ChangeLanguage")]
-        public async Task<IActionResult> SetLanguage(int langid, string returnUrl = "")
+    [CheckStoreClosed(false)]
+    [Route("llms.txt"), CrawlerEndpoint]
+    public async Task<IActionResult> LlmsTextFile()
+    {
+        // Cache for 24 hours
+        Response.Headers.CacheControl = "public, max-age=86400";
+
+        using var psb = StringBuilderPool.Instance.Get(out var sb);
+        using var writer = new StringWriter(sb);
+
+        await _llmsGenerator.Value.GenerateLlms(writer, Request);
+
+        var content = sb.ToString();
+
+        return Content(content, "text/plain", Encoding.UTF8);
+    }
+
+    [HttpPost]
+    public IActionResult ChangeTheme(string themeName, string returnUrl = null)
+    {
+        if (!_themeSettings.AllowCustomerToSelectTheme || (themeName.HasValue() && !_themeRegistry.ContainsTheme(themeName)))
         {
-            var language = await _db.Languages.FindByIdAsync(langid, false);
-            if (language == null || !language.Published)
-            {
-                return NotFound();
-            }
-
-            Services.WorkContext.WorkingLanguage = language;
-
-            var helper = new LocalizedUrlHelper(Request.PathBase, returnUrl ?? string.Empty);
-            var urlPolicy = HttpContext.GetUrlPolicy();
-
-            if (urlPolicy != null && urlPolicy.LocalizationSettings.SeoFriendlyUrlsForLanguagesEnabled)
-            {
-                // Don't prepend culture code if it is master language and master is prefixless by configuration.
-                if (language.UniqueSeoCode != urlPolicy.DefaultCultureCode || urlPolicy.LocalizationSettings.DefaultLanguageRedirectBehaviour == DefaultLanguageRedirectBehaviour.PrependSeoCodeAndRedirect)
-                {
-                    helper.PrependCultureCode(Services.WorkContext.WorkingLanguage.UniqueSeoCode, true);
-                }
-            }
-
-            returnUrl = helper.FullPath;
-
-            return RedirectToReferrer(returnUrl);
+            return NotFound();
         }
 
-        /// <summary>
-        /// This action method gets called via an AJAX request.
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> StatesByCountryId(string countryId, bool addEmptyStateIfRequired)
+        _themeContext.WorkingThemeName = themeName;
+
+        if (HttpContext.Request.IsAjax())
         {
-            // This should never happen. But just in case we return an empty List to don't throw in frontend.
-            if (!countryId.HasValue())
+            return Json(new { Success = true });
+        }
+
+        return RedirectToReferrer(returnUrl);
+    }
+
+    [DisallowRobot]
+    [LocalizedRoute("/currency-selected/{customerCurrency:int}", Name = "ChangeCurrency")]
+    public async Task<IActionResult> CurrencySelected(int customerCurrency, string returnUrl = null)
+    {
+        var currency = await _db.Currencies.FindByIdAsync(customerCurrency);
+        if (currency == null || !currency.Published)
+        {
+            return NotFound();
+        }
+
+        Services.WorkContext.WorkingCurrency = currency;
+
+        return RedirectToReferrer(returnUrl);
+    }
+
+    [CheckStoreClosed(false)]
+    [DisallowRobot]
+    [LocalizedRoute("/set-language/{langid:int}", Name = "ChangeLanguage")]
+    public async Task<IActionResult> SetLanguage(int langid, string returnUrl = "")
+    {
+        var language = await _db.Languages.FindByIdAsync(langid, false);
+        if (language == null || !language.Published)
+        {
+            return NotFound();
+        }
+
+        Services.WorkContext.WorkingLanguage = language;
+
+        var helper = new LocalizedUrlHelper(Request.PathBase, returnUrl ?? string.Empty);
+        var urlPolicy = HttpContext.GetUrlPolicy();
+
+        if (urlPolicy != null && urlPolicy.LocalizationSettings.SeoFriendlyUrlsForLanguagesEnabled)
+        {
+            // Don't prepend culture code if it is master language and master is prefixless by configuration.
+            if (language.UniqueSeoCode != urlPolicy.DefaultCultureCode || urlPolicy.LocalizationSettings.DefaultLanguageRedirectBehaviour == DefaultLanguageRedirectBehaviour.PrependSeoCodeAndRedirect)
             {
-                return Json(new List<SelectListItem>());
+                helper.PrependCultureCode(Services.WorkContext.WorkingLanguage.UniqueSeoCode, true);
+            }
+        }
+
+        returnUrl = helper.FullPath;
+
+        return RedirectToReferrer(returnUrl);
+    }
+
+    /// <summary>
+    /// This action method gets called via an AJAX request.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> StatesByCountryId(string countryId, bool addEmptyStateIfRequired)
+    {
+        // This should never happen. But just in case we return an empty List to don't throw in frontend.
+        if (!countryId.HasValue())
+        {
+            return Json(new List<SelectListItem>());
+        }
+
+        var cacheKey = string.Format(ModelCacheInvalidator.STATEPROVINCES_BY_COUNTRY_MODEL_KEY, countryId, addEmptyStateIfRequired, Services.WorkContext.WorkingLanguage.Id);
+        var cacheModel = await _cache.GetAsync(cacheKey, async () =>
+        {
+            var stateProvinces = await _db.StateProvinces.GetStateProvincesByCountryIdAsync(Convert.ToInt32(countryId));
+            var result = stateProvinces.ToSelectListItems() ?? new List<SelectListItem>();
+
+            if (addEmptyStateIfRequired && result.Count == 0)
+            {
+                result.Add(new SelectListItem { Text = T("Address.OtherNonUS"), Value = "0" });
             }
 
-            var cacheKey = string.Format(ModelCacheInvalidator.STATEPROVINCES_BY_COUNTRY_MODEL_KEY, countryId, addEmptyStateIfRequired, Services.WorkContext.WorkingLanguage.Id);
-            var cacheModel = await _cache.GetAsync(cacheKey, async () =>
-            {
-                var stateProvinces = await _db.StateProvinces.GetStateProvincesByCountryIdAsync(Convert.ToInt32(countryId));
-                var result = stateProvinces.ToSelectListItems() ?? new List<SelectListItem>();
+            return result;
+        });
 
-                if (addEmptyStateIfRequired && result.Count == 0)
-                {
-                    result.Add(new SelectListItem { Text = T("Address.OtherNonUS"), Value = "0" });
-                }
+        return Json(cacheModel);
+    }
 
-                return result;
-            });
+    [DisallowRobot]
+    [HttpPost]
+    [LocalizedRoute("/cookiemanager", Name = "CookieManager")]
+    public IActionResult CookieManager()
+    {
+        return ViewComponent("CookieManager");
+    }
 
-            return Json(cacheModel);
-        }
-
-        [DisallowRobot]
-        [HttpPost]
-        [LocalizedRoute("/cookiemanager", Name = "CookieManager")]
-        public IActionResult CookieManager()
-        {
-            return ViewComponent("CookieManager");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SetCookieManagerConsent(CookieManagerModel model)
+    [HttpPost]
+    public async Task<IActionResult> SetCookieManagerConsent(CookieManagerModel model)
+    {
+        if (model != null)
         {
             if (model.AcceptAll)
             {
@@ -280,13 +328,13 @@ namespace Smartstore.Web.Controllers
             // Info: We don't pass the required value from model.RequiredConsent because the control is disabled and the value is always false
             // but required cookies are always allowed. However, we need to set the consent explicitly because we can't even set required cookies without consent.
             await _cookieConsentManager.SetConsentCookieAsync(true, model.AnalyticsConsent, model.ThirdPartyConsent, model.AdUserDataConsent, model.AdPersonalizationConsent);
-
-            if (!HttpContext.Request.IsAjax())
-            {
-                return RedirectToReferrer();
-            }
-
-            return Json(new { Success = true });
         }
+
+        if (!HttpContext.Request.IsAjax())
+        {
+            return RedirectToReferrer();
+        }
+
+        return Json(new { Success = model != null });
     }
 }

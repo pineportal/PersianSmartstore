@@ -6,16 +6,10 @@
 		<Value>Extends the store with Stripe payment.</Value>
 	</LocaleResource>
 
-    <!-- 
-        TODO: (mh) (core) 
-        Alter this when the following issue is resolved
-        https://github.com/smartstore/Smartstore/issues/574
-        The following two resources should be display in the frontend.
-    -->
 	<LocaleResource Name="Plugins.FriendlyName.Payments.StripeElements" AppendRootKey="false">
 		<Value>Pay now with Stripe</Value>
 	</LocaleResource>
-	<LocaleResource Name="Plugins.Description.Payments.StripeElements" AppendRootKey="false">
+	<LocaleResource Name="Plugins.PaymentInfo.Payments.StripeElements" AppendRootKey="false">
 		<Value>Opens a secure payment window where the payment is made directly with Stripe.</Value>
 	</LocaleResource>
 	

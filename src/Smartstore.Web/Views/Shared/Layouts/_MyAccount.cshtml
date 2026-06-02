@@ -12,12 +12,14 @@
                 </div>
 
                 <div class="card my-account-menu nav-collapsible">
-                    <div class="card-header p-2 nav-toggler collapsed" data-toggle="collapse" data-target="#myaccount-menu" aria-controls="myaccount-menu" aria-expanded="false">
+                    <div class="card-header p-2 nav-toggler collapsed" 
+                         data-toggle="collapse" data-target="#myaccount-menu" 
+                         aria-controls="myaccount-menu" aria-expanded="false" tabindex="0">
                         @await Component.InvokeAsync("MyAccountHeader")
                     </div>
 
-                    <div id="myaccount-menu" class="collapse nav-collapse">
-                        <menu name="MyAccount" template="ListGroup" />
+                    <div id="myaccount-menu" class="collapse nav-collapse" role="region">
+                        <menu name="MyAccount" template="ListGroup" public-name="@T("Account.MyAccount")" />
                     </div>
                 </div>
                 
@@ -25,9 +27,9 @@
                     <zone name="myaccount_menu_after" />
                 </div>
             </div>
-            <div class="col-md-8 col-lg-9">
+            <div class="col-md-8 col-lg-9" role="region" aria-labelledby="myaccount-header">
                 <div class="page-title pt-4 pt-md-0">
-                    <h1 class="h3">@ViewBag.PageTitle</h1>
+                    <h1 id="myaccount-header" class="h3">@ViewBag.PageTitle</h1>
                 </div>
 
                 @RenderBody()

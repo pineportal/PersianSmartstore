@@ -80,13 +80,23 @@ jQuery(function () {
     });
 
     // Prevent (button) multiclick
-    $(document).on('click', '.btn-prevent-multiclick', function () {
+    $(document).on('click', '.btn-prevent-multiclick', function (e) {
         let el = $(this);
         let containingForm = el.closest("form");
 
         if (containingForm.length) {
             el.prop('disabled', true);
-            containingForm.trigger('submit');
+
+            const submitEvent = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+            });
+            const nativePrevented = !containingForm[0].dispatchEvent(submitEvent);
+
+            // If native handlers (from captcha js) have NOT called preventDefault(), trigger jQuery.
+            if (!nativePrevented) {
+                containingForm.trigger('submit');
+            }
 
             if (!containingForm.valid()) {
                 el.prop('disabled', false);
@@ -164,7 +174,7 @@ jQuery(function () {
 
     // .mf-dropdown (mobile friendly dropdown)
     (function () {
-        $('.mf-dropdown').each(function (i, el) {
+        $('.mf-dropdown').each((_, el) => {
             var elLabel = $('> .btn [data-bind]', el);
             if (elLabel.length == 0 || elLabel.text().length > 0)
                 return;
@@ -174,22 +184,27 @@ jQuery(function () {
         });
 
         body.on('mouseenter mouseleave mousedown change', '.mf-dropdown > select', function (e) {
-            var btn = $(this).parent().find('> .btn');
+            let $btn = $(this).parent().find('> .btn');
+
+            const blurButton = (e) => {
+                $btn.removeClass('active focus');
+            }
+
             if (e.type == "mouseenter") {
-                btn.addClass('hover');
+                $btn.addClass('hover');
             }
             else if (e.type == "mousedown") {
-                btn.addClass('active focus').removeClass('hover');
-                _.delay(function () {
-                    body.one('mousedown touch', function (e) { btn.removeClass('active focus'); });
+                $btn.addClass('active focus').removeClass('hover');
+                _.delay(() => {
+                    body.one('mousedown.mfdropdown touch.mfdropdown', blurButton);
                 }, 50);
             }
             else if (e.type == "mouseleave") {
-                btn.removeClass('hover');
+                $btn.removeClass('hover');
             }
             else if (e.type == "change") {
-                btn.removeClass('hover active focus');
-                var elLabel = btn.find('[data-bind]');
+                $btn.removeClass('hover active focus');
+                var elLabel = $btn.find('[data-bind]');
                 elLabel.text(elLabel.data('bind') == 'value' ? $(this).val() : $('option:selected', this).text());
             }
         });
@@ -242,6 +257,9 @@ jQuery(function () {
 
             if (_.isFunction(fn)) fn();
         }
+
+        window.showDrop = showDrop;
+        window.closeDrop = closeDrop;
 
         function handleEnter(group) {
             clearTimeout(group.data('closeTimeout'));
@@ -314,7 +332,8 @@ jQuery(function () {
 
             if (type === 'enter') {
                 handleEnter(group);
-            } else {
+            }
+            else if (e.type == 'mouseleave') {
                 // Close drop delayed to allow for mouse re-entry
                 handleLeave(group, leaveDelay);
             }
@@ -456,13 +475,19 @@ jQuery(function () {
 
     // Toggle password visibility
     $(document).on('click', '.btn-toggle-pwd', function () {
-        const input = $(this).prev('.form-control')[0];
+        const $btn = $(this);
+        const input = $btn.prev('.form-control')[0];
         if (input?.type == 'text') {
             input.type = 'password';
+            $btn.aria('pressed', 'false').aria('label', Res["Aria.Label.ShowPassword"]);
         }
         else if (input?.type == 'password') {
             input.type = 'text';
+            $btn.aria('pressed', 'true').aria('label', Res["Aria.Label.HidePassword"]);
         }
+
+        // Refocus input
+        input?.focus();
     });
 
     // Swap Popper x placement when RTL

@@ -1,4 +1,8 @@
-﻿@model ProductModel
+﻿@using Smartstore.Core.Catalog
+
+@model ProductModel
+
+@inject CatalogSettings CatalogSettings
 
 @if (Model.Id == 0)
 {
@@ -21,6 +25,15 @@
         <div class="adminData">
             <input asp-for="HasPreviewPicture" />
             <span asp-validation-for="HasPreviewPicture"></span>
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="DisplayAllImagesNumber" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="DisplayAllImagesNumber" placeholder="@CatalogSettings.DisplayAllImagesNumber" />
+            <span asp-validation-for="DisplayAllImagesNumber"></span>
         </div>
     </div>
     <div class="adminRow">

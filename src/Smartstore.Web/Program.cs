@@ -40,7 +40,7 @@ using Smartstore.Core.Data.Migrations;
 using Smartstore.Core.Logging.Serilog;
 using Smartstore.Utilities;
 
-var rgSystemSource = new Regex("^File|^System|^Microsoft|^Serilog|^Autofac|^Castle|^MiniProfiler|^Newtonsoft|^Pipelines|^Azure|^StackExchange|^Superpower|^Dasync", RegexOptions.Compiled);
+var rgSystemSource = new Regex("^File|^System|^Microsoft|^Serilog|^SixLabors|^Autofac|^Castle|^MiniProfiler|^Newtonsoft|^Pipelines|^Azure|^StackExchange|^FluentMigrator|^AngleSharp", RegexOptions.Compiled);
 var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Production;
 var isDevEnvironment = IsDevEnvironment();
 var baseDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -242,7 +242,7 @@ Logger SetupSerilog(IConfiguration configuration)
                 .Filter.ByIncludingOnly(IsDbSource)
                 .Filter.ByExcluding(IsFileSource)
                 .Filter.ByExcluding(IsApiQueryWarning)
-                .WriteTo.DbContext(period: TimeSpan.FromSeconds(5), batchSize: 50, eagerlyEmitFirstEvent: false, queueLimit: 1000);
+                .WriteTo.DbContext(period: TimeSpan.FromSeconds(10), batchSize: 50, eagerlyEmitFirstEvent: false, queueLimit: 1000);
         }, restrictedToMinimumLevel: dbMinLevel, levelSwitch: null);
 
     return builder.CreateLogger();
@@ -273,4 +273,3 @@ bool IsApiQueryWarning(LogEvent e)
 }
 
 #endregion
-

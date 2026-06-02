@@ -1,43 +1,47 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using Smartstore.Core.Widgets;
 using Smartstore.Web.Components;
 
-namespace Smartstore.DevTools.Components
+namespace Smartstore.DevTools.Components;
+
+public class WidgetZoneViewComponent : SmartViewComponent
 {
-    public class WidgetZoneViewComponent : SmartViewComponent
+    public async Task<IViewComponentResult> InvokeAsync(bool renderMenu = false)
     {
-        public async Task<IViewComponentResult> InvokeAsync(bool renderMenu = false)
+        if (!renderMenu)
         {
-            if (!renderMenu)
-            {
-                // Zone preview rendering
-                return View();
-            }
-            
-            // Menu rendering
-            var widgetProvider = HttpContext.RequestServices.GetRequiredService<IWidgetProvider>();
+            // Zone preview rendering
+            return View();
+        }
 
-            // Get widget zone areas.
-            var jsonZones = (JObject)(await widgetProvider.GetAllKnownWidgetZonesAsync());
+        // Menu rendering
+        var widgetProvider = HttpContext.RequestServices.GetRequiredService<IWidgetProvider>();
 
-            var groups =
-                from p in jsonZones["WidgetZonesAreas"]
-                select p;
+        // Get widget zone areas.
+        dynamic jsonZones = await widgetProvider.GetAllKnownWidgetZonesAsync();
 
+        var groups = jsonZones?.WidgetZonesAreas as IList<object>;
+        if (groups is not null)
+        {
             // Localize widget zone areas.
             foreach (var group in groups)
             {
-                var areaRessource = group["name"].ToString();
-                var areaName = T(areaRessource);
+                if (group is not IDictionary<string, object> obj)
+                {
+                    continue;
+                }
 
-                group["name"] = areaName.Value;
+                var areaResource = obj.TryGetValue("name", out var name) ? name?.ToString() : null;
+                if (areaResource.HasValue())
+                {
+                    obj["name"] = T(areaResource).Value;
+                }
             }
-
-            ViewBag.WidgetZoneGroups = groups;
-
-            return View("Menu");
         }
+
+        ViewBag.WidgetZoneGroups = groups;
+
+        return View("Menu");
     }
 }

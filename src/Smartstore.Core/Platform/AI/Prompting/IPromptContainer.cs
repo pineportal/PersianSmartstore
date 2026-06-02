@@ -2,39 +2,51 @@
 
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace Smartstore.Core.AI.Prompting
+namespace Smartstore.Core.AI.Prompting;
+
+/// <summary>
+/// Represents an AI prompt.
+/// </summary>
+public interface IPromptContainer
 {
     /// <summary>
-    /// Model interface for prompt UI.
+    /// The final prompt to be sent to the AI service.
     /// </summary>
-    public interface IPromptContainer
-    {
-        string? EntityName { get; }
-        string? Prompt { get; }
-    }
+    string? Prompt { get; }
+}
 
+/// <summary>
+/// Represents a composite prompt consisting of a string template and user input.
+/// </summary>
+public interface ICompositePrompt : IPromptContainer
+{
     /// <summary>
-    /// Model interface for the text generation prompt UI.
+    /// The entity name/title that is used as the user input.
     /// </summary>
-    public interface ITextPromptContainer : IPromptContainer
-    {
-        int? WordLimit { get; }
-        string? Style { get; }
-        string? Tone { get; }
+    string? EntityName { get; }
+}
 
-        bool DisplayWordLimit { get; set; }
-        bool DisplayStyle { get; set; }
-        bool DisplayTone { get; set; }
+/// <summary>
+/// Represents a prompt for text generation.
+/// </summary>
+public interface ITextPromptContainer : ICompositePrompt
+{
+    int? WordLimit { get; }
+    string? Style { get; }
+    string? Tone { get; }
 
-        SelectList? AvailableStyles { get; }
-        SelectList? AvailableTones { get; }
-    }
+    bool DisplayWordLimit { get; set; }
+    bool DisplayStyle { get; set; }
+    bool DisplayTone { get; set; }
 
-    /// <summary>
-    /// Model interface for the suggestion generation prompt UI.
-    /// </summary>
-    public interface ISuggestionPromptContainer : IPromptContainer
-    {
-        int? NumSuggestions { get; }
-    }
+    SelectList? AvailableStyles { get; }
+    SelectList? AvailableTones { get; }
+}
+
+/// <summary>
+/// Represents a prompt for generating suggestions.
+/// </summary>
+public interface ISuggestionPromptContainer : ICompositePrompt
+{
+    int? NumSuggestions { get; }
 }

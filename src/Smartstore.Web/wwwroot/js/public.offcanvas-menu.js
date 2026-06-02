@@ -88,9 +88,15 @@
                     var nodeId = el.data("id");
                     self.navigateToLayer(nodeId || 0, dir, function (layer) {
                         li.removeClass("animating");
+                        layer.find('.ocm-nav .ocm-link[role="treeitem"]').first().focus();
                     });
 
                     return false;
+                });
+
+                this.container.on('collapse.ak', '.ocm-link', function (e) {
+                    e.stopPropagation();
+                    $(this).closest(".ocm-menu").find(".ocm-back .ocm-link").trigger("click");
                 });
             }
         };
@@ -141,8 +147,8 @@
             if (footer.length === 0)
                 return;
 
-            var langSelector = $(".menubar-section .language-selector");
-            var currencySelector = $(".menubar-section .currency-selector");
+            var langSelector = $("#language-options");
+            var currencySelector = $("#currency-options");
             var ocmLangSelector = $("#ocm-language-selector", footer);
             var ocmCurrencySelector = $("#ocm-currency-selector", footer);
             var displayCurrencySelector = currencySelector.length > 0;
@@ -188,7 +194,7 @@
             var menubar = $(".menubar-section .menubar").clone().removeClass('navbar navbar-slide');
 
             // remove currency & language selectors 
-            menubar.find(".currency-selector, .language-selector").remove();
+            menubar.find("#currency-selector, #language-selector").closest(".dropdown").remove();
 
             // remove data-toggle attributes
             menubar.find("[data-toggle=dropdown]").removeAttr("data-toggle");
@@ -256,9 +262,12 @@
                 prevLayer = currentLayer.prev();
 
             var finalize = function (layer) {
-                layer.one('transitionend', function (e) {
+                layer.one('transitionend', (e) => {
                     callback(layer);
                     self.selectedNodeId = nodeId;
+
+                    // Fire event for focus trap
+                    layer.trigger('shown.sm.offcanvaslayer');
                 });
             };
 

@@ -21,6 +21,7 @@ $font-size-base: null !default;
 $font-size-lg: null !default;
 $font-size-sm: null !default;
 $font-size-xs: null !default;
+$badge-content-shift: null !default;
 
 // Headings
 $headings-font-family: null !default;
@@ -76,6 +77,8 @@ $megamenu-rotator-bg: null !default;
 // Search
 $searchbox-pill: null !default;
 $searchbox-shadow: null !default;
+$searchbox-outline-width: null !default;
+$searchbox-outline-color: null !default;
 $searchbox-bg-1: null !default;
 $searchbox-bg-2: null !default;
 $searchbox-bg-mobile: null !default;

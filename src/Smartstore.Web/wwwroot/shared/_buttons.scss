@@ -5,6 +5,22 @@ $btn-wide-padding-x-lg: 2.5rem;
 $btn-wide-padding-x-sm: 1.2rem;
 
 
+// Some common utils
+// -----------------------------------------------------
+
+button:where(.reset) {
+    // Use with non-.btn buttons. :where(.reset) (instead of .reset) for lower specificity.
+    user-select: none;
+    background-color: transparent;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0;
+    margin: 0;
+    border: none;
+    color: inherit;
+}
+
+
 // Make icon font-size 14px in small buttons
 // (looks ugly otherwise)
 // -----------------------------------------------------
@@ -41,15 +57,13 @@ $btn-wide-padding-x-sm: 1.2rem;
     gap: 0.5em;
     min-height: var(--btn-height);
 
-    > i, 
-    > svg {
+    > :is(i, svg) {
         color: var(--btn-icon-color);
         transition: var(--btn-icon-transition);
     }
 
     &:hover {
-        > i, 
-        > svg {
+        > :is(i, svg) {
             color: var(--btn-icon-hover-color);
         }
     }
@@ -57,8 +71,7 @@ $btn-wide-padding-x-sm: 1.2rem;
     &.disabled,
     &:disabled,
     fieldset:disabled & {
-        > i, 
-        > svg {
+        > :is(i, svg) {
             color: var(--btn-icon-color);
         }
     }
@@ -66,8 +79,7 @@ $btn-wide-padding-x-sm: 1.2rem;
     &:active,
     &.active,
     .show > &.dropdown-toggle {
-        > i, 
-        > svg {
+        > :is(i, svg) {
             color: var(--btn-icon-active-color);
         }
     }
@@ -104,10 +116,7 @@ $btn-wide-padding-x-sm: 1.2rem;
 // Light addon buttons without border looking shitty
 // -----------------------------------------------------
 
-.input-group-append > .btn-secondary,
-.input-group-append > .btn-light,
-.input-group-prepend > .btn-secondary,
-.input-group-prepend > .btn-light { 
+:is(.input-group-append, .input-group-prepend) > :is(.btn-secondary, .btn-light) { 
     --btn-border-color: #{rgba($gray-700, 0.15)};
     --btn-hover-border-color: var(--btn-border-color);
     --btn-active-border-color: #{rgba($gray-700, 0.2)};
@@ -252,7 +261,6 @@ $btn-wide-padding-x-sm: 1.2rem;
     --btn-hover-color: var(--btn-color);
     --btn-hover-bg: #{rgba(#fff, 0.15)};
     --btn-hover-border-color: var(--btn-border-color);
-    --btn-hover-shadow: none;
     --btn-active-color: var(--btn-hover-color);
     --btn-active-bg: #{rgba(#fff, 0.12)};
     --btn-active-border-color: #{rgba(#fff, 0.4)};
@@ -276,7 +284,6 @@ $btn-wide-padding-x-sm: 1.2rem;
     --btn-hover-color: #{darken($yiq-text-dark, 8%)};
     --btn-hover-bg: #{rgba(#000, 0.06)};
     --btn-hover-border-color: #{rgba(#000, 0.1)};
-    --btn-hover-shadow: none;
     --btn-active-color: var(--btn-hover-color);
     --btn-active-bg: #{rgba(#000, 0.08)};
     --btn-active-border-color: #{rgba(#000, 0.15)};
@@ -363,7 +370,7 @@ $btn-wide-padding-x-sm: 1.2rem;
         transition: transform 0.2s ease-out;
         transform: translate(0, 0);
 
-        > i, > svg {
+        > :is(i, svg) {
             position: absolute;
             display: inline-block;
             vertical-align: middle;
@@ -390,7 +397,7 @@ $btn-wide-padding-x-sm: 1.2rem;
 
     &:hover > span {
         transform: translateX(var(--btn-animate-offset));
-        > i, > svg {
+        > :is(i, svg) {
             opacity: 1;
         }
     }
@@ -430,7 +437,7 @@ $btn-wide-padding-x-sm: 1.2rem;
 .btn-to-primary {
     --btn-transition: none;
 
-    > i, > svg {
+    > :is(i, svg) {
         opacity: 1;
     }
 }
@@ -518,6 +525,16 @@ $btn-wide-padding-x-sm: 1.2rem;
 }
 
 
+// btn-pure 
+// (combination of btn-clear-dark and btn-no-border)
+// --------------------------------------------------
+
+.btn-plain {
+    @extend .btn-clear-dark;
+    @extend .btn-no-border;
+}
+
+
 // .mf-dropdown (Mobile Friendly dropdown)
 // --------------------------------------------------
 
@@ -525,8 +542,25 @@ $btn-wide-padding-x-sm: 1.2rem;
     display: inline-block;
     position: relative;
 
+    > select {
+        position: absolute;
+        opacity: 0.01;
+        inset-inline-start: 0;
+        width: 100%;
+        top: 0;
+        bottom: 0;
+        cursor: pointer;
+        z-index: 1;
+
+        &:focus-visible + .btn:not(:is(.focus)) {
+            // Make subtle focus ring
+            outline: 1px solid $focus-ring-color;
+        }
+    }
+
     .btn {
         position: relative;
+        z-index: 0;
     }
 
     .btn > em {
@@ -546,6 +580,7 @@ $btn-wide-padding-x-sm: 1.2rem;
 
     .btn.has-caret {
         text-align: start;
+        justify-content: start;
         padding-inline-end: $input-btn-padding-x * 2;
 
         &.btn-sm {
@@ -556,8 +591,7 @@ $btn-wide-padding-x-sm: 1.2rem;
             padding-inline-end: $input-btn-padding-x-lg * 2;
         }
 
-        > em,
-        > span {
+        > :is(em, span) {
             display: block;
             margin-bottom: 1px; // equalizes button heights
             @include text-truncate();
@@ -580,15 +614,5 @@ $btn-wide-padding-x-sm: 1.2rem;
 
     .btn-lg.has-caret:after {
         inset-inline-end: $input-btn-padding-x-lg;
-    }
-
-    select {
-        position: absolute;
-        opacity: 0;
-        inset-inline-start: 0;
-        width: 100%;
-        top: 0;
-        bottom: 0;
-        cursor: pointer;
     }
 }

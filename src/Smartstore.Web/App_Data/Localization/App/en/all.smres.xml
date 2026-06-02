@@ -33,6 +33,12 @@
 	<LocaleResource Name="Account.Avatar">
 		<Value>Avatar</Value>
 	</LocaleResource>
+	<LocaleResource Name="Account.Avatar.AvatarChanged">
+		<Value>The avatar has been changed.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Account.Avatar.AvatarRemoved">
+		<Value>The avatar has been removed.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Account.Avatar.MaximumUploadedFileSize">
 		<Value>Maximum avatar size is {0}</Value>
 	</LocaleResource>
@@ -44,9 +50,6 @@
 	</LocaleResource>
 	<LocaleResource Name="Account.BackInStockSubscriptions">
 		<Value>Back in stock subscriptions</Value>
-	</LocaleResource>
-	<LocaleResource Name="Account.BackInStockSubscriptions.DeleteSelected">
-		<Value>Delete selected</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.BackInStockSubscriptions.Description">
 		<Value>You will receive an e-mail when a particular product is back in stock.</Value>
@@ -136,7 +139,7 @@
 		<Value>Repeat deliveries</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerOrders.RecurringOrders.Cancel">
-		<Value>Cancel repeat delivery</Value>
+		<Value>Cancel repeat delivery for order {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerOrders.RecurringOrders.CancelDelivery">
 		<Value>Would you like to cancel the repeat delivery?</Value>
@@ -160,10 +163,10 @@
 		<Value>Total deliveries</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerOrders.ReturnItems">
-		<Value>Return Item(s)</Value>
+		<Value>Return items</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerReturnRequests">
-		<Value>Return requests</Value>
+		<Value>Withdrawals and Returns</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerReturnRequests.Action">
 		<Value>Return action</Value>
@@ -172,16 +175,13 @@
 		<Value>Your Comments:</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerReturnRequests.Date">
-		<Value>Date Requested</Value>
+		<Value>Requested on</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerReturnRequests.Item">
 		<Value>Item</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerReturnRequests.Reason">
 		<Value>Return reason</Value>
-	</LocaleResource>
-	<LocaleResource Name="Account.CustomerReturnRequests.Title">
-		<Value>Return #{0} - {1}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.CustomerSince">
 		<Value>Customer since {0}</Value>
@@ -403,7 +403,7 @@
 		<Value>Your email address</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.PasswordRecovery.EmailHasBeenSent">
-		<Value>We have sent you an email with further instructions if an account exists with your email address.</Value>
+		<Value>If there is an account associated with this email, we have sent a link to reset your password.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.PasswordRecovery.NewPassword">
 		<Value>New password</Value>
@@ -467,6 +467,9 @@
 	</LocaleResource>
 	<LocaleResource Name="Account.Register.Result.EmailValidation">
 		<Value>Your registration has been successfully completed. You have just been sent an email containing membership activation instructions.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Account.Register.Result.MeetPasswordRules">
+		<Value>Password must meet these rules: {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Account.Register.Result.Standard">
 		<Value>Your registration completed</Value>
@@ -559,7 +562,7 @@
 		<Value>Deleted a product attribute ('{0}')</Value>
 	</LocaleResource>
 	<LocaleResource Name="ActivityLog.DeleteReturnRequest">
-		<Value>Deleted a return request (ID = {0})</Value>
+		<Value>Deleted a return (ID = {0})</Value>
 	</LocaleResource>
 	<LocaleResource Name="ActivityLog.DeleteSetting">
 		<Value>Deleted a setting ('{0}')</Value>
@@ -601,7 +604,7 @@
 		<Value>Edited a product attribute ('{0}')</Value>
 	</LocaleResource>
 	<LocaleResource Name="ActivityLog.EditReturnRequest">
-		<Value>Edited a return request (ID = {0})</Value>
+		<Value>Edited a return (ID = {0})</Value>
 	</LocaleResource>
 	<LocaleResource Name="ActivityLog.EditSettings">
 		<Value>The setting {0} has been changed. The new value is {1}.</Value>
@@ -960,32 +963,281 @@
 	<LocaleResource Name="Admin.Affiliates.Updated">
 		<Value>The affiliate has been updated successfully.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateFullDesc">
-		<Value>Generate full description</Value>
+	<LocaleResource Name="Admin.AI.ImageCreation.Atmosphere">
+		<Value>The atmosphere feels {1} and is shaped by {0}.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateImage">
-		<Value>Generate image</Value>
+	<LocaleResource Name="Admin.AI.ImageCreation.Atmosphere.Fallback">
+		<Value>The atmosphere is intended to feel {1} and is shaped by lighting that is {0}.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateMetaDesc">
-		<Value>Generate meta description</Value>
+	<LocaleResource Name="Admin.AI.ImageCreation.Atmosphere.LightingOnly">
+		<Value>The atmosphere is shaped by {0}.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateMetaKeywords">
-		<Value>Generate meta keywords</Value>
+	<LocaleResource Name="Admin.AI.ImageCreation.Atmosphere.LightingOnly.Fallback">
+		<Value>The atmosphere is shaped by lighting that is {0}.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateMetaTitle">
-		<Value>Generate title tag</Value>
+	<LocaleResource Name="Admin.AI.ImageCreation.Atmosphere.MoodOnly">
+		<Value>The atmosphere feels {0}.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateShortDesc">
-		<Value>Generate short description</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.AI.CreateText">
-		<Value>Generate text</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.AI.EditHtml">
-		<Value>Edit HTML text</Value>
+	<LocaleResource Name="Admin.AI.ImageCreation.Atmosphere.MoodOnly.Fallback">
+		<Value>The atmosphere is intended to feel {0}.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.AI.ImageCreation.DefaultPrompt">
 		<Value>Generate a picture about the topic: '{0}'.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Describe">
+		<Value>Add picture description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Optic">
+		<Value>The visual style is {0} with a {1} color palette.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Optic.ColorOnly">
+		<Value>The visual style uses a {0} color palette.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Optic.ColorOnly.Fallback">
+		<Value>The visual style uses a color palette focused on {0}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Optic.Fallback">
+		<Value>The visual style is focused on {0} and uses a color palette described as {1}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Optic.MediumOnly">
+		<Value>The visual style is {0}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Optic.MediumOnly.Fallback">
+		<Value>The visual style is focused on {0}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Ambient">
+		<Value>ambient</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Asymmetrical">
+		<Value>asymmetrical</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Beach">
+		<Value>beach</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.BirdsEye">
+		<Value>Birds-eye view</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.BlackAndWhite">
+		<Value>black and white</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Bright">
+		<Value>bright</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.City">
+		<Value>city</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Closeup">
+		<Value>Closeup</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Colorful">
+		<Value>colorful</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Cosy">
+		<Value>cosy</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Forest">
+		<Value>forest</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Futuristic">
+		<Value>futuristic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.GoldenRatio">
+		<Value>Golden ratio</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Headshot">
+		<Value>Headshot</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Hectic">
+		<Value>hectic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Illustration">
+		<Value>illustration</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Inside">
+		<Value>indoors</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Kitchen">
+		<Value>kitchen</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.LivingRoom">
+		<Value>living room</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Monochromatic">
+		<Value>monochromatic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Muted">
+		<Value>muted</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Mysterious">
+		<Value>mysterious</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Neon">
+		<Value>neon</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Nostalgic">
+		<Value>nostalgic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Outdoors">
+		<Value>outdoors</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Overcast">
+		<Value>overcast</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Painting">
+		<Value>painting</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Pastel">
+		<Value>pastel</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Photo">
+		<Value>photo</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Portrait">
+		<Value>Portrait</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Relaxing">
+		<Value>relaxing</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.RuleOfThirds">
+		<Value>Rule of thirds</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Shop">
+		<Value>shop</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Soft">
+		<Value>soft</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Studio">
+		<Value>studio lights</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Symmetrical">
+		<Value>symmetrical</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Param.Vibrant">
+		<Value>vibrant</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Ambient">
+		<Value>soft ambient lighting</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Asymmetrical">
+		<Value>an asymmetrical composition</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Beach">
+		<Value>at a beach</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.BirdsEye">
+		<Value>a bird's-eye view composition</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.BlackAndWhite">
+		<Value>black and white</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Bright">
+		<Value>bright</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.City">
+		<Value>in an urban city environment</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Closeup">
+		<Value>a close-up composition</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Colorful">
+		<Value>colorful</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Cosy">
+		<Value>cosy and inviting</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Forest">
+		<Value>in a forest</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Futuristic">
+		<Value>futuristic and high-tech</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.GoldenRatio">
+		<Value>the golden ratio</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Headshot">
+		<Value>a headshot composition</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Hectic">
+		<Value>busy and hectic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Illustration">
+		<Value>that of an illustration</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Inside">
+		<Value>indoors in an interior space</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Kitchen">
+		<Value>in a kitchen interior</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.LivingRoom">
+		<Value>in a living room interior</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Monochromatic">
+		<Value>monochromatic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Muted">
+		<Value>muted</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Mysterious">
+		<Value>mysterious and slightly enigmatic</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Neon">
+		<Value>neon lighting</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Nostalgic">
+		<Value>nostalgic and sentimental</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Outdoors">
+		<Value>outdoors in an open environment</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Overcast">
+		<Value>overcast daylight</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Painting">
+		<Value>that of a painting</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Pastel">
+		<Value>pastel</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Photo">
+		<Value>that of a photograph</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Portrait">
+		<Value>a classic portrait composition</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Relaxing">
+		<Value>calm and relaxing</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.RuleOfThirds">
+		<Value>the rule of thirds</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Shop">
+		<Value>inside a shop interior</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Soft">
+		<Value>soft, diffused light</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Studio">
+		<Value>professional studio lighting</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Symmetrical">
+		<Value>a symmetrical composition</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.PromptFragment.Vibrant">
+		<Value>vibrant</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Scene">
+		<Value>The scene takes place {0}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Scene.Fallback">
+		<Value>The scene takes place in an environment with a focus on {0}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Staging">
+		<Value>The staging follows {0}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.ImageCreation.Staging.Fallback">
+		<Value>The staging is arranged with a focus on {0}.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.AI.MakeSuggestions">
 		<Value>Make suggestions</Value>
@@ -1014,6 +1266,9 @@
 	<LocaleResource Name="Admin.AI.TextCreation.Improve">
 		<Value>Improve</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.AI.TextCreation.Organize">
+		<Value>Organize</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.AI.TextCreation.Simplify">
 		<Value>Simplify</Value>
 	</LocaleResource>
@@ -1031,6 +1286,33 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.AI.ToolTitle.TranslateText">
 		<Value>Translate with AI</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.FullDesc">
+		<Value>Full Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.Image">
+		<Value>Image</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.MetaDesc">
+		<Value>Meta Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.MetaKeywords">
+		<Value>Meta Keywords</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.MetaTitle">
+		<Value>Title-Tag</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.ShortDesc">
+		<Value>Short Description</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.Topic.Text">
+		<Value>Text</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.TopicGenerate">
+		<Value>Generate {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.AI.TopicOptimize">
+		<Value>Optimize {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.AI.TranslateText">
 		<Value>Translate</Value>
@@ -1282,7 +1564,7 @@
 		<Value>The attribute has been deleted successfully.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Attributes.SpecificationAttributes.EditAttributeDetails">
-		<Value>Edit specification attribute details</Value>
+		<Value>Edit specification attribute</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Attributes.SpecificationAttributes.Fields">
 		<Value>Display order</Value>
@@ -1298,6 +1580,12 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Attributes.SpecificationAttributes.Fields.AllowFiltering.Hint">
 		<Value>Specifies whether search results can be filtered by this attribute. This setting is only effective by using the 'MegaSearchPlus' plugin. Changes will take effect after next update of the search index.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Attributes.SpecificationAttributes.Fields.CollectionGroup">
+		<Value>Display Group</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Attributes.SpecificationAttributes.Fields.CollectionGroup.Hint">
+		<Value>Specifies the name of a display group (optional). This causes the attributes to be displayed in groups in the frontend.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Attributes.SpecificationAttributes.Fields.DisplayOrder.Hint">
 		<Value>The display order of the specification attribute.</Value>
@@ -1605,6 +1893,12 @@
 	<LocaleResource Name="Admin.Catalog.Categories.Fields.SubjectToAcl.Hint">
 		<Value>Determines whether the category is subject to ACL (access control list).</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Categories.Fields.WithdrawalPeriodDays">
+		<Value>Withdrawal period</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Categories.Fields.WithdrawalPeriodDays.Hint">
+		<Value>Specifies the number of days within which products in this category can be withdrawn. A value of 0 means that the product is not eligible for withdrawal (e.g., hygiene products). If a product is assigned to multiple categories, the withdrawal period of each category must be met in order for the product to be eligible for withdrawal.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Categories.List">
 		<Value>Category name</Value>
 	</LocaleResource>
@@ -1633,7 +1927,7 @@
 		<Value>Products</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Categories.Products.AddNew">
-		<Value>Add a new product</Value>
+		<Value>Assign products</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Categories.Products.Fields">
 		<Value>Display order</Value>
@@ -1646,6 +1940,9 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Categories.Products.NoDuplicatesAllowed">
 		<Value>This product has already been assigned to the category.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Categories.ProductsHaveBeenAssignedToCategory">
+		<Value>{0} of {1} products have been assigned to the category.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Categories.SwitchToListView">
 		<Value>switch to list view</Value>
@@ -2390,7 +2687,7 @@
 		<Value>Select gift card type. WARNING: not recommended to change in production environment.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Products.Fields.GTIN">
-		<Value>GTIN (global trade item number)</Value>
+		<Value>GTIN / EAN</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Products.Fields.GTIN.Hint">
 		<Value>Enter global trade item number (GTIN). These identifiers include UPC (in North America), EAN (in Europe), JAN (in Japan), and ISBN (for books).</Value>
@@ -2626,6 +2923,12 @@
 	<LocaleResource Name="Admin.Catalog.Products.Fields.QuantityControlType.Hint">
 		<Value>Specifies the control type to enter the quantity.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Products.Fields.QuantityPerParentUnit">
+		<Value>Quantity per main product</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Products.Fields.QuantityPerParentUnit.Hint">
+		<Value>Specifies how many units of this required product are automatically kept in the cart for each unit of the main product. If 0 (default), the quantity will not be adjusted automatically, and the customer will be able to change it themselves. If greater than 0, the quantity is automatically calculated and cannot be changed manually in the shopping cart. Example: If a shelf requires four screw sets, enter 4.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Products.Fields.QuantityStep">
 		<Value>Quantity step</Value>
 	</LocaleResource>
@@ -2754,6 +3057,12 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Products.Fields.Width.Hint">
 		<Value>The width of the product.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Products.Fields.WithdrawalPeriodDays">
+		<Value>Withdrawal period</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Catalog.Products.Fields.WithdrawalPeriodDays.Hint">
+		<Value>Specifies the number of days within which the product can be withdrawn. A value of 0 means that the product is not eligible for withdrawal (e.g., hygiene products).</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Catalog.Products.FirstVariant">
 		<Value>Default product variant info</Value>
@@ -3415,6 +3724,9 @@
 	<LocaleResource Name="Admin.Common.Configure">
 		<Value>Configure</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Common.Configured">
+		<Value>Configured</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Common.Copy">
 		<Value>Copy</Value>
 	</LocaleResource>
@@ -3658,6 +3970,9 @@
 	<LocaleResource Name="Admin.Common.NoEntriesSelected">
 		<Value>No entries have been selected.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Common.NotConfigured">
+		<Value>Not configured</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Common.Of">
 		<Value>of</Value>
 	</LocaleResource>
@@ -3783,6 +4098,12 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Common.StoresAll">
 		<Value>All stores</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.SuccessfullyDeleted">
+		<Value>The entries were successfully deleted.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Common.SuccessfullySaved">
+		<Value>The changes have been saved successfully.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Common.SuccessfulOn">
 		<Value>Successful on</Value>
@@ -3918,6 +4239,33 @@
                     Please keep in mind you have to save changes in the store configuration &lt;br/&gt; 
                     before you can assign them to all subcategories and products. &lt;br/&gt;
                     &lt;b&gt;Attention:&lt;/b&gt; Please keep in mind that &lt;b&gt;existing store mappings will be deleted&lt;/b&gt;</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroup.EntityName">
+		<Value>Object</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroup.EntityName.Hint">
+		<Value>The name of the object assigned to the display group.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroup.Name">
+		<Value>Name</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroup.Name.Hint">
+		<Value>Specifies the name of the display group.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroup.NumberOfAssignments">
+		<Value>Assignments</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroup.NumberOfAssignments.Hint">
+		<Value>The number of objects assigned to the display group.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroups">
+		<Value>Display groups</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroups.Add">
+		<Value>Add display group</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.CollectionGroups.Info">
+		<Value>Display groups can be used to organize lists, such as lists of specification attributes, and present them more clearly.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Countries">
 		<Value>Countries</Value>
@@ -4119,6 +4467,9 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Currencies.Fields.DomainEndings.Hint">
 		<Value>Selects this currency as the default currency based on the domain extension. Example: .ch</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Currencies.Fields.ExchangeRateDate">
+		<Value>Exchange rate date</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Currencies.Fields.IsPrimaryExchangeRateCurrency">
 		<Value>Exchange rate currency</Value>
@@ -5059,12 +5410,6 @@
 	<LocaleResource Name="Admin.Configuration.Settings.Blog.NumberOfTags.Hint">
 		<Value>The number of blog tags that appear in the tag cloud.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.Blog.PostsPageSize">
-		<Value>Posts page size</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.Blog.PostsPageSize.Hint">
-		<Value>Set the page size for posts.</Value>
-	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Blog.ShowHeaderRSSUrl">
 		<Value>Display blog RSS feed link in the browser address bar</Value>
 	</LocaleResource>
@@ -5183,10 +5528,10 @@
 		<Value>Specifies the way delivery times are displayed on product detail pages.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Catalog.DisplayAllImagesNumber">
-		<Value>Number from which images are only displayed on variation change</Value>
+		<Value>Only show selected variant images from this number of images</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Catalog.DisplayAllImagesNumber.Hint">
-		<Value>Upper limit from which variation images are only displayed if the related value was selected. Below that limit all images are displayed.</Value>
+		<Value>If the number of images reaches this value, only the images of the selected variant are shown. If fewer images are available, all images are shown.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Catalog.EmailAFriendEnabled">
 		<Value>'Email a friend' enabled</Value>
@@ -5409,6 +5754,12 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Catalog.SearchMinAssociatedProductsCount.Hint">
 		<Value>Specifies the minimum number of associated products from which a search field is displayed.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Catalog.ShippingMetadataInProductDetail">
+		<Value>Shipping information for search engines</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Catalog.ShippingMetadataInProductDetail.Hint">
+		<Value>This specifies whether structured shipping information is added for products with free shipping for search engines. Other shipping costs are not included as these are based on information provided by customers and cannot be clearly assigned to a single product.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Catalog.ShowBestsellersOnHomepage">
 		<Value>Show best sellers on home page</Value>
@@ -5870,7 +6221,7 @@
 		<Value>'Newsletter' enabled</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.CustomerUser.NewsletterEnabled.Hint">
-		<Value>Displays the newsletter registration form.</Value>
+		<Value>Specifies whether the option to subscribe to the newsletter is displayed.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.CustomerUser.NotifyNewCustomerRegistration">
 		<Value>Notify about new customer registration</Value>
@@ -6336,7 +6687,7 @@
 		<Value>A CAPTCHA is a program that can tell whether its user is a human or a computer. You've probably seen them — colorful images with distorted text at the bottom of Web registration forms. CAPTCHAs are used by many websites to prevent abuse from "bots," or automated programs usually written to generate spam. No computer program can read distorted text as well as humans can, so bots cannot navigate sites protected by CAPTCHAs. SmartStore.NET uses reCAPTCHA.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.General.Common.Captcha.Hint">
-		<Value>A CAPTCHA is a program that can tell whether its user is a human or a computer. You've probably seen them — colorful images with distorted text at the bottom of Web registration forms. CAPTCHAs are used by many websites to prevent abuse from "bots," or automated programs usually written to generate spam. No computer program can read distorted text as well as humans can, so bots cannot navigate sites protected by CAPTCHAs. SmartStore.NET uses reCAPTCHA.</Value>
+		<Value>A CAPTCHA is an automated test that distinguishes real users from bots, e.g., via a brief challenge or an invisible risk check. It protects forms and logins from spam and abuse.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon">
 		<Value>General settings</Value>
@@ -6432,70 +6783,49 @@
 		<Value>CAPTCHA enabled</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaEnabled.Hint">
-		<Value>Check the box to enable CAPTCHA</Value>
+		<Value>Enables global bot protection via CAPTCHA.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaEnabledNoKeys">
-		<Value>Captcha is enabled but the appropriate keys are not entered.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets">
+		<Value>Enable CAPTCHA on the following pages</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnAskQuestionPage">
-		<Value>Show on 'ask question' page</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Hint">
+		<Value>Select the pages on which CAPTCHA should be enabled.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnAskQuestionPage.Hint">
-		<Value>Check the box the box to show CAPTCHA on 'ask question' page</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.BlogComment">
+		<Value>Blog comment</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnBlogCommentPage">
-		<Value>Show on blog page (comments)</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.ContactUs">
+		<Value>Contact us</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnBlogCommentPage.Hint">
-		<Value>Check the box to show CAPTCHA on blog page when writing a comment.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.Forum">
+		<Value>Forum</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnContactUsPage">
-		<Value>Show on contact us page</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.Login">
+		<Value>Login</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnContactUsPage.Hint">
-		<Value>Check the box to show CAPTCHA on contact us page.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.NewsComment">
+		<Value>News comment</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnEmailProductToFriendPage">
-		<Value>Show on 'email product to a friend' page</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.PasswordRecovery">
+		<Value>Password recovery</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnEmailProductToFriendPage.Hint">
-		<Value>Check the box to show CAPTCHA on 'email product to a friend' page.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.ProductInquiry">
+		<Value>Product inquiry</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnEmailWishlistToFriendPage">
-		<Value>Show on 'email wishlist to a friend' page</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.ProductReview">
+		<Value>Product review</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnEmailWishlistToFriendPage.Hint">
-		<Value>Check the box to show CAPTCHA on 'email wishlist to a friend' page.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.Registration">
+		<Value>Registration</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnForumPage">
-		<Value>Show on forum pages</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.ShareProduct">
+		<Value>Share product</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnForumPage.Hint">
-		<Value>Specifies whether to display a CAPTCHA on forum pages when creating or replying to a topic.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.ShareWishlist">
+		<Value>Share wishlist</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnLoginPage">
-		<Value>Show on login page</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnLoginPage.Hint">
-		<Value>Check the box to show CAPTCHA on login page.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnNewsCommentPage">
-		<Value>Show on news page (comments)</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnNewsCommentPage.Hint">
-		<Value>Check the box to show CAPTCHA on news page when writing a comment.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnProductReviewPage">
-		<Value>Show on product reviews page</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnProductReviewPage.Hint">
-		<Value>Check the box to show CAPTCHA on product reviews page when writing a review.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnRegistrationPage">
-		<Value>Show on registration page</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnRegistrationPage.Hint">
-		<Value>Check the box to show CAPTCHA on registration page.</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CaptchaShowOnTargets.Option.Withdrawal">
+		<Value>Withdrawal</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.CompanyInformationSettings">
 		<Value>Company</Value>
@@ -6767,6 +7097,78 @@
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.ForceSslForAllPages.Hint">
 		<Value>Specifies whether to SSL secure all request.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.BadgePosition">
+		<Value>Badge position</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.BadgePosition.BottomLeft">
+		<Value>Floating at bottom left</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.BadgePosition.BottomRight">
+		<Value>Floating at bottom right</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.BadgePosition.Hide">
+		<Value>Hide badge (but show disclaimer)</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.BadgePosition.Hint">
+		<Value>When the badge is hidden, a notice with links to Google's privacy policy and terms of service will be displayed in plain sight.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.BadgePosition.Inline">
+		<Value>Inline within the form flow</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.HiddenBadgeLegalNotice">
+		<Value>&lt;div class="captcha-disclaimer grecaptcha-disclaimer alert alert-info"&gt;This site is protected by &lt;strong&gt;reCAPTCHA&lt;/strong&gt; and the Google &lt;a href="https://policies.google.com/privacy" rel="noopener" target="_blank"&gt;Privacy Policy&lt;/a&gt; and &lt;a href="https://policies.google.com/terms" rel="noopener" target="_blank"&gt;Terms of Service&lt;/a&gt; apply.&lt;/div&gt;</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.Info">
+		<Value>Manage keys and domains in the &lt;a class='fwm' href='https://www.google.com/recaptcha/admin' target='_blank'&gt;reCAPTCHA Admin Console&lt;/a&gt;. v3 runs invisibly with a risk score; optional step-up challenges can be enabled if needed.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.ScoreThreshold">
+		<Value>Score Threshold</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.ScoreThreshold.Hint">
+		<Value>Minimum score (0–1) to accept; higher = stricter. Default: 0.5.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.SecretKey">
+		<Value>Private key</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.SecretKey.Hint">
+		<Value>Private server key; never on the client.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.SiteKey">
+		<Value>Public key</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.SiteKey.Hint">
+		<Value>Public key for the frontend.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.Size">
+		<Value>Size</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.Size.Compact">
+		<Value>Compact</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.Size.Invisible">
+		<Value>Invisible</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.Size.Normal">
+		<Value>Normal</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.UseDarkTheme">
+		<Value>Use dark theme</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.VerifyUrl">
+		<Value>Verify URL</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.VerifyUrl.Hint">
+		<Value>Server endpoint for token verification</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.Version">
+		<Value>Version</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.WidgetUrl">
+		<Value>Widget URL</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.GoogleRecaptcha.WidgetUrl.Hint">
+		<Value>Client script URL</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.HideAdminMenuItemsBasedOnPermissions">
 		<Value>Hide admin menu items based on permissions</Value>
 	</LocaleResource>
@@ -6857,17 +7259,8 @@
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.ProductDescriptionPriority.Hint">
 		<Value>Specifies which 'description' is read by search engines as description content for rich snippets. If the description selected here is not stored in the product, the other one is automatically marked as 'description', if available.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.reCaptchaPrivateKey">
-		<Value>reCAPTCHA private key</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.reCaptchaPrivateKey.Hint">
-		<Value>Enter reCAPTCHA private key (if enabled)</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.reCaptchaPublicKey">
-		<Value>reCAPTCHA public key</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.reCaptchaPublicKey.Hint">
-		<Value>Enter reCAPTCHA public key (if enabled)</Value>
+	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.ProviderSystemName">
+		<Value>Provider</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.ReCaptchaTypeChangeWarning">
 		<Value>When changing the reCAPTCHA type, the public and private key must also be changed.</Value>
@@ -6898,9 +7291,6 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.SEOSettings.Routing">
 		<Value>Internal links</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.ShowOnPasswordRecoveryPage">
-		<Value>Show on password recovery page</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.SocialSettings">
 		<Value>Social networks</Value>
@@ -6997,12 +7387,6 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.UseImagesForLanguageSelection.Hint">
 		<Value>Check the box if you want to use images for language selection.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.UseInvisibleReCaptcha">
-		<Value>Use invisible reCAPTCHA</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.UseInvisibleReCaptcha.Hint">
-		<Value>Does not require the user to click on a checkbox, instead it is invoked directly when the user submits a form. By default only the most suspicious traffic will be prompted to solve a captcha.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.UseNativeNameInLanguageSelector">
 		<Value>Display native language name in language selector</Value>
@@ -7326,10 +7710,10 @@
 		<Value>Specifies whether multiple order total restrictions through customer group assignments extend the allowed order value range.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.NumberOfDaysReturnRequestAvailable">
-		<Value>Number of days that the return request is available</Value>
+		<Value>Allowed period for return requests (in days)</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.NumberOfDaysReturnRequestAvailable.Hint">
-		<Value>Set a certain number of days that the Return Request Link will be available in the customer area. For example, if the store owner allows returns within 30 days of purchase, they would set this to 30. Logged in customers, viewing orders in My Account, would then not see Return Request buttons for orders completed more than thirty days ago.</Value>
+		<Value>The number of days after order completion during which customers can submit return requests. This applies to RMA return requests only and not to legal withdrawal. The value 0 means "unlimited".</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.OnePageCheckoutEnabled">
 		<Value>Use one page checkout</Value>
@@ -7349,17 +7733,14 @@
 	<LocaleResource Name="Admin.Configuration.Settings.Order.OrderListPageSize.Hint">
 		<Value>Specifies the number of displayed orders per page.</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.Order.OrderSettings">
-		<Value>Order settings</Value>
-	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.OrderTotalRestrictionType.Hint">
 		<Value>Determines whether multiple order total restrictions are cumulated by customer group assignments.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestActions">
-		<Value>Return action</Value>
+		<Value>Available return actions</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestActions.Hint">
-		<Value>A comma-separated list of actions a customer will be able to choose when submitting a return request.</Value>
+		<Value>A comma-separated list of the actions that a customer will be able to select when submitting a return request. This is not used for legal withdrawal.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestReasons">
 		<Value>Return reasons</Value>
@@ -7368,19 +7749,13 @@
 		<Value>A comma-separated list of reasons a customer will be able to choose when submitting a return request.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestsDescription1">
-		<Value>The returns system will allow your customers to request a return on items they've purchased. These are also known as RMA requests.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestsDescription2">
-		<Value>NOTE: This option is available for completed orders.</Value>
+		<Value>Customers can use the returns system to request the return of items. Unlike withdrawal, returns are only possible for completed orders.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestsEnabled">
-		<Value>Enable Returns System</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestsEnabled.Hint">
-		<Value>Check the box if you want to allow customers to submit return requests for items they've previously purchased.</Value>
+		<Value>Return requests enabled</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Order.ReturnRequestSettings">
-		<Value>Return request settings</Value>
+		<Value>Returns</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Payment.CapturePaymentReason">
 		<Value>Capture payment amount when…</Value>
@@ -7445,6 +7820,9 @@
 	<LocaleResource Name="Admin.Configuration.Settings.Performance.Resiliency">
 		<Value>Overload protection</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.PostsPageSize">
+		<Value>Posts per page</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Price">
 		<Value>Prices</Value>
 	</LocaleResource>
@@ -7453,6 +7831,12 @@
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Price.AlwaysDisplayRetailPrice.Hint">
 		<Value>If active, the MSRP will be displayed in product detail even if there is already an offer or a discount. In this case the MSRP will appear as another crossed out price alongside the discounted price.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Price.ApplyDiscountsOfLinkedProducts">
+		<Value>Apply discounts of linked products</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Price.ApplyDiscountsOfLinkedProducts.Hint">
+		<Value>Specifies whether discounts (e.g. tier prices) of linked products are taken into account when calculating attribute price surcharges.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Price.ApplyPercentageDiscountOnTierPrice">
 		<Value>Apply percentage discounts on tier prices</Value>
@@ -7586,6 +7970,12 @@
 	<LocaleResource Name="Admin.Configuration.Settings.Price.ShowPriceLabelInLists.Hint">
 		<Value>Specifies whether the label of the compare price is displayed in product lists.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Price.ShowRequiredProductPricesWithMainProduct">
+		<Value>Show additional prices with main product</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Price.ShowRequiredProductPricesWithMainProduct.Hint">
+		<Value>Specifies whether the prices of automatically added required products are displayed below the price of the main product, for example "+ €3.00 deposit". This makes additional mandatory costs, such as deposits or required accessories, visible before the customer proceeds to the shopping cart.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Price.ShowRetailPriceSaving">
 		<Value>Show price saving against retail price</Value>
 	</LocaleResource>
@@ -7648,11 +8038,29 @@ If enabled, new guests will be blocked under these circumstances.</Value>
 	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.LongTrafficNotes">
 		<Value>Configuration of the long traffic window. Use these settings to monitor traffic restrictions over a longer period of time, such as a minute or longer.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.MailSendRateLimit">
+		<Value>Limit</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.MailSendRateLimit.Hint">
+		<Value>The maximum number of queued emails that may be sent during the time window. Empty value means there is no limit.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.MailSendRateWindow">
+		<Value>Time window (hh:mm:ss)</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.MailSendRateWindow.Hint">
+		<Value>The time period for measuring the queued mail send rate (e.g., 1 minute).</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.PeakTraffic">
 		<Value>Peak</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.PeakTrafficNotes">
 		<Value>The peak traffic window defines the shorter period used for detecting sudden traffic spikes. These settings are useful for reacting to bursts of traffic that occur in a matter of seconds.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.QueuedMailSending">
+		<Value>Mail Sending</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.QueuedMailSendingNotes">
+		<Value>Limits how many queued emails can be sent within a specific time window to prevent overload during email bursts.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.Resiliency.TrafficLimitBot">
 		<Value>Bot limit</Value>
@@ -7685,7 +8093,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Reward points</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.RewardPoints.Description">
-		<Value>The Reward Points Program allows customers to earn points for certain actions they take on the site. Points are awarded based on making purchases and customer actions such as registration.</Value>
+		<Value>The reward points program allows customers to earn points for certain actions, such as registering or placing orders.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.RewardPoints.Earning">
 		<Value>Earning Reward Points</Value>
@@ -7704,6 +8112,12 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.RewardPoints.ExchangeRate.Hint2">
 		<Value>1 reward point =</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.RewardPoints.PointsForNewsletterSubscription">
+		<Value>Points for subscribing to the newsletter</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Configuration.Settings.RewardPoints.PointsForNewsletterSubscription.Hint">
+		<Value>Specifies how many reward points registered customers will receive as a one-time bonus for subscribing to the newsletter.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Configuration.Settings.RewardPoints.PointsForProductReview">
 		<Value>Points for a product review</Value>
@@ -8752,89 +9166,11 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.EditBlogPostDetails">
 		<Value>Edit blog post details</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields">
-		<Value>Allow comments</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.AllowComments">
-		<Value>Allow comments</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.AllowComments.Hint">
-		<Value>When checked, customers can leave comments about your blog entry.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Body">
-		<Value>Body</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Body.Hint">
-		<Value>The body of this blog entry.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Comments">
-		<Value>View comments</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.DisplayTagsInPreview">
-		<Value>Display tags on preview</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.DisplayTagsInPreview.Hint">
-		<Value>Specifies whether tags are display in the preview for blog item.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.EndDate">
-		<Value>End date</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.EndDate.Hint">
-		<Value>Set the blog post end date or leave empty.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Intro">
-		<Value>Intro</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Intro.Hint">
-		<Value>Specifies the intro of the blog post.</Value>
-	</LocaleResource>
 	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Language">
 		<Value>Regional relevance</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Language.Hint">
 		<Value>Specifies the language for which the post is displayed. If limited to one language, blog contents need only be edited in that language (no multilingualism).</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Picture">
-		<Value>Picture</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Picture.Hint">
-		<Value>Specifies the picture of the blog post.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.PreviewDisplayType">
-		<Value>Preview display type</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.PreviewDisplayType.Hint">
-		<Value>Specifies display type of the preview for a blog item.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.PreviewPicture">
-		<Value>Preview picture</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.PreviewPicture.Hint">
-		<Value>Specifies the preview picture of the blog post.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.SectionBg">
-		<Value>Background color</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.SectionBg.Hint">
-		<Value>Specifies the background color of the blog post.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.StartDate">
-		<Value>Start date</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.StartDate.Hint">
-		<Value>Set the blog post start date or leave empty.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Tags">
-		<Value>Tags</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Tags.Hint">
-		<Value>Tags are keywords that this blog post can also be identified by. Enter a comma separated list of the tags to be associated with this blog post.</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Title">
-		<Value>Title</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Fields.Title.Hint">
-		<Value>The title of this blog entry.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ContentManagement.Blog.BlogPosts.Info">
 		<Value>Info</Value>
@@ -8859,12 +9195,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.ContentManagement.Blog.Comments.Fields.IPAddress">
 		<Value>IP Address</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.Heading.Display">
-		<Value>Display</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ContentManagement.Blog.Heading.Publish">
-		<Value>Publishing</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ContentManagement.EditMenu">
 		<Value>Edit menu</Value>
@@ -9451,6 +9781,12 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.ContentManagement.Topics.Fields.CookieType.Hint">
 		<Value>Sets whether this widget is displayed according to the customer's settings in the cookie manager. This option should be used if you add a third-party script that sets cookies.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.ContentManagement.Topics.Fields.EnableProseContainer">
+		<Value>Enable narrow text container</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.ContentManagement.Topics.Fields.EnableProseContainer.Hint">
+		<Value>When enabled, the topic is rendered in a narrow prose container (not full page width).</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.ContentManagement.Topics.Fields.HtmlId">
 		<Value>Html Id</Value>
 	</LocaleResource>
@@ -9612,6 +9948,12 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Customers.CanOnlyBeCustomerOrGuest">
 		<Value>The customer cannot be in both '{0}' and '{1}' customer roles.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Customers.CheckVatNumber">
+		<Value>Check online</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Customers.CheckVatNumber.Hint">
+		<Value>Checks the VAT number online and updates its status.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Customers.CookieConsent">
 		<Value>Cookie consent</Value>
@@ -9970,6 +10312,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.Customers.Customers.Fields.VatNumber.Hint">
 		<Value>Enter company VAT number. NOTE: Enter VAT number with country code (e.g. GB 111 111 11)</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Customers.Customers.Fields.VatNumber.MarkAs">
+		<Value>Mark as</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Customers.Customers.Fields.VatNumber.MarkAsInvalid">
 		<Value>Mark VAT number as invalid</Value>
 	</LocaleResource>
@@ -9977,7 +10322,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Mark VAT number as valid</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Customers.Customers.Fields.VatNumberStatus">
-		<Value>status: {0}</Value>
+		<Value>VAT number status</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Customers.Customers.Fields.ZipPostalCode">
 		<Value>Zip / postal code</Value>
@@ -10248,6 +10593,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Customers.Reports.RegisteredCustomers.Fields.Period.year">
 		<Value>In the last year</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Customers.VatNumberValidationError">
+		<Value>The following error occurred while verifying the VAT number online: {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Dashboard">
 		<Value>Dashboard</Value>
@@ -11530,6 +11878,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.OrderNotice.OrderPlaced">
 		<Value>Order placed</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.OrderNotice.OrderPlacedUcp">
+		<Value>The order was placed using UCP (Agentic Commerce) "{0}". The payment token {1} was processed without a user interface.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.OrderNotice.OrderRefunded">
 		<Value>Order has been refunded. Amount = {0}</Value>
 	</LocaleResource>
@@ -11583,9 +11934,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Orders.Address.Country">
 		<Value>Country</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Orders.Address.EditAddress">
-		<Value>Edit address</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Orders.Address.Email">
 		<Value>Email</Value>
@@ -12253,6 +12601,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.Orders.Products.AddNew.UnitPriceInclTax.Hint">
 		<Value>Enter product price (incl tax).</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Orders.Products.AppliedDiscounts">
+		<Value>The following discounts were applied to the products: {0}.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Orders.Products.Discount">
 		<Value>Discount</Value>
 	</LocaleResource>
@@ -12306,9 +12657,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Orders.Products.Quantity">
 		<Value>Quantity</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Orders.Products.ReturnRequest">
-		<Value>Return request</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Orders.Products.ReturnRequest.Create">
 		<Value>Create return</Value>
@@ -12529,8 +12877,17 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.Permissions.AllowInherited">
 		<Value>Allow (inherited)</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Permissions.AllPermissionsGranted">
+		<Value>All {0} permissions granted.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Permissions.DenyInherited">
 		<Value>Deny (inherited)</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Permissions.NoPermissionGranted">
+		<Value>No permissions granted.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Permissions.NumPermissionsGranted">
+		<Value>{0} of {1} permissions granted.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Permissions.RemovedPermissions">
 		<Value>Permissions have been removed: {0}</Value>
@@ -12719,7 +13076,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>The campaign has been updated successfully.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Promotions.Campaigns.Warning">
-		<Value>Save the campaign and use the preview button to test it before sending it to many customers.</Value>
+		<Value>Save the campaign and use the preview button to test it before sending it to many customers. You can set additional settings, such as the email account to be used, in the &lt;a href="{0}" class="alert-link"&gt;System.Campaign&lt;/a&gt;</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Promotions.Discounts">
 		<Value>Discounts</Value>
@@ -12765,9 +13122,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Promotions.Discounts.Fields.CouponCode">
 		<Value>Coupon code</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.Promotions.Discounts.Fields.CouponCode.Hint">
-		<Value>The discount coupon code.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Promotions.Discounts.Fields.DiscountAmount">
 		<Value>Discount amount</Value>
@@ -13097,25 +13451,19 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Yesterday</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests">
-		<Value>Return requests</Value>
+		<Value>Withdrawals and Returns</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Accept">
 		<Value>Accept</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Accept.Caption">
-		<Value>Accept return request</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ReturnRequests.Deleted">
-		<Value>The return request has been deleted successfully.</Value>
+		<Value>Accept the return</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.EditReturnRequestDetails">
-		<Value>Edit return request details</Value>
+		<Value>Edit return request</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Fields">
 		<Value>Date</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ReturnRequests.Fields.CreatedOn.Hint">
-		<Value>Date when the return request has been submitted.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Fields.Customer">
 		<Value>Customer</Value>
@@ -13133,7 +13481,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>ID</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Fields.ID.Hint">
-		<Value>Return request identifier.</Value>
+		<Value>ID of the withdrawal or return</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Fields.Order">
 		<Value>Order</Value>
@@ -13151,7 +13499,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Quantity</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Fields.Quantity.Hint">
-		<Value>Chosen information.</Value>
+		<Value>Number of items to be returned</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Fields.ReasonForReturn">
 		<Value>Reason for return</Value>
@@ -13180,23 +13528,17 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.ReturnRequests.Fields.Status">
 		<Value>Return request status</Value>
 	</LocaleResource>
-	<LocaleResource Name="Admin.ReturnRequests.Fields.Status.Hint">
-		<Value>Choose request status</Value>
-	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.MaxRefundAmount">
 		<Value>Maximum refund amount</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.MaxRefundAmount.Hint">
-		<Value>The maximum amount that can be refunded for this return request.</Value>
+		<Value>The maximum amount that can be refunded for this item.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.Notified">
 		<Value>The customer has been notified successfully.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.ReturnRequests.NotifyCustomer">
 		<Value>Notify customer about status change</Value>
-	</LocaleResource>
-	<LocaleResource Name="Admin.ReturnRequests.Updated">
-		<Value>The return request has been updated successfully.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.AddCondition">
 		<Value>Add rule</Value>
@@ -13243,6 +13585,15 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.Affiliate">
 		<Value>Affiliate</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Rules.FilterDescriptor.AllProductsFromCategoryInCart">
+		<Value>All products from category in cart</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Rules.FilterDescriptor.AllProductsFromManufacturerInCart">
+		<Value>All products from manufacturer in cart</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Rules.FilterDescriptor.AllProductsWithDeliveryTimeInCart">
+		<Value>All products with delivery time in cart</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.Authentication">
 		<Value>Authentication</Value>
 	</LocaleResource>
@@ -13287,6 +13638,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.CartTotal">
 		<Value>Total amount of cart</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Rules.FilterDescriptor.CartWeightRule">
+		<Value>Weight of all products in cart</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.Company">
 		<Value>Company</Value>
@@ -13387,6 +13741,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.ProductInCart">
 		<Value>Product in cart</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Rules.FilterDescriptor.ProductInCategoryTreeCartRule">
+		<Value>Product from category or subcategories in cart</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.ProductOnWishlist">
 		<Value>Product on wishlist</Value>
 	</LocaleResource>
@@ -13437,6 +13794,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.Store">
 		<Value>Store</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.Rules.FilterDescriptor.SubscribedToNewsletter">
+		<Value>Subscribed to newsletter</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.Rules.FilterDescriptor.TaxDisplayType">
 		<Value>Tax display type</Value>
@@ -13834,6 +14194,12 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.System.Log.Fields.LogLevel.Hint">
 		<Value>The level of log entry.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.System.Log.Fields.Occurrences">
+		<Value>Occurrences</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.System.Log.Fields.Occurrences.Hint">
+		<Value>Number of times this event was repeated within the 10-minute aggregation window.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.System.Log.Fields.PageURL">
 		<Value>Page URL</Value>
 	</LocaleResource>
@@ -13887,6 +14253,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.System.Maintenance">
 		<Value>Maintenance</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.System.Maintenance.AttributeFileUploadsDeleted">
+		<Value>{0} media files, {1} downloads, and {2} tracks of uploaded attribute files have been deleted.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.System.Maintenance.CleanupOrphanedRecords">
 		<Value>{0} orphaned data records of type {1} were deleted.</Value>
@@ -14446,6 +14815,12 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.System.SystemInfo.HTTPHOST.Hint">
 		<Value>HTTP_HOST is used when you have run a multi-store solution to determine the current store.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.System.SystemInfo.IPAddress">
+		<Value>IP address</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.System.SystemInfo.IPAddress.Hint">
+		<Value>The IP address of the machine.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Admin.System.SystemInfo.IsFullTrust">
 		<Value>Is full trust level</Value>
 	</LocaleResource>
@@ -14535,6 +14910,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Admin.System.Warnings.DirectoryPermission.Wrong">
 		<Value>The '{0}' account is not granted with Modify permission on folder '{1}'. Please configure these permissions.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Admin.System.Warnings.EuVatWebService.Unstable">
+		<Value>Due to the server's IPv6 configuration, the EU web service for validating VAT numbers may not work properly.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Admin.System.Warnings.ExchangeCurrency">
 		<Value>Primary exchange rate currency is not set</Value>
@@ -14750,6 +15128,135 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Admin.WidgetZones.UserDefined">
 		<Value>User-defined</Value>
 	</LocaleResource>
+	<LocaleResource Name="Admin.Withdrawal.EditWithdrawal">
+		<Value>Edit withdrawal</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Description.AutoSearchBox">
+		<Value>Enter a search term. Results will appear automatically as you type.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Description.InstantSearch">
+		<Value>Enter a search term. Results will appear automatically as you type. Press the Enter key to view all the results.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Description.SearchBox">
+		<Value>Enter a search term. Press the Enter key to view all the results.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ActiveFilters">
+		<Value>Active filters</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.AlphabeticallySortedLinks">
+		<Value>Alphabetically sorted links</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ApplyPriceRange">
+		<Value>Apply price range</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.Breadcrumb">
+		<Value>Breadcrumb</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.BundleContains">
+		<Value>The product set contains {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.BuyHint">
+		<Value>By clicking on "Buy," I accept the terms and conditions.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CartItemSummary">
+		<Value>{0} at {1}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CartItemSummaryWithAttributes">
+		<Value>{0} at {1}, quantity {2}. {3}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CartItemSummaryWithTotal">
+		<Value>{0} at {1} each, quantity {2}, total {3}.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CartTotalSummary">
+		<Value>Your order: {0} {1}, {2} products.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CheckoutProcess">
+		<Value>Checkout process</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CheckoutStep.Current">
+		<Value>Current step</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CheckoutStep.Pending">
+		<Value>Not visited</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CheckoutStep.Visited">
+		<Value>Completed</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.Choice">
+		<Value>{0}, {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CommentForm">
+		<Value>Comment form</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.CurrencySelector">
+		<Value>Current currency {0} - Change currency</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ExpandItem">
+		<Value>Press ENTER for more options to {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.HidePassword">
+		<Value>Hide password</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.LanguageSelector">
+		<Value>Current language {0} - Change language</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.MainNavigation">
+		<Value>Main navigation</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.MediaGallery">
+		<Value>Media gallery</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.OffCanvasCartTab">
+		<Value>My articles</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.OffCanvasMenuTab">
+		<Value>Shop sections</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.PageNavigation">
+		<Value>Page navigation</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.PaginatorItemsPerPage">
+		<Value>Results per page</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.PriceRange">
+		<Value>Price range</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ProductOfOrderPlacedOn">
+		<Value>Order {0} from {1}, {2}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ProductVariants">
+		<Value>Product variants</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.Rating">
+		<Value>Rating: {0} out of 5 stars. {1}</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.SearchFilters">
+		<Value>Search filters</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.SearchHitCount">
+		<Value>Search results</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.SelectDeselectEntries">
+		<Value>Select or deselect all entries in the list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.SelectDeselectEntry">
+		<Value>Select or deselect entry</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ShowNextProducts">
+		<Value>Show next product group</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ShowPassword">
+		<Value>Show password</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.ShowPreviousProducts">
+		<Value>Show previous product group</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.SocialMediaLinks">
+		<Value>Our social media channels</Value>
+	</LocaleResource>
+	<LocaleResource Name="Aria.Label.UploaderProgressBar">
+		<Value>{0} fileupload</Value>
+	</LocaleResource>
 	<LocaleResource Name="BackInStockSubscriptions.AlreadySubscribed">
 		<Value>You're already subscribed for this product back in stock notification</Value>
 	</LocaleResource>
@@ -14769,7 +15276,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Only registered customers can used this feature</Value>
 	</LocaleResource>
 	<LocaleResource Name="BackInStockSubscriptions.PopupTitle">
-		<Value>Receive an email when this arrives in stock</Value>
+		<Value>Email when available</Value>
 	</LocaleResource>
 	<LocaleResource Name="BackInStockSubscriptions.Subscribed">
 		<Value>You will be notified when this product is available again.</Value>
@@ -14826,7 +15333,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>RSS</Value>
 	</LocaleResource>
 	<LocaleResource Name="Blog.RSS.Hint">
-		<Value>Click here to be informed automatically when we add new items to our site</Value>
+		<Value>Opens the RSS feed with the latest blog posts. Subscribe with an RSS reader to stay informed.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Blog.TagCloud">
 		<Value>Popular blog tags</Value>
@@ -14845,9 +15352,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Categories">
 		<Value>Categories</Value>
-	</LocaleResource>
-	<LocaleResource Name="Categories.Breadcrumb.Top">
-		<Value>Top</Value>
 	</LocaleResource>
 	<LocaleResource Name="Categories.Compare">
 		<Value>Compare</Value>
@@ -15152,6 +15656,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.CannotDisplayView">
 		<Value>The view "{0}" could not be displayed.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.CaptchaCheckFailed">
+		<Value>A CAPTCHA check failed with the error {0}.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.CaptchaUnableToVerify">
 		<Value>The API call to verify a CAPTCHA has failed.</Value>
 	</LocaleResource>
@@ -15190,6 +15697,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.Confirm">
 		<Value>Confirm</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.Consent">
+		<Value>Consent</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Continue">
 		<Value>Continue</Value>
@@ -15248,9 +15758,6 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Deactivated">
 		<Value>Deactivated</Value>
 	</LocaleResource>
-	<LocaleResource Name="Common.DecreaseValue">
-		<Value>Decrease value</Value>
-	</LocaleResource>
 	<LocaleResource Name="Common.Delete">
 		<Value>Delete</Value>
 	</LocaleResource>
@@ -15262,6 +15769,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.DeletePermanent">
 		<Value>Delete permanently</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.DeleteSelected">
+		<Value>Delete selected</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.DelKey">
 		<Value>Del</Value>
@@ -15298,6 +15808,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.DontShowAgain">
 		<Value>Don't show again</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.DontShowDialogAgain">
+		<Value>Do not show this dialog again</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Download">
 		<Value>Download</Value>
@@ -15349,6 +15862,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.Enabled">
 		<Value>Enabled</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.EnlargeView">
+		<Value>Enlarge view</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.EnterKey">
 		<Value>Enter</Value>
@@ -15416,6 +15932,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Entity.SelectTopics">
 		<Value>Select topics</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.Entity.SpecificationAttribute">
+		<Value>Specification attribute</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.Entity.SpecificationAttributeOption">
 		<Value>Specification attribute option</Value>
 	</LocaleResource>
@@ -15476,6 +15995,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Exit">
 		<Value>Exit</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.ExpandCollapse">
+		<Value>Expand/collapse</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.ExpandCollapseAll">
 		<Value>Expand\collapse all</Value>
 	</LocaleResource>
@@ -15534,7 +16056,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>For: {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.FormFields.Required.Hint">
-		<Value>* Input elements with asterisk are required and have to be filled out.</Value>
+		<Value>* Input fields with an asterisk are mandatory and must be filled in.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.FreeShipping">
 		<Value>Free shipping</Value>
@@ -15550,6 +16072,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.Grid">
 		<Value>Grid</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.Helpful">
+		<Value>Helpful</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Hide">
 		<Value>Hide</Value>
@@ -15568,9 +16093,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.Inactive">
 		<Value>Inactive</Value>
-	</LocaleResource>
-	<LocaleResource Name="Common.IncreaseValue">
-		<Value>Increase value</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.International">
 		<Value>International</Value>
@@ -15680,6 +16202,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Note">
 		<Value>Note</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.NotHelpful">
+		<Value>Not helpful</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.Notification">
 		<Value>Alert</Value>
 	</LocaleResource>
@@ -15770,11 +16295,20 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.PleaseSelect">
 		<Value>Please select</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.PleaseWait">
+		<Value>Please wait…</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.Plugin">
 		<Value>Plugin</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Plural">
 		<Value>Plural</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.Preset">
+		<Value>Preset</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.Print">
+		<Value>Print</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Product">
 		<Value>Product</Value>
@@ -15808,9 +16342,6 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.Read">
 		<Value>Read</Value>
-	</LocaleResource>
-	<LocaleResource Name="Common.ReCaptchaCheckFailed">
-		<Value>A reCAPTCHA check failed with the error {0}.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Recommended">
 		<Value>Recommended</Value>
@@ -15860,14 +16391,26 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Scheduled">
 		<Value>Scheduled</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.ScrollUp">
+		<Value>Scroll up</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.Search">
 		<Value>Search</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.SearchProducts">
 		<Value>Search products</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.SecurityPrompt">
+		<Value>Security prompt</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.SelectAction">
+		<Value>Select action</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.SelectAll">
 		<Value>Select all</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.SelectView">
+		<Value>Select view</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Send">
 		<Value>Send</Value>
@@ -15929,6 +16472,12 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Size">
 		<Value>Size</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.SkipList">
+		<Value>Skip list</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.SkipToMainContent">
+		<Value>Skip to main content</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.Status">
 		<Value>Status</Value>
 	</LocaleResource>
@@ -15959,6 +16508,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Common.Trash">
 		<Value>Trash</Value>
 	</LocaleResource>
+	<LocaleResource Name="Common.Type">
+		<Value>Type</Value>
+	</LocaleResource>
 	<LocaleResource Name="Common.Unavailable">
 		<Value>Unavailable</Value>
 	</LocaleResource>
@@ -15967,6 +16519,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Common.Unknown">
 		<Value>Unknown</Value>
+	</LocaleResource>
+	<LocaleResource Name="Common.Unlimited">
+		<Value>Unlimited</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Unpublished">
 		<Value>Unpublished</Value>
@@ -16020,7 +16575,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Wrong email</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.WrongInvisibleCaptcha">
-		<Value>The reCAPTCHA failed. Please try it again.</Value>
+		<Value>CAPTCHA failed. Please try again.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Common.Year">
 		<Value>Year</Value>
@@ -16179,7 +16734,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>The product has no user agreement.</Value>
 	</LocaleResource>
 	<LocaleResource Name="DownloadableProducts.IAgree">
-		<Value>I agree</Value>
+		<Value>I have read and agree to the user agreement.</Value>
 	</LocaleResource>
 	<LocaleResource Name="DownloadableProducts.NoItems">
 		<Value>There are no downloadable products</Value>
@@ -16688,6 +17243,24 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Enums.PaymentStatus.Voided">
 		<Value>Voided</Value>
 	</LocaleResource>
+	<LocaleResource Name="Enums.PostIntroVisibility.FullText">
+		<Value>Show all</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.PostIntroVisibility.Hidden">
+		<Value>Don't show</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.PostIntroVisibility.ThreeLines">
+		<Value>Three lines maximum</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.PostIntroVisibility.TwoLines">
+		<Value>Two lines maximum</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.PostListColumns.Three">
+		<Value>Three columns</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.PostListColumns.Two">
+		<Value>Two columns</Value>
+	</LocaleResource>
 	<LocaleResource Name="Enums.PriceDisplayStyle.BadgeAll">
 		<Value>In bagdes</Value>
 	</LocaleResource>
@@ -16811,6 +17384,12 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Enums.RelatedEntityType.TierPrice">
 		<Value>Tier price</Value>
 	</LocaleResource>
+	<LocaleResource Name="Enums.ReturnCaseKind.Return">
+		<Value>Return</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.ReturnCaseKind.Withdrawal">
+		<Value>Withdrawal</Value>
+	</LocaleResource>
 	<LocaleResource Name="Enums.ReturnRequestStatus.Cancelled">
 		<Value>Cancelled</Value>
 	</LocaleResource>
@@ -16824,7 +17403,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Pending</Value>
 	</LocaleResource>
 	<LocaleResource Name="Enums.ReturnRequestStatus.Received">
-		<Value>Received</Value>
+		<Value>Received items</Value>
 	</LocaleResource>
 	<LocaleResource Name="Enums.ReturnRequestStatus.RequestRejected">
 		<Value>Request rejected</Value>
@@ -16936,6 +17515,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Enums.VatNumberStatus.Invalid">
 		<Value>Invalid</Value>
+	</LocaleResource>
+	<LocaleResource Name="Enums.VatNumberStatus.ServiceUnavailable">
+		<Value>Online checks are currently unavailable</Value>
 	</LocaleResource>
 	<LocaleResource Name="Enums.VatNumberStatus.Unknown">
 		<Value>Unknown</Value>
@@ -17416,6 +17998,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Homepage.TopBrands">
 		<Value>Top Brands</Value>
 	</LocaleResource>
+	<LocaleResource Name="Homepage.TopCategories">
+		<Value>Top categories</Value>
+	</LocaleResource>
 	<LocaleResource Name="HtmlEditor.ClickToEdit">
 		<Value>Click to edit HTML...</Value>
 	</LocaleResource>
@@ -17456,22 +18041,22 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>The password and confirmation do not match.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.PasswordRequiresDigit">
-		<Value>The password must contain a digit.</Value>
+		<Value>At least one number (0–9)</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.PasswordRequiresLower">
-		<Value>The password must contain a lowercase letter.</Value>
+		<Value>At least one lowercase letter (a–z)</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.PasswordRequiresNonAlphanumeric">
-		<Value>The password must contain a non alphanumeric character.</Value>
+		<Value>At least one special character (e.g. !@#$)</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.PasswordRequiresUniqueChars">
-		<Value>The password must contain at least {0} unique characters.</Value>
+		<Value>At least {0} unique characters</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.PasswordRequiresUpper">
-		<Value>The password must contain a capital letter.</Value>
+		<Value>At least one uppercase letter (A–Z)</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.PasswordTooShort">
-		<Value>The password is too short. It must contain at least {0} characters.</Value>
+		<Value>At least {0} characters</Value>
 	</LocaleResource>
 	<LocaleResource Name="Identity.Error.RecoveryCodeRedemptionFailed">
 		<Value>The redemption of the recovery code failed.</Value>
@@ -17548,6 +18133,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Languages">
 		<Value>Languages</Value>
 	</LocaleResource>
+	<LocaleResource Name="LinkBuilder.LinkTarget">
+		<Value>Define the target attribute for the link.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Manufacturers">
 		<Value>Manufacturers</Value>
 	</LocaleResource>
@@ -17575,20 +18163,11 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Manufacturers.ViewMode.List">
 		<Value>List</Value>
 	</LocaleResource>
-	<LocaleResource Name="Media.Category.ImageAlternateTextFormat">
-		<Value>Picture for category {0}</Value>
-	</LocaleResource>
 	<LocaleResource Name="Media.Category.ImageLinkTitleFormat">
 		<Value>Show products in category {0}</Value>
 	</LocaleResource>
-	<LocaleResource Name="Media.Manufacturer.ImageAlternateTextFormat">
-		<Value>Picture for manufacturer {0}</Value>
-	</LocaleResource>
 	<LocaleResource Name="Media.Manufacturer.ImageLinkTitleFormat">
 		<Value>All products from {0}</Value>
-	</LocaleResource>
-	<LocaleResource Name="Media.Product.ImageAlternateTextFormat">
-		<Value>Picture of {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="Media.Product.ImageLinkTitleFormat">
 		<Value>Show details for {0}</Value>
@@ -17699,7 +18278,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>RSS</Value>
 	</LocaleResource>
 	<LocaleResource Name="News.RSS.Hint">
-		<Value>Click here to be informed automatically when we add new items to our site</Value>
+		<Value>Opens the RSS feed with the latest news. Subscribe with an RSS reader to stay informed.</Value>
 	</LocaleResource>
 	<LocaleResource Name="News.ViewAll">
 		<Value>[View News Archive]</Value>
@@ -17774,7 +18353,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>The payment of the order could not be captured.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Order.CannotCompleteUnpaidOrder">
-		<Value>An unpaid order cannot be completed.</Value>
+		<Value>An order with a payment status of "{0}" cannot be completed.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Order.CannotMarkCompleted">
 		<Value>Cannot mark order as completed.</Value>
@@ -17878,6 +18457,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Order.Product(s).Name">
 		<Value>Name</Value>
 	</LocaleResource>
+	<LocaleResource Name="Order.Product(s).OrderedQuantity">
+		<Value>Ordered</Value>
+	</LocaleResource>
 	<LocaleResource Name="Order.Product(s).Price">
 		<Value>Price</Value>
 	</LocaleResource>
@@ -17960,7 +18542,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>View details</Value>
 	</LocaleResource>
 	<LocaleResource Name="Order.ShipmentStatusEvents">
-		<Value>Shipment status events</Value>
+		<Value>Status of your shipment</Value>
 	</LocaleResource>
 	<LocaleResource Name="Order.ShipmentStatusEvents.Country">
 		<Value>Country</Value>
@@ -18385,6 +18967,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Permissions.DisplayName.AccessWishlist">
 		<Value>Access wishlist</Value>
 	</LocaleResource>
+	<LocaleResource Name="Permissions.DisplayName.CollectionGroup">
+		<Value>Display groups</Value>
+	</LocaleResource>
 	<LocaleResource Name="Permissions.DisplayName.CreateAddress">
 		<Value>Create addresses</Value>
 	</LocaleResource>
@@ -18484,6 +19069,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Plugins.Feed.FreeShippingThreshold.Hint">
 		<Value>Amount as from shipping is free.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Plugins.Permissions.DisplayName.Display">
+		<Value>Display</Value>
+	</LocaleResource>
 	<LocaleResource Name="Polls.AnswerNotFound">
 		<Value>The poll answer {0} was not found.</Value>
 	</LocaleResource>
@@ -18500,7 +19088,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Community poll</Value>
 	</LocaleResource>
 	<LocaleResource Name="Polls.TotalVotes">
-		<Value>{0} vote(s)...</Value>
+		<Value>{0} votes cast.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Polls.Vote">
 		<Value>Vote</Value>
@@ -18515,10 +19103,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Private messages are disabled.</Value>
 	</LocaleResource>
 	<LocaleResource Name="PrivateMessages.Inbox">
-		<Value>Inbox</Value>
-	</LocaleResource>
-	<LocaleResource Name="PrivateMessages.Inbox.DeleteSelected">
-		<Value>Delete selected</Value>
+		<Value>Private messages</Value>
 	</LocaleResource>
 	<LocaleResource Name="PrivateMessages.Inbox.FromColumn">
 		<Value>From</Value>
@@ -18740,7 +19325,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Delivery time:</Value>
 	</LocaleResource>
 	<LocaleResource Name="Products.Details">
-		<Value>Description</Value>
+		<Value>Product details</Value>
 	</LocaleResource>
 	<LocaleResource Name="Products.Dimensions">
 		<Value>Dimensions</Value>
@@ -18904,6 +19489,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Products.PriceRangeFrom">
 		<Value>From {0}</Value>
 	</LocaleResource>
+	<LocaleResource Name="Products.ProductCodeNotFound">
+		<Value>The product with the code &lt;b&gt;{0}&lt;/b&gt; could not be found.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Products.ProductHasBeenAddedToTheCart">
 		<Value>The product has been added to your shopping cart</Value>
 	</LocaleResource>
@@ -18914,7 +19502,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Product could not be added to the shopping cart.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Products.ProductsHaveBeenAddedToTheCart">
-		<Value>The selected products have successfully been added to the cart.</Value>
+		<Value>{0} of {1} products have been added to the shopping cart.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Products.Qty">
 		<Value>Qty</Value>
@@ -18925,8 +19513,11 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Products.RelatedProducts">
 		<Value>Related products</Value>
 	</LocaleResource>
+	<LocaleResource Name="Products.RequiredProductPriceInfo">
+		<Value>&lt;span&gt;+ {0} &lt;span title="{1}"&gt;{2}&lt;/span&gt;&lt;/span&gt;</Value>
+	</LocaleResource>
 	<LocaleResource Name="Products.SavingBadgeLabel">
-		<Value>- {0} %</Value>
+		<Value>&amp;minus; {0} %</Value>
 	</LocaleResource>
 	<LocaleResource Name="Products.SelectProducts">
 		<Value>Please select the desired products.</Value>
@@ -18942,6 +19533,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Products.Specs">
 		<Value>Features</Value>
+	</LocaleResource>
+	<LocaleResource Name="Products.Specs.AdditionalFeatures">
+		<Value>Additional features</Value>
 	</LocaleResource>
 	<LocaleResource Name="Products.SwitchToGrid">
 		<Value>Show</Value>
@@ -19063,11 +19657,83 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Providers.MenuItems.FriendlyName.Route">
 		<Value>Route</Value>
 	</LocaleResource>
+	<LocaleResource Name="ReturnCase.Case">
+		<Value>Case {0}</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.CaseNo">
+		<Value>Case no.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.CertainItems">
+		<Value>Certain items</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.Complete">
+		<Value>Completed</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.ConvertedWithdrawal">
+		<Value>The withdrawal has been converted to a return. Status: &lt;b&gt;{0}&lt;/b&gt;.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.EntireOrder">
+		<Value>Entire order</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep">
+		<Value>Next step</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.Cancelled">
+		<Value>No further action is required.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.ItemsRefunded">
+		<Value>The refund has been processed.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.ItemsRepaired">
+		<Value>We will send the repaired items back to you.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.Pending">
+		<Value>Please return the items.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.Received">
+		<Value>We are processing your return.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.RequestRejected">
+		<Value>No further action is required.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.NextStep.ReturnAuthorized">
+		<Value>We will continue processing your request.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.Open">
+		<Value>Open</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.OrderWithdrawn">
+		<Value>The order has been withdrawn.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.ReceivedWithdrawal">
+		<Value>Received withdrawal</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.ReturnItemExists">
+		<Value>There are returns for this item.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.StartProcessing">
+		<Value>Start processing</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.StartProcessing.Hint">
+		<Value>Converts the withdrawal into a return for further processing.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.WithdrawalItemExists">
+		<Value>A withdrawal request has been submitted for this item.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.WithdrawalQuantity">
+		<Value>Withdrawal quantity</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.WithdrawEntireOrder">
+		<Value>I would like to withdraw the entire order:</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnCase.WithdrawItems">
+		<Value>I would like to withdraw the following items:</Value>
+	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.Comments">
 		<Value>Comments</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.NoItemsSubmitted">
-		<Value>Your return request has not been submitted because you haven't chosen any items.</Value>
+		<Value>Please select the items you wish to return and specify the quantity.</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.Products.Name">
 		<Value>Product</Value>
@@ -19076,13 +19742,16 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Unit price</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.Products.Quantity">
-		<Value>Qty. to return</Value>
+		<Value>Quantity to return</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.ReturnAction">
 		<Value>Return action</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.ReturnReason">
 		<Value>Return reason</Value>
+	</LocaleResource>
+	<LocaleResource Name="ReturnRequests.ReturnsNotPossible">
+		<Value>Returns are not possible for this order.</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.SelectProduct(s)">
 		<Value>Which items do you want to return?</Value>
@@ -19091,10 +19760,10 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Submit return request</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.Submitted">
-		<Value>Your return request has been submitted successfully.</Value>
+		<Value>A return request has been submitted.</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.Title">
-		<Value>Return item(s) from order #{0}</Value>
+		<Value>Returnable items from order no. {0}</Value>
 	</LocaleResource>
 	<LocaleResource Name="ReturnRequests.WhyReturning">
 		<Value>Why are you returning these items?</Value>
@@ -19150,14 +19819,17 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Reviews.Overview.First">
 		<Value>Be the first to review this item</Value>
 	</LocaleResource>
+	<LocaleResource Name="Reviews.Overview.NoReviews">
+		<Value>There are no reviews for this product yet.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Reviews.Overview.ReadAll">
 		<Value>Read all reviews</Value>
 	</LocaleResource>
 	<LocaleResource Name="Reviews.Overview.Review">
-		<Value>review</Value>
+		<Value>Rating: {0} out of 5 stars. {1} review.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Reviews.Overview.Reviews">
-		<Value>review(s)</Value>
+		<Value>Rating: {0} out of 5 stars. {1} reviews.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Reviews.ProductReviewsFor">
 		<Value>Product reviews for</Value>
@@ -19193,7 +19865,10 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Points balance</Value>
 	</LocaleResource>
 	<LocaleResource Name="RewardPoints.History">
-		<Value>History</Value>
+		<Value>History of your reward points</Value>
+	</LocaleResource>
+	<LocaleResource Name="RewardPoints.Message.EarnedForNewsletterSubscription">
+		<Value>Earned reward points for signing up for the newsletter in the "{0}" store.</Value>
 	</LocaleResource>
 	<LocaleResource Name="RewardPoints.Message.EarnedForOrder">
 		<Value>Earned promotion for order #{0}</Value>
@@ -19226,7 +19901,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Order amount</Value>
 	</LocaleResource>
 	<LocaleResource Name="RewardPoints.PointsForPurchasesInfo">
-		<Value>For every {0} order amount {1} points are awarded.</Value>
+		<Value>For every {0} net order value, {1} points are awarded.</Value>
 	</LocaleResource>
 	<LocaleResource Name="RSS.InformationAboutProducts">
 		<Value>Information about products</Value>
@@ -19313,7 +19988,7 @@ within the observation window, additional requests may be denied, even if type-s
 		<Value>Remove all filters</Value>
 	</LocaleResource>
 	<LocaleResource Name="Search.Facet.RemoveFilter">
-		<Value>Remove filter: {0} &amp;gt; {1}</Value>
+		<Value>Remove filter: {0} "{1}"</Value>
 	</LocaleResource>
 	<LocaleResource Name="Search.Facet.RemoveGroupFilters">
 		<Value>Remove filters</Value>
@@ -19386,6 +20061,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Search.ResultFiltering">
 		<Value>Result filtering</Value>
+	</LocaleResource>
+	<LocaleResource Name="Search.SearchBox.Clear">
+		<Value>Clear search term</Value>
 	</LocaleResource>
 	<LocaleResource Name="Search.SearchBox.Tooltip">
 		<Value>What are you looking for?</Value>
@@ -19522,8 +20200,11 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="ShoppingCart.DiscountCouponCode.NoMoreDiscount">
 		<Value>Further discounts are not possible.</Value>
 	</LocaleResource>
+	<LocaleResource Name="ShoppingCart.DiscountCouponCode.Removed">
+		<Value>The discount code has been removed</Value>
+	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.DiscountCouponCode.Tooltip">
-		<Value>Enter your coupon here</Value>
+		<Value>Your discount code</Value>
 	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.DiscountCouponCode.WrongDiscount">
 		<Value>The coupon code you entered couldn't be applied to your order</Value>
@@ -19566,6 +20247,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.GiftCardCouponCode.DontWorkWithAutoshipProducts">
 		<Value>You cannot use gift cards with auto-ship (recurring) items.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ShoppingCart.GiftCardCouponCode.Removed">
+		<Value>The gift card code has been removed</Value>
 	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.GiftCardCouponCode.Tooltip">
 		<Value>Enter gift card code</Value>
@@ -19717,8 +20401,14 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="ShoppingCart.RewardPoints">
 		<Value>Reward points</Value>
 	</LocaleResource>
+	<LocaleResource Name="ShoppingCart.RewardPoints.Applied">
+		<Value>The reward points were applied.</Value>
+	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.RewardPoints.Button">
 		<Value>Apply</Value>
+	</LocaleResource>
+	<LocaleResource Name="ShoppingCart.RewardPoints.Removed">
+		<Value>The reward points have been removed.</Value>
 	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.SelectAllProducts">
 		<Value>&lt;a href="{0}" class="select-cart-items" rel="nofollow"&gt;Select all products&lt;/a&gt;.</Value>
@@ -19740,6 +20430,12 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.SKU">
 		<Value>SKU</Value>
+	</LocaleResource>
+	<LocaleResource Name="ShoppingCart.SyncedRequiredProductQuantityInfo">
+		<Value>The quantity is automatically calculated based on the main product.</Value>
+	</LocaleResource>
+	<LocaleResource Name="ShoppingCart.SyncedRequiredProductQuantityWarning">
+		<Value>The quantity {0} is not allowed. The required quantity is {1}.</Value>
 	</LocaleResource>
 	<LocaleResource Name="ShoppingCart.Totals.CalculatedDuringCheckout">
 		<Value>Calculated during checkout</Value>
@@ -19822,6 +20518,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Smartstore.AI.Prompts.AppendToLastSpan">
 		<Value>Be sure to append the new mark-up to the last span tag.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Smartstore.AI.Prompts.AssignIdToHeader">
+		<Value>Assign each heading a unique, concise id attribute in kebab-case format based on core content keywords. On ID collision: number them (e.g., id="benefits-1", id="benefits-2").</Value>
+	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.CaretPos">
 		<Value>The placeholder [CARETPOS] marks the position where your new text should appear.</Value>
 	</LocaleResource>
@@ -19830,6 +20529,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.CharWordLimit">
 		<Value>The text may contain no more than {0} characters and no more than {1} words.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Smartstore.AI.Prompts.CleanupMarkup">
+		<Value>Remove inline styles, empty elements, unnecessary span/div/font wrappers, and redundant nesting.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.ContinueAtPlaceholder">
 		<Value>Determine the next higher block-level element that contains the placeholder [CARETPOS] (e.g. &lt;p&gt; or &lt;div&gt;). Consider this element as a valid context area for your text addition. If the user instruction requires it, the addition can also be made outside the caret position within this element.</Value>
@@ -19842,6 +20544,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.CreateHtml">
 		<Value>Return only pure HTML code</Value>
+	</LocaleResource>
+	<LocaleResource Name="Smartstore.AI.Prompts.CreateImagesOnlyOnExplicitRequest">
+		<Value>Only add placeholders for images if this is explicitly requested.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.CreateJson">
 		<Value>Only return a single JSON object - without formatting, meta comments or additional text.</Value>
@@ -19863,6 +20568,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.DontUseTextInImages">
 		<Value>Do not use any text or characters in the images to be created. The image should be purely visual, without any writing or labelling.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Smartstore.AI.Prompts.EnsureLogicalFlow">
+		<Value>Add headings (h2-h6) where appropriate, break long paragraphs, use lists for enumerations, ensure logical flow.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.ImageAnalyzer.NoContent">
 		<Value>Set the value 'no-content' in every field for which no meaningful content can be determined.</Value>
@@ -19921,6 +20629,9 @@ within the observation window, additional requests may be denied, even if type-s
 	<LocaleResource Name="Smartstore.AI.Prompts.OneParagraph">
 		<Value>The text contains only one section, which is enclosed by a p-tag.</Value>
 	</LocaleResource>
+	<LocaleResource Name="Smartstore.AI.Prompts.OnlyImproveStructure">
+		<Value>Only improve structure—don't remove content or meaningful markup.</Value>
+	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.ParagraphCount">
 		<Value>The text should be divided into {0} paragraphs enclosed in p tags.</Value>
 	</LocaleResource>
@@ -19941,6 +20652,9 @@ within the observation window, additional requests may be denied, even if type-s
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.PreservePreviousHighlightTags">
 		<Value>Any text deviation from the transmitted original text must be enclosed with the mark tag. When you create a new answer, take into account the text you added previously. Enclose ANY text you have added within this chat history with the mark tag.</Value>
+	</LocaleResource>
+	<LocaleResource Name="Smartstore.AI.Prompts.PreserveSemantic">
+		<Value>Keep all semantic HTML intact (including tables, blockquotes, images, code blocks, etc.). Preserve CSS classes, links, and attributes.</Value>
 	</LocaleResource>
 	<LocaleResource Name="Smartstore.AI.Prompts.ProcessHtmlElementsIndividually">
 		<Value>Process each HTML element individually.</Value>

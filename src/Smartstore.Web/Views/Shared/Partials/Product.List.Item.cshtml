@@ -6,13 +6,13 @@
     var list = Model.Parent;
     var image = Model.Image;
     var hasImage = image?.HasImage() == true;
-
     var isLinesMode = list.ViewMode == ProductSummaryViewMode.List;
+    var isTouchDevice = list.IsTouchDevice;
     var showButtons = list.ShowButtons && (!Model.Price.DisableWishlistButton || list.CompareEnabled || (!Model.Price.DisableBuyButton && list.BuyEnabled));
     var showVariants = (Model.ColorAttributes != null && Model.ColorAttributes.Any()) || (Model.Attributes != null && Model.Attributes.Any());
     var showDrop = showButtons || showVariants;
     var showAttrs = isLinesMode && (list.ShowSku || list.ShowWeight || list.ShowDimensions);
-    var addImageClass = image.File == null ? " no-picture" : "";
+    var addImageClass = image.File == null ? " no-picture" : string.Empty;
     if (!hasImage)
     {
         addImageClass += " no-default-picture";
@@ -21,24 +21,27 @@
     ViewBag.ArtDetailUrl = Model.DetailUrl;
 }
 
-<article class="art" data-id="@Model.Id">
-
-    <div class="art-picture-block">
+<div class="art" data-id="@Model.Id" role="listitem">
+    <figure class="art-picture-block">
         @* TODO: (mc) Let user define one free badge per product in backend *@
-        <div sm-if="Model.Badges.Count > 0" class="art-badges">
+        <figcaption sm-if="Model.Badges.Count > 0" class="art-badges">
             @foreach (var badge in Model.Badges.OrderBy(x => x.DisplayOrder))
             {
                 <span class="art-badge badge badge-@badge.Style">@Html.Raw(badge.Label)</span>
             }
-        </div>
+        </figcaption>
         @if (image.Title.HasValue())
         {
-            var linkTitle = T("Media.Product.ImageLinkTitleFormat", Model.Name);
-            <a class="art-picture img-center-container@(addImageClass)" href="@Model.DetailUrl" title="@linkTitle" attr-data-content='(!hasImage, T("Common.NoImageAvail"))'>
-                <img sm-model="image" loading="lazy" />
+            <a class="art-picture img-center-container@(addImageClass)"
+               href="@Model.DetailUrl"
+               title="@T("Media.Product.ImageLinkTitleFormat", Model.Name)"
+               tabindex="-1"
+               aria-hidden="true"
+               attr-data-content='(!hasImage, T("Common.NoImageAvail"))'>
+                <img sm-model="image" loading="lazy" attr-alt='(image.Alt.IsEmpty(), Model.Name)' />
             </a>
         }
-    </div>
+    </figure>
 
     @if (isLinesMode)
     {
@@ -74,7 +77,7 @@
     }
 
     <h3 class="art-name" sm-language-attributes-for="Model.Name">
-        <a href="@Model.DetailUrl" title="@Model.Name.ToString()">
+        <a class="art-name-link" href="@Model.DetailUrl" title="@Model.Name.ToString()">
             <span>@Html.Raw(Model.Name)</span>
         </a>
     </h3>
@@ -82,21 +85,21 @@
     @if (list.ShowDescription)
     {
         <div class="art-description" title="@Model.ShortDescription.ToString()" sm-language-attributes-for="Model.ShortDescription">
-            @Html.Raw(Model.ShortDescription.Truncate(160, "..."))
+            @Html.Raw(Model.ShortDescription.Truncate(160, "…"))
         </div>
     }
 
     <table sm-if="showAttrs" class="art-attrs">
         <tr sm-if="list.ShowSku && Model.Sku.HasValue()">
-            <td>@T("Products.Sku")</td>
+            <th scope="row">@T("Products.Sku")</th>
             <td>@Model.Sku</td>
         </tr>
-        <tr sm-if="list.ShowWeight && Model.Weight.HasValue()">
-            <td>@T("Products.Weight")</td>
+        <tr sm-if="list.ShowWeight && !Model.Weight.IsEmpty">
+            <th scope="row">@T("Products.Weight")</th>
             <td>@Model.Weight</td>
         </tr>
         <tr sm-if="list.ShowDimensions && Model.Dimensions.HasValue()">
-            <td>@T("Products.Dimensions") <span class="lrm">(@Model.DimensionMeasureUnit)</span></td>
+            <th scope="row">@T("Products.Dimensions") <span class="lrm">(@Model.DimensionMeasureUnit)</span></th>
             <td>@Model.Dimensions</td>
         </tr>
     </table>
@@ -134,14 +137,30 @@
         @Html.Raw("</div>")
     }
 
-    <div sm-if="!isLinesMode && showDrop" class="art-drop">
-        @if (showVariants)
+    @if (!isLinesMode && showDrop)
+    {
+        var id = $"art-drop-{Model.Parent?.Id}-{Model.Id}";
+
+        if (!isTouchDevice)
+        {
+            <button class="sr-toggle" aria-expanded="false" aria-controls="@id" ak-close-on-leave>
+                <small class="sr-toggle-info">@T("Aria.Label.ExpandItem", Model.Name)</small>
+            </button>
+
+            <div id="@id" class="art-drop">
+                @if (showVariants)
+                {
+                    <partial name="Product.List.Item.Variants" model="Model" />
+                }
+                @if (showButtons)
+                {
+                    <partial name="Product.List.Item.Buttons" model="Model" />
+                }
+            </div>
+        }
+        else if (showVariants)
         {
             <partial name="Product.List.Item.Variants" model="Model" />
         }
-        @if (showButtons)
-        {
-            <partial name="Product.List.Item.Buttons" model="Model" />
-        }
-    </div>
-</article>
+    }
+</div>

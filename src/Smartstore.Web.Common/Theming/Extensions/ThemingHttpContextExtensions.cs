@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Smartstore.Net;
 
-namespace Smartstore.Web.Theming
+namespace Smartstore.Web.Theming;
+
+public static class ThemingHttpContextExtensions
 {
-    public static class ThemingHttpContextExtensions
+    extension(HttpContext context)
     {
-        internal static string GetUserThemeChoiceFromCookie(this HttpContext context)
+        internal string GetUserThemeChoiceFromCookie()
         {
             if (context == null)
                 return null;
@@ -13,7 +15,7 @@ namespace Smartstore.Web.Theming
             return context.Request.Cookies[CookieNames.UserThemeChoice].NullEmpty();
         }
 
-        internal static void SetUserThemeChoiceInCookie(this HttpContext context, string value)
+        internal void SetUserThemeChoiceInCookie(string value)
         {
             if (context == null)
             {

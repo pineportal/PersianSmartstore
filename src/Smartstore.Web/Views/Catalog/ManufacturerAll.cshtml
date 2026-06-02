@@ -12,30 +12,28 @@
 
     async Task RenderManufacturer(BrandModel item)
     {
-        var url = Url.RouteUrl("Manufacturer", new { SeName = item.SeName });
-
-        <article class="art" data-id="@item.Id">
+        <div class="art" data-id="@item.Id" role="listitem">
             @if (item.Image != null && item.Image.HasImage())
             {
                 var image = item.Image;
                 <div class="art-picture-block">
-                    <a href="@url" class="art-picture img-center-container">
-                        <img sm-model="image" loading="lazy" />
+                    <a href="@item.Path" class="art-picture img-center-container" aria-hidden="true" tabindex="-1">
+                        <img sm-model="image" loading="lazy" attr-alt='(image.Alt.IsEmpty(), item.Name)' />
                     </a>
                 </div>
             }
             <div class="art-genericname">
-                <a href="@url" title="@item.Name">
+                <a class="art-name-link" href="@item.Path" title="@item.Name">
                     <span sm-language-attributes-for="item.Name">@item.Name</span>
                 </a>
             </div>
-        </article>
+        </div>
     }
 }
 
 <div class="page manufacturer-list-page">
     <div class="page-title">
-        <h1 class="h2">@T("Manufacturers.List")</h1>
+        <h1 id="page-title" class="h2">@T("Manufacturers.List")</h1>
     </div>
     <div class="page-body">
         <zone name="manufacturers_all_top" />
@@ -44,7 +42,7 @@
         {
             var groupedManus = alphabeticalList.GroupBy(x => char.ToUpper(x.Name.Value[0]));
 
-            <div class="manufacturer-nav">
+            <nav class="manufacturer-nav" aria-label="@T("Aria.Label.AlphabeticallySortedLinks")">
                 <ul class="navbar justify-content-start list-unstyled">
                     @if (numericList.Any())
                     {
@@ -56,12 +54,12 @@
                         <li class="nav-item"><a class="nav-link" href="#@manu.Key">@manu.Key</a></li>
                     }
                 </ul>
-            </div>
+            </nav>
 
             if (numericList.Any())
             {
-                <h4 id="number" class="manufacturer-list-title">@T("Catalog.ManufacturerAll.Numbers")</h4>
-                <div class="artlist artlist-grid artlist-6-cols artlist-boxed manufacturer-grid">
+                <h2 id="number" class="manufacturer-list-title h4">@T("Catalog.ManufacturerAll.Numbers")</h2>
+                <div role="list" class="artlist artlist-grid artlist-6-cols artlist-boxed manufacturer-grid" aria-labelledby="page-title number">
                     @foreach (var item in numericList)
                     {
                         await RenderManufacturer(item);
@@ -71,8 +69,8 @@
 
             foreach (var manu in groupedManus)
             {
-                <h4 id="@manu.Key" class="manufacturer-list-title">@manu.Key</h4>
-                <div class="artlist artlist-grid artlist-6-cols artlist-boxed manufacturer-grid">
+                <h2 id="@manu.Key" class="manufacturer-list-title h4">@manu.Key</h2>
+                <div role="list" class="artlist artlist-grid artlist-6-cols artlist-boxed manufacturer-grid" aria-labelledby="page-title @manu.Key">
                     @foreach (var item in manu)
                     {
                         await RenderManufacturer(item);
@@ -82,7 +80,7 @@
         }
         else
         {
-            <div class="artlist artlist-grid artlist-6-cols artlist-boxed manufacturer-grid">
+            <div role="list" class="artlist artlist-grid artlist-6-cols artlist-boxed manufacturer-grid" aria-labelledby="page-title">
                 @foreach (var item in Model)
                 {
                     await RenderManufacturer(item);
@@ -103,3 +101,21 @@
         });
     });
 </script>
+
+@{
+    // JSON-LD
+    if (Model.Count > 0)
+    {
+        var position = 1;
+        var itemList = JsonLdFragment.Create("ItemList")
+            .Prop("name", T("Manufacturers.List").Value)
+            .Arr("itemListElement", Model.Select(item => JsonLdFragment.Create("ListItem")
+                .Prop("position", position++)
+                .Prop("url", Request.ToAbsoluteUrl(item.Path))));
+
+        Assets.JsonLd["CollectionPage"]
+            .Prop("name", T("Manufacturers.List").Value)
+            .Prop("url", Request.ToAbsoluteUrl())
+            .Obj("mainEntity", itemList);
+    }
+}

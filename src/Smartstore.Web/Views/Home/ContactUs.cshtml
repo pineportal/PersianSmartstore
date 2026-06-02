@@ -20,7 +20,7 @@
             <div class="col-md-6">
                 @if (Model.SuccessfullySent)
                 {
-                    <div class="alert alert-success">
+                    <div class="alert alert-success" role="alert">
                         @Model.Result
                     </div>
                 }
@@ -32,13 +32,21 @@
                         <honeypot />
 
                         <div class="form-floating mb-3">
-                            <input asp-for="FullName" sm-required="Model.FullNameRequired" class="remember remember-disallow-empty" placeholder="@Html.DisplayNameFor(x => x.FullName)" />
+                            <input asp-for="FullName" 
+                                   sm-required="Model.FullNameRequired"
+                                   class="remember remember-disallow-empty" 
+                                   placeholder="@Html.DisplayNameFor(x => x.FullName)"
+                                   autocomplete="name" />
                             <label asp-for="FullName" attr-class='(Model.FullNameRequired, "required")'></label>
                             <span asp-validation-for="FullName"></span>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="Email" sm-required="true" class="remember remember-disallow-empty" placeholder="@Html.DisplayNameFor(x => x.Email)" />
+                            <input asp-for="Email" 
+                                   sm-required="true" 
+                                   class="remember remember-disallow-empty" 
+                                   placeholder="@Html.DisplayNameFor(x => x.Email)"
+                                   autocomplete="email" />
                             <label asp-for="Email" class="required"></label>
                             <span asp-validation-for="Email"></span>
                         </div>
@@ -55,9 +63,7 @@
 
                         <zone name="gdpr_consent" />
 
-                        <div sm-if="Model.DisplayCaptcha" class="mt-3">
-                            <captcha sm-enabled="Model.DisplayCaptcha" />
-                        </div>
+                        <captcha sm-target="ContactUs" class="mt-3" />
 
                         <button type="submit" name="send-email" class="btn btn-primary btn-lg mt-3">
                             @T("ContactUs.Button")
@@ -74,11 +80,11 @@
 <script sm-target-zone="scripts" data-origin="contact-us">
     $(function () {
         restoreRememberedFormFields("registerVals");
-
         const form = document.getElementById('contact-form');
-
-        form.addEventListener('focusout', (event) => {
-            rememberFormFields("contact-form", "registerVals");
-        });
+        if (form) {
+            form.addEventListener('focusout', (event) => {
+                rememberFormFields("contact-form", "registerVals");
+            });
+        }
     });
 </script>

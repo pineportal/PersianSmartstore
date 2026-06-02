@@ -111,12 +111,18 @@
 }
 
 @mixin fontawesome($content, $size: $icon-font-size-base, $variant: $icon-font-variant-default) {
-    display: inline-block;
-    font-style: normal;
-    font-variant: normal;
-    text-rendering: auto;
+    // Copied over from FA's core stylesheet. We don't want to customize the FA core.
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: inline-block;
+    font-feature-settings: normal;
+    font-style: normal;
+    font-synthesis: none;
+    font-variant: normal;
     line-height: 1;
+    text-align: center;
+    text-rendering: auto;
+    width: 1.25em;
 
     font-size: $size;
     @include fontawesome-font($content, $variant);
@@ -229,4 +235,12 @@
 @mixin input-clear($size: 1.25rem) {
     @include trailing-action($size);
     --input-clear-size: #{$size};
+}
+
+@mixin matches-any($selectors...) {
+    // join with comma + space
+    $list: join($selectors, ", ");
+    #{":is"}(#{$list}) {
+        @content;
+    }
 }

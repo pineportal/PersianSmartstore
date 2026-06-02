@@ -11,6 +11,8 @@
 
 # Secrets
 *.secrets
+*.csr
+*.pem
 
 # Build results
 [Dd]ebug/
@@ -36,6 +38,7 @@ TestResult.xml
 # DNX
 artifacts/
 .artifacts/
+.tools/
 
 *_i.c
 *_p.c
@@ -228,6 +231,9 @@ DataProtection-Keys/
 
 # Import/Export
 src/Smartstore.Web/wwwroot/[Ee]xchange/*
+
+# .well-known
+src/Smartstore.Web/wwwroot/.well-known/*
 
 # User settings
 src/Smartstore.Web/Config/usersettings*

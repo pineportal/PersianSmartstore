@@ -5,6 +5,8 @@
 @{
     ViewBag.Title = T("Admin.Configuration.Settings.RewardPoints").Value;
     Layout = "_SettingLayout";
+
+    var primaryCurrencyCode = CommonServices.CurrencyService.PrimaryCurrency.CurrencyCode;
 }
 
 <form asp-action="RewardPointsSettings">
@@ -53,7 +55,7 @@
                                     <span class="input-group-text">@T("Admin.Configuration.Settings.RewardPoints.ExchangeRate.Hint2")</span>
                                 </div>
                                 <div class="col">
-                                    <editor asp-for="ExchangeRate" sm-postfix="@Model.PrimaryStoreCurrencyCode" />
+                                    <editor asp-for="ExchangeRate" sm-postfix="@primaryCurrencyCode" />
                                 </div>
                             </div>
                         </div>
@@ -104,12 +106,21 @@
             </div>
             <div class="adminRow">
                 <div class="adminTitle">
+                    <smart-label asp-for="PointsForNewsletterSubscription" />
+                </div>
+                <div class="adminData">
+                    <setting-editor asp-for="PointsForNewsletterSubscription"></setting-editor>
+                    <span asp-validation-for="PointsForNewsletterSubscription"></span>
+                </div>
+            </div>
+            <div class="adminRow">
+                <div class="adminTitle">
                     <smart-label asp-for="PointsForPurchases_Points" />
                 </div>
                 <div class="adminData">
                     <div class="form-row flex-nowrap">
                         <div class="col w-50">
-                            <setting-editor asp-for="PointsForPurchases_Amount" sm-postfix="@Model.PrimaryStoreCurrencyCode" placeholder="@T("RewardPoints.OrderAmount")"></setting-editor>
+                            <setting-editor asp-for="PointsForPurchases_Amount" sm-postfix="@primaryCurrencyCode" placeholder="@T("RewardPoints.OrderAmount")"></setting-editor>
                             <span asp-validation-for="PointsForPurchases_Amount"></span>
                         </div>
                         <div class="col w-50">

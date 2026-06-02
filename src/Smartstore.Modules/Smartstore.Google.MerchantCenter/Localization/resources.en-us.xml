@@ -29,6 +29,9 @@
     <LocaleResource Name="TabTitleProfiles">
         <Value>Export profiles</Value>
     </LocaleResource>
+    <LocaleResource Name="DeleteGmcData">
+        <Value>Deletes the Google data assigned to the product.</Value>
+    </LocaleResource>
     <LocaleResource Name="GeneralSettings">
         <Value>General settings</Value>
     </LocaleResource>
@@ -36,7 +39,16 @@
         <Value>Default values</Value>
     </LocaleResource>
     <LocaleResource Name="DefaultValueSettingsNote">
-        <Value>Default values will be exported if the information does not exist or is not available for a particular product. For a particular product, these values can be edited in the plugin configuration and the product edit page.</Value>
+        <Value>
+            <![CDATA[Default values will be exported if the information does not exist or is not available for a particular product. For a particular product, 
+these values can be edited in the plugin configuration and the product edit page. Google data is set for <strong>{0}</strong> of <strong>{1}</strong> products.]]>
+        </Value>
+    </LocaleResource>
+    <LocaleResource Name="ExportAllProducts">
+        <Value>Export all products</Value>
+    </LocaleResource>
+    <LocaleResource Name="ExportAllProducts.Hint">
+        <Value>Specifies whether all products are exported (default). If disabled, only products for which Google data is specified are exported.</Value>
     </LocaleResource>
     <LocaleResource Name="MissingDefaultCategory">
         <Value>Default Google category is not set</Value>
@@ -147,10 +159,10 @@
         <Value>SKU</Value>
     </LocaleResource>
     <LocaleResource Name="SearchIsTouched">
-        <Value>Edited</Value>
+        <Value>With Google data</Value>
     </LocaleResource>
     <LocaleResource Name="SearchIsTouched.Hint">
-        <Value>Searches for records which have or have not been edited yet.</Value>
+        <Value>Filters products for which Google data is stored.</Value>
     </LocaleResource>
     <LocaleResource Name="ExpirationDays">
         <Value>Expires in</Value>
@@ -159,10 +171,10 @@
         <Value>Number of days after products should expire or no longer appear. A value of 0 causes that no expiry date will be exported.</Value>
     </LocaleResource>
     <LocaleResource Name="ExportShipping">
-        <Value>Export shipping weight</Value>
+        <Value>Export shipping data</Value>
     </LocaleResource>
     <LocaleResource Name="ExportShipping.Hint">
-        <Value>Activate this option if you want to export the weight of the product.</Value>
+        <Value>Activate this option if you want to export optional shipping data like the weight, length, width and height of a product.</Value>
     </LocaleResource>
     <LocaleResource Name="ExportShippingTime">
         <Value>Export delivery time</Value>
@@ -202,6 +214,12 @@
     </LocaleResource>
     <LocaleResource Name="EnergyEfficiencyClasses">
         <Value>A,B,C,D,E,F,G</Value>
+    </LocaleResource>
+    <LocaleResource Name="AssignableFiles">
+        <Value>Pictures</Value>
+    </LocaleResource>
+    <LocaleResource Name="AssignableFiles.Hint">
+        <Value>Specifies the images to be exported. Google supports exporting up to ten images. Depending on the "Additional images" export profile setting, either the first image or up to ten images will be exported unless otherwise specified here.</Value>
     </LocaleResource>
     <LocaleResource Name="CustomLabel0">
         <Value>Label 0</Value>

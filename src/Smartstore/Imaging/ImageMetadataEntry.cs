@@ -1,34 +1,33 @@
 ﻿#nullable enable
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
-namespace Smartstore.Imaging
+namespace Smartstore.Imaging;
+
+public enum ImageMetadataProfile
 {
-    public enum ImageMetadataProfile
+    Iptc,
+    Exif,
+    Other = 100
+}
+
+public sealed class ImageMetadataEntry
+{
+    public ImageMetadataEntry(string tag, string value, ImageMetadataProfile profile)
     {
-        Iptc,
-        Exif,
-        Other = 100
+        Guard.NotEmpty(tag);
+
+        Tag = tag;
+        Value = value;
+        Profile = profile;
     }
-    
-    public sealed class ImageMetadataEntry
-    {
-        public ImageMetadataEntry(string tag, string value, ImageMetadataProfile profile)
-        {
-            Guard.NotEmpty(tag, nameof(tag));
 
-            Tag = tag;
-            Value = value;
-            Profile = profile;
-        }
+    [JsonPropertyName("tag")]
+    public string Tag { get; }
 
-        [JsonProperty("tag")]
-        public string Tag { get; }
+    [JsonPropertyName("value")]
+    public string? Value { get; }
 
-        [JsonProperty("value")]
-        public string? Value { get; }
-
-        [JsonProperty("profile")]
-        public ImageMetadataProfile Profile { get; }
-    }
+    [JsonPropertyName("profile")]
+    public ImageMetadataProfile Profile { get; }
 }

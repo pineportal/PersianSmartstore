@@ -9,17 +9,28 @@
 <div sm-if="facets.Count() > 7" class="facet-local-search has-icon has-icon-right input-group-sm mb-3">
     <input type="text" class="form-control facet-local-search-input" placeholder="@T("Search.Facet.FindPlaceholder", Model.Label)" />
     <span class="input-group-icon">
-        <i class="fa fa-search text-muted"></i>
+        <i class="fa fa-search text-muted" aria-hidden="true"></i>
     </span>
 </div>
 
-<div class="facet-body-inner@(Model.IsScrollable ? " scrollable custom-scrollbar" : "")">
+<div class="facet-body-inner" attr-class='(Model.IsScrollable, "scrollable custom-scrollbar")' 
+     role="listbox" 
+     aria-multiselectable="true" 
+     aria-orientation="vertical" 
+     aria-labelledby="facet-group-header-@Model.Key">
     @foreach (var facet in facets)
     {
-        <div class="facet-item facet-check" data-href="@Url.FacetToggle(facet)">
-            <label>
-                <input class="facet-control-native" type="checkbox" value="@facet.Value.ToString()" attr-checked='(facet.Value.IsSelected, "checked")' />
-                <span class="facet-control-ui"></span>
+        <div class="facet-item facet-check">
+            <label class="facet-control-label">
+                <input class="facet-control-native"
+                       type="checkbox"
+                       id="optcheck-@(facet.Value.Key)"
+                       value="@facet.Value.ToString()"
+                       role="option"
+                       aria-selected="@facet.Value.IsSelected.ToString().ToLower()"
+                       attr-checked='(facet.Value.IsSelected, "checked")'
+                       data-href="@Url.FacetToggle(facet)" />
+                <span class="facet-control-ui" aria-hidden="true"></span>
                 <span class="facet-label has-count" attr-data-count='(facet.HitCount > 0, facet.HitCount.ToString("N0"))'>
                     @(facet.Value.Label ?? facet.Value.ToString())
                 </span>

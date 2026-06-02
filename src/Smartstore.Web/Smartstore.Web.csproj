@@ -13,28 +13,31 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-		<PackageReference Include="Azure.Core" Version="1.45.0" />
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
+		<PackageReference Include="Azure.Core" Version="1.57.0" />
 		<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.4" />
-		<PackageReference Include="Microsoft.ClearScript.V8" Version="7.5.0" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.5.0" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.osx-x64" Version="7.5.0" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.0" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x86" Version="7.5.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.13.0" />
+		<PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.4.0" />
+		<PackageReference Include="Microsoft.ClearScript.V8" Version="7.5.1" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.5.1" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.osx-x64" Version="7.5.1" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.1" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x86" Version="7.5.1" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.3.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.3.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="6.0.36" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="6.0.36" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.4">
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.13.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.13.0" />
-		<PackageReference Include="System.Runtime.Caching" Version="9.0.4" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="5.3.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.3.0">
+            <!-- Prevents BuildHost folders from being copied into the project -->
+            <ExcludeAssets>contentFiles</ExcludeAssets>
+        </PackageReference>
+		<PackageReference Include="System.Runtime.Caching" Version="10.0.8" />
         <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
 	</ItemGroup>
 
@@ -89,6 +92,9 @@
 	<ItemGroup>
         <Content Remove="wwwroot\lib\bi\bootstrap-icons-all.svg" CopyToPublishDirectory="Never" />
         <Content Remove="wwwroot\lib\fontastic\icomoon\**" CopyToPublishDirectory="Never" />
+        <Content Remove="wwwroot\exchange\**" CopyToPublishDirectory="Never" />
+        <Content Remove="wwwroot\.well-known\**" CopyToPublishDirectory="Never" />
+        <Content Remove="wwwroot\css\compiled\**" CopyToPublishDirectory="Never" />
         <!-- Don't publish README files in wwwroot -->
         <None Include="wwwroot\**\README.md" CopyToPublishDirectory="Never" />
 	</ItemGroup>

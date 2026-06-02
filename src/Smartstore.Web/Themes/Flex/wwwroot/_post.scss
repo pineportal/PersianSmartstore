@@ -1,0 +1,72 @@
+/// <reference path="references.scss" />
+
+// Shared
+.post-date {
+    // TODO: (mh) This here must be blog-agnostic.
+    color: var(--blog-post-date-color, $text-muted);
+}
+
+// Details view of post
+.post { 
+
+}
+
+// List view of postitems
+.postlist {
+    .post-date {
+        font-size: $font-size-sm;
+    }
+}
+
+.postlist-item {
+    overflow: hidden;
+
+    &.unpublished {
+        opacity: 0.5;
+    }
+}
+
+.postlist-item-centered-picture {
+    --img-aspect-ratio: 0.5;
+    --shadow-intensity: 1.75 !important;
+    display: block;
+    overflow: hidden;
+    margin-bottom: 0;
+    border-radius: var(--border-radius-md);
+
+    > img {
+        object-fit: cover;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.postlist-item-overlay {
+    position: absolute;
+    z-index: 3;
+}
+
+.postlist-item-overlay-tags {
+    gap: 3px;
+    flex-wrap: wrap;
+}
+
+.postlist-item-tag {
+    --badge-ring-opacity: 0.4;
+}
+
+// Comments
+.post-comment-item {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba($black, 0.12);
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.post-commentlist-title {
+    border-bottom-width: 0 !important;
+    margin-bottom: 0 !important;
+}

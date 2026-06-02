@@ -5,7 +5,7 @@
 
 ; (function ($, window, document, undefined) {
 
-    var methods = {
+    const methods = {
         loadDialog: function (options) {
             options = normalizeOptions(options, this);
 
@@ -24,13 +24,13 @@
             return this.each(function () {
                 fillList(this, options);
             });
-        },
-
-        itemClick: function () {
-            return this.each(function () {
-                itemClick(this);
-            });
         }
+
+        //itemClick: function () {
+        //    return this.each(function () {
+        //        itemClick(this);
+        //    });
+        //},
     };
 
     $.fn.entityPicker = function (method) {
@@ -159,6 +159,11 @@
         }
 
         if (dialog.length) {
+            if (!opt.targetInput) {
+                // Clear selection if there is no target for selected values.
+                dialog.find('input[name=Selected]').val('');
+            }
+
             showAndFocusDialog();
         }
         else {
@@ -197,10 +202,11 @@
     }
 
     function initDialog(context) {
-        var dialog = $(context);
-        var keyUpTimer = null;
-        var currentValue = '';
-
+        let dialog = $(context);
+        let keyUpTimer = null;
+        let currentValue = '';
+        let unselectedItems = [];
+        
         // search entities
         dialog.find('button[name=SearchEntities]').on('click', function (e) {
             e.preventDefault();
@@ -270,10 +276,15 @@
             }
             else if (item.hasClass('selected')) {
                 item.removeClass('selected');
+                if (!item.hasClass('touched')) {
+                    unselectedItems.push(toInt(item.data('returnvalue')));
+                }
             }
             else if (data.maxItems === 0 || list.find('.selected').length < data.maxItems) {
                 item.addClass('selected');
             }
+
+            item.addClass('touched');
 
             dialog.find('.modal-footer .btn-primary').prop('disabled', list.find('.selected').length <= 0);
         }).on({
@@ -287,27 +298,31 @@
             }
         }, '.entpicker-item');
 
+        dialog.on('hidden.bs.modal', () => {
+            unselectedItems = [];
+        });
+
         // return value(s)
         dialog.find('.modal-footer .btn-primary').on('click', function () {
             var dialog = $(this).closest('.entpicker');
-            var items = dialog.find('.entpicker-list .selected');
             var opts = dialog.data('entitypicker');
             var returnId = opts.returnField.toLowerCase() === 'id';
 
-            var selectedItems = _.map(items, function (val) {
+            var visibleSelectedItems = _.map(dialog.find('.entpicker-list .selected'), (val) => {
                 return {
                     id: $(val).data('returnvalue'),
                     name: $(val).find('.title').attr('title')
                 };
             });
 
-            var selectedValues = _.uniq(_.map(selectedItems, function (x) {
+            var visibleSelectedValues = _.uniq(_.map(visibleSelectedItems, function (x) {
                 return returnId && !_.isNumber(x.id) ? toInt(x.id) : x.id;
             }));
 
-            if (opts.appendMode && _.isArray(opts.selected)) {
-                selectedValues = _.union(opts.selected, selectedValues);
-            }
+            var preSelectedValues = _.isArray(opts.selected) ? opts.selected : [];
+            var selectedValues = opts.appendMode
+                ? _.union(_.difference(preSelectedValues, unselectedItems), visibleSelectedValues)
+                : visibleSelectedValues;
 
             var selectedValuesStr = selectedValues.join(opts.delim);
 
@@ -318,7 +333,7 @@
             dialog.find('input[name=Selected]').val(selectedValuesStr);
 
             if (_.isFunction(window[opts.onSelectionCompleted])) {
-                if (window[opts.onSelectionCompleted](selectedValues, selectedItems, dialog)) {
+                if (window[opts.onSelectionCompleted](selectedValues, visibleSelectedItems, dialog)) {
                     dialog.modal('hide');
                 }
             }
@@ -328,7 +343,7 @@
         });
 
         // cancel
-        dialog.find('button.entpicker-cancel').on('click', function () {
+        dialog.find('button.entpicker-cancel').on('click', () => {
             dialog.find('.entpicker-list').empty();
             dialog.find('.footer-note span').hide();
             dialog.find('.modal-footer .btn-primary').prop('disabled', true);

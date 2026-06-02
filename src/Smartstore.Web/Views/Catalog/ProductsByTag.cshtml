@@ -12,6 +12,10 @@
     }
 
     ViewBag.HideLeftCol = true; // ...on mobile
+
+    var languageAttributes = Model.TagName.HasValue() && Model.TagName.BidiOverride && Model.TagName.CurrentLanguage.Rtl
+        ? $" lang=\"{Model.TagName.CurrentLanguage.GetTwoLetterISOLanguageName()}\" dir=\"rtl\""
+        : string.Empty;
 }
 
 <widget target-zone="left">
@@ -20,14 +24,9 @@
 
 <div class="page product-tag-page">
     <div class="page-title">
-        @{
-            var langAttrs = string.Empty;
-            if (Model.TagName.HasValue() && Model.TagName.BidiOverride && Model.TagName.CurrentLanguage.Rtl)
-            {
-                langAttrs = $" lang=\"{Model.TagName.CurrentLanguage.GetTwoLetterISOLanguageName()}\" dir=\"rtl\"";
-            }
-        }
-        <h1 class="h3 d-flex align-items-baseline">@Html.Raw(T("Products.Tags.ProductsTaggedWith", $"<small{langAttrs} class='search-term'>{Model.TagName}</small>"))</h1>
+        <h1 class="h3 d-flex align-items-baseline">
+            @Html.Raw(T("Products.Tags.ProductsTaggedWith", $"<small{languageAttributes} class='search-term'>{Model.TagName}</small>"))
+        </h1>
 
         @if (Model.SearchResult.TotalHitsCount > 0)
         {

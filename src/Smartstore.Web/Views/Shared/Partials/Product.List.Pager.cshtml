@@ -51,19 +51,34 @@
 {
     <div class="artlist-action--pagesize d-none d-sm-block">
         <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle d-inline-block fwn" data-toggle="dropdown">
+            <button id="artlist-pagesize-button"
+                    type="button" 
+                    class="btn btn-secondary dropdown-toggle d-inline-block fwn" 
+                    data-toggle="dropdown" 
+                    role="combobox" 
+                    aria-haspopup="listbox" 
+                    aria-expanded="false" 
+                    aria-controls="artlist-pagesize-list"
+                    aria-activedescendant="artlist-pagesize-@pageable.PageSize">
+                <span class="sr-only">@T("Aria.Label.PaginatorItemsPerPage")</span>
                 @Html.Raw(T("Pager.XPerPage", $"<span class='fwm'>{pageable.PageSize}</span>"))
             </button>
-            <div class="dropdown-menu">
+            <div id="artlist-pagesize-list" class="dropdown-menu" role="listbox" aria-labelledby="artlist-pagesize-button">
                 @foreach (var size in Model.AvailablePageSizes)
                 {
-                    <a href="@Display.ModifyQueryString(null, $"?s={size}", removeParamName: "i")" class="dropdown-item">@size</a>
+                    <a id="artlist-pagesize-@size"
+                       href="@Display.ModifyQueryString(null, $"?s={size}", removeParamName: "i")" 
+                       class="dropdown-item" 
+                       role="option"
+                       attr-aria-selected='(size == pageable.PageSize, "true")'>
+                       @size
+                    </a>
                 }
             </div>
         </div>
     </div>
 
-    <div class="vr text-body-tertiary d-none d-sm-block mx-2"></div>
+    <div class="vr text-body-tertiary d-none d-sm-block mx-2" aria-hidden="true" role="presentation"></div>
 }
 
 <pagination

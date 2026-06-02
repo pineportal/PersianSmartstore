@@ -7,88 +7,87 @@ using MySqlConnector;
 using Smartstore.Data.MySql.Translators;
 using Smartstore.Data.Providers;
 
-namespace Smartstore.Data.MySql
+namespace Smartstore.Data.MySql;
+
+internal class MySqlDbFactory : DbFactory
 {
-    internal class MySqlDbFactory : DbFactory
+    public override DbSystemType DbSystem { get; } = DbSystemType.MySql;
+
+    public override DbConnectionStringBuilder CreateConnectionStringBuilder(string connectionString)
+        => new MySqlConnectionStringBuilder(connectionString) { AllowUserVariables = true, UseAffectedRows = false };
+
+    public override DbConnectionStringBuilder CreateConnectionStringBuilder(
+        string server,
+        string database,
+        string userId,
+        string password)
     {
-        public override DbSystemType DbSystem { get; } = DbSystemType.MySql;
+        Guard.NotEmpty(server);
 
-        public override DbConnectionStringBuilder CreateConnectionStringBuilder(string connectionString)
-            => new MySqlConnectionStringBuilder(connectionString) { AllowUserVariables = true, UseAffectedRows = false };
-
-        public override DbConnectionStringBuilder CreateConnectionStringBuilder(
-            string server,
-            string database,
-            string userId,
-            string password)
+        var builder = new MySqlConnectionStringBuilder
         {
-            Guard.NotEmpty(server);
+            Server = server,
+            Database = database,
+            UserID = userId,
+            Password = password,
+            Pooling = true,
+            MinimumPoolSize = 1,
+            MaximumPoolSize = 1024,
+            AllowUserVariables = true,
+            UseAffectedRows = false
+        };
 
-            var builder = new MySqlConnectionStringBuilder
-            {
-                Server = server,
-                Database = database,
-                UserID = userId,
-                Password = password,
-                Pooling = true,
-                MinimumPoolSize = 1,
-                MaximumPoolSize = 1024,
-                AllowUserVariables = true,
-                UseAffectedRows = false
-            };
+        return builder;
+    }
 
-            return builder;
-        }
+    public override DataProvider CreateDataProvider(DatabaseFacade database)
+        => new MySqlDataProvider(database);
 
-        public override DataProvider CreateDataProvider(DatabaseFacade database)
-            => new MySqlDataProvider(database);
+    public override TContext CreateDbContext<TContext>(string connectionString, int? commandTimeout = null)
+    {
+        Guard.NotEmpty(connectionString);
 
-        public override TContext CreateDbContext<TContext>(string connectionString, int? commandTimeout = null)
-        {
-            Guard.NotEmpty(connectionString);
-
-            var optionsBuilder = new DbContextOptionsBuilder<TContext>()
-                .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), sql =>
-                {
-                    sql.EnablePrimitiveCollectionsSupport(true);
-                    sql.TranslateParameterizedCollectionsToConstants();
-                    sql.CommandTimeout(commandTimeout);
-                })
-                .ReplaceService<IMethodCallTranslatorProvider, MySqlMappingMethodCallTranslatorProvider>();
-
-            return (TContext)Activator.CreateInstance(typeof(TContext), [optionsBuilder.Options]);
-        }
-
-        public override DbContextOptionsBuilder ConfigureDbContext(DbContextOptionsBuilder builder, string connectionString)
-        {
-            Guard.NotNull(builder);
-            Guard.NotEmpty(connectionString);
-
-            return builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), sql =>
+        var optionsBuilder = new DbContextOptionsBuilder<TContext>()
+            .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), sql =>
             {
                 sql.EnablePrimitiveCollectionsSupport(true);
-                sql.TranslateParameterizedCollectionsToConstants();
-
-                var extension = builder.Options.FindExtension<DbFactoryOptionsExtension>();
-                if (extension != null)
-                {
-                    if (extension.CommandTimeout.HasValue)
-                        sql.CommandTimeout(extension.CommandTimeout.Value);
-
-                    if (extension.MinBatchSize.HasValue)
-                        sql.MinBatchSize(extension.MinBatchSize.Value);
-
-                    if (extension.MaxBatchSize.HasValue)
-                        sql.MaxBatchSize(extension.MaxBatchSize.Value);
-
-                    if (extension.QuerySplittingBehavior.HasValue)
-                        sql.UseQuerySplittingBehavior(extension.QuerySplittingBehavior.Value);
-
-                    if (extension.UseRelationalNulls.HasValue)
-                        sql.UseRelationalNulls(extension.UseRelationalNulls.Value);
-                }
+                sql.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                sql.CommandTimeout(commandTimeout);
             })
             .ReplaceService<IMethodCallTranslatorProvider, MySqlMappingMethodCallTranslatorProvider>();
-        }
+
+        return (TContext)Activator.CreateInstance(typeof(TContext), [optionsBuilder.Options]);
+    }
+
+    public override DbContextOptionsBuilder ConfigureDbContext(DbContextOptionsBuilder builder, string connectionString)
+    {
+        Guard.NotNull(builder);
+        Guard.NotEmpty(connectionString);
+
+        return builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), sql =>
+        {
+            sql.EnablePrimitiveCollectionsSupport(true);
+            sql.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+
+            var extension = builder.Options.FindExtension<DbFactoryOptionsExtension>();
+            if (extension != null)
+            {
+                if (extension.CommandTimeout.HasValue)
+                    sql.CommandTimeout(extension.CommandTimeout.Value);
+
+                if (extension.MinBatchSize.HasValue)
+                    sql.MinBatchSize(extension.MinBatchSize.Value);
+
+                if (extension.MaxBatchSize.HasValue)
+                    sql.MaxBatchSize(extension.MaxBatchSize.Value);
+
+                if (extension.QuerySplittingBehavior.HasValue)
+                    sql.UseQuerySplittingBehavior(extension.QuerySplittingBehavior.Value);
+
+                if (extension.UseRelationalNulls.HasValue)
+                    sql.UseRelationalNulls(extension.UseRelationalNulls.Value);
+            }
+        })
+        .ReplaceService<IMethodCallTranslatorProvider, MySqlMappingMethodCallTranslatorProvider>();
     }
 }

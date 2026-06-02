@@ -1,68 +1,67 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
 
-namespace Smartstore.Core.Logging.Serilog
+namespace Smartstore.Core.Logging.Serilog;
+
+public sealed class LogFilePathEnricher : ILogEventEnricher
 {
-    public sealed class LogFilePathEnricher : ILogEventEnricher
+    const string DefaultLogFilePath = "App_Data/Logs/Smartstore-.log";
+
+    private string _cachedLogFilePath;
+    private LogEventProperty _cachedLogFilePathProperty;
+
+    public const string LogFilePathPropertyName = "LogFilePath";
+
+    public void Enrich(LogEvent e, ILogEventPropertyFactory propertyFactory)
     {
-        const string DefaultLogFilePath = "App_Data/Logs/Smartstore-.log";
+        var logFilePath = ExtractPathFromSourceContext(e.GetSourceContext());
 
-        private string _cachedLogFilePath;
-        private LogEventProperty _cachedLogFilePathProperty;
-
-        public const string LogFilePathPropertyName = "LogFilePath";
-
-        public void Enrich(LogEvent e, ILogEventPropertyFactory propertyFactory)
+        if (logFilePath != null)
         {
-            var logFilePath = ExtractPathFromSourceContext(e.GetSourceContext());
+            LogEventProperty logFilePathProperty;
 
-            if (logFilePath != null)
+            if (logFilePath.Equals(_cachedLogFilePath, StringComparison.OrdinalIgnoreCase))
             {
-                LogEventProperty logFilePathProperty;
-
-                if (logFilePath.Equals(_cachedLogFilePath, StringComparison.OrdinalIgnoreCase))
-                {
-                    // Path hasn't changed, so let's use the cached property
-                    logFilePathProperty = _cachedLogFilePathProperty;
-                }
-                else
-                {
-                    // We've got a new path for the log. Let's create a new property
-                    // and cache it for future log events to use
-                    _cachedLogFilePath = logFilePath;
-
-                    _cachedLogFilePathProperty = logFilePathProperty =
-                        propertyFactory.CreateProperty(LogFilePathPropertyName, logFilePath);
-                }
-
-                e.AddPropertyIfAbsent(logFilePathProperty);
+                // Path hasn't changed, so let's use the cached property
+                logFilePathProperty = _cachedLogFilePathProperty;
             }
+            else
+            {
+                // We've got a new path for the log. Let's create a new property
+                // and cache it for future log events to use
+                _cachedLogFilePath = logFilePath;
+
+                _cachedLogFilePathProperty = logFilePathProperty =
+                    propertyFactory.CreateProperty(LogFilePathPropertyName, logFilePath);
+            }
+
+            e.AddPropertyIfAbsent(logFilePathProperty);
+        }
+    }
+
+    private static string ExtractPathFromSourceContext(string sourceContext)
+    {
+        if (string.IsNullOrEmpty(sourceContext))
+        {
+            return null;
         }
 
-        private static string ExtractPathFromSourceContext(string sourceContext)
+        var index = sourceContext.IndexOf('/');
+
+        if (index == -1)
         {
-            if (string.IsNullOrEmpty(sourceContext))
-            {
-                return null;
-            }
-
-            var index = sourceContext.IndexOf('/');
-
-            if (index == -1)
-            {
-                return DefaultLogFilePath;
-            }
-
-            var path = sourceContext[index..].Trim('/');
-            var ext = Path.GetExtension(path);
-            var isFullPath = ext == ".log" || ext == ".txt";
-
-            if (!isFullPath)
-            {
-                path += "/log-.log";
-            }
-
-            return path;
+            return DefaultLogFilePath;
         }
+
+        var path = sourceContext[index..].Trim('/');
+        var ext = Path.GetExtension(path);
+        var isFullPath = ext == ".log" || ext == ".txt";
+
+        if (!isFullPath)
+        {
+            path += "/log-.log";
+        }
+
+        return path;
     }
 }

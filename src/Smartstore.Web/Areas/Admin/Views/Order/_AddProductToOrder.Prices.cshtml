@@ -1,0 +1,58 @@
+﻿@model AddOrderProductModel
+
+@{
+    var primaryCurrencyCode = (string)ViewBag.PrimaryStoreCurrencyCode;
+    // TODO: (mg) Change resources: Inkl./Excl. Steuern --> Brutto/Netto
+    // TODO: (mg) Very awkward to enter gross, net, and tax amounts without automatic calculation. TBD with MC.
+}
+
+<div class="adminContent">
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="UnitPriceInclTax" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="UnitPriceInclTax" sm-postfix="@primaryCurrencyCode" />
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="UnitPriceExclTax" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="UnitPriceExclTax" sm-postfix="@primaryCurrencyCode" />
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="TaxRate" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="TaxRate" />
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="Quantity" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="Quantity" />
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="PriceInclTax" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="PriceInclTax" sm-postfix="@primaryCurrencyCode" />
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="PriceExclTax" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="PriceExclTax" sm-postfix="@primaryCurrencyCode" />
+        </div>
+    </div>
+</div>

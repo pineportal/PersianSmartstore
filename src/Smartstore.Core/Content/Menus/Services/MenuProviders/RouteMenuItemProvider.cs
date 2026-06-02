@@ -1,36 +1,29 @@
 ﻿using Smartstore.Collections;
-using Smartstore.Core.Localization;
+using Smartstore.Utilities;
 
-namespace Smartstore.Core.Content.Menus
+namespace Smartstore.Core.Content.Menus;
+
+[MenuItemProvider("route")]
+public class RouteMenuItemProvider : MenuItemProviderBase
 {
-    [MenuItemProvider("route")]
-    public class RouteMenuItemProvider : MenuItemProviderBase
+    protected override Task ApplyLinkAsync(MenuItemProviderRequest request, TreeNode<MenuItem> node)
     {
-        protected override Task ApplyLinkAsync(MenuItemProviderRequest request, TreeNode<MenuItem> node)
+        CommonHelper.TryAction(() => node.ApplyRouteData(request.Entity.Model));
+
+        if (request.IsEditMode)
         {
-            try
+            var item = node.Value;
+
+            item.Summary = T("Providers.MenuItems.FriendlyName.Route");
+            item.Icon = "fas fa-route";
+
+            if (!item.HasRoute)
             {
-                node.ApplyRouteData(request.Entity.Model);
+                item.Text = null;
+                item.ResKey = "Admin.ContentManagement.Menus.SpecifyLinkTarget";
             }
-            catch
-            {
-            }
-
-            if (request.IsEditMode)
-            {
-                var item = node.Value;
-
-                item.Summary = T("Providers.MenuItems.FriendlyName.Route");
-                item.Icon = "fas fa-route";
-
-                if (!item.HasRoute)
-                {
-                    item.Text = null;
-                    item.ResKey = "Admin.ContentManagement.Menus.SpecifyLinkTarget";
-                }
-            }
-
-            return Task.CompletedTask;
         }
+
+        return Task.CompletedTask;
     }
 }

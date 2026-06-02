@@ -1,117 +1,109 @@
 ﻿using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using NuGet.Common;
-using NuGet.Configuration;
 using NuGet.Packaging;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 
-namespace Smartstore.Engine.Modularity.NuGet
+namespace Smartstore.Engine.Modularity.NuGet;
+
+internal static class NuGetExtensions
 {
-    internal static class NuGetExtensions
+    private static readonly string[] PackageBaseAddressUrl = { "PackageBaseAddress/3.0.0" };
+
+    public static Task<JsonObject> GetJsonObjectAsync(this HttpSource source,
+        Uri uri,
+        HttpSourceCacheContext cacheContext,
+        ILogger log,
+        CancellationToken token)
     {
-        private static readonly string[] PackageBaseAddressUrl = { "PackageBaseAddress/3.0.0" };
+        var cacheKey = GetHashKey(uri);
 
-        public static SourceRepository GetCoreV3Custom(this Repository.RepositoryFactory factory, PackageSource source)
+        var request = new HttpSourceCachedRequest(uri.AbsoluteUri, cacheKey, cacheContext)
         {
-            var providers = Repository.Provider.GetCoreV3()
-                .Concat(new[] { new Lazy<INuGetResourceProvider>(() => new HttpHandlerResourceV3NoProxyProvider()) });
+            EnsureValidContents = stream => LoadJsonAsync(stream, true).Await(),
+            IgnoreNotFounds = false
+        };
 
-            return Repository.CreateSource(providers, source);
-        }
+        return source.GetAsync(request, ProcessJson, log, token);
+    }
 
-        public static Task<JObject> GetJObjectAsync(this HttpSource source,
-            Uri uri,
-            HttpSourceCacheContext cacheContext,
-            ILogger log,
-            CancellationToken token)
+    public static Task<HttpSourceResult> GetNupkgAsync(this HttpSource source,
+        Uri uri,
+        HttpSourceCacheContext cacheContext,
+        ILogger log,
+        CancellationToken cancelToken)
+    {
+        var cacheKey = GetHashKey(uri);
+
+        var request = new HttpSourceCachedRequest(uri.AbsoluteUri, cacheKey, cacheContext)
         {
-            var cacheKey = GetHashKey(uri);
-
-            var request = new HttpSourceCachedRequest(uri.AbsoluteUri, cacheKey, cacheContext)
+            IgnoreNotFounds = false,
+            EnsureValidContents = stream =>
             {
-                EnsureValidContents = stream => LoadJsonAsync(stream, true).Await(),
-                IgnoreNotFounds = false
-            };
-
-            return source.GetAsync(request, ProcessJson, log, token);
-        }
-
-        public static Task<HttpSourceResult> GetNupkgAsync(this HttpSource source,
-            Uri uri,
-            HttpSourceCacheContext cacheContext,
-            ILogger log,
-            CancellationToken cancelToken)
-        {
-            var cacheKey = GetHashKey(uri);
-
-            var request = new HttpSourceCachedRequest(uri.AbsoluteUri, cacheKey, cacheContext)
-            {
-                IgnoreNotFounds = false,
-                EnsureValidContents = stream =>
+                using (var reader = new PackageArchiveReader(stream, leaveStreamOpen: true))
                 {
-                    using (var reader = new PackageArchiveReader(stream, leaveStreamOpen: true))
-                    {
-                        reader.NuspecReader.GetIdentity();
-                    }
+                    reader.NuspecReader.GetIdentity();
                 }
-            };
-
-            return source.GetAsync(request, result => Task.FromResult(result), log, cancelToken);
-        }
-
-        private static string GetHashKey(Uri uri)
-        {
-            return uri.AbsolutePath
-                .Replace('/', '_')
-                .Replace('\\', '_')
-                .Replace(':', '_');
-        }
-
-        private static Task<JObject> ProcessJson(HttpSourceResult result)
-        {
-            return LoadJsonAsync(result.Stream, false);
-        }
-
-        private static async Task<JObject> LoadJsonAsync(Stream stream, bool leaveOpen)
-        {
-            if (stream.CanSeek)
-            {
-                stream.Position = 0;
             }
+        };
 
-            using (var reader = new StreamReader(stream, Encoding.UTF8, false, 8192, leaveOpen))
-            using (var jsonReader = new JsonTextReader(reader))
-            {
-                // Avoid error prone json.net date handling
-                jsonReader.DateParseHandling = DateParseHandling.None;
+        return source.GetAsync(request, result => Task.FromResult(result), log, cancelToken);
+    }
 
-                var json = await JObject.LoadAsync(jsonReader, new JsonLoadSettings()
-                {
-                    LineInfoHandling = LineInfoHandling.Ignore,
-                    CommentHandling = CommentHandling.Ignore,
-                });
+    private static string GetHashKey(Uri uri)
+    {
+        return uri.AbsolutePath
+            .Replace('/', '_')
+            .Replace('\\', '_')
+            .Replace(':', '_');
+    }
 
-                return json;
-            }
-        }
+    private static Task<JsonObject> ProcessJson(HttpSourceResult result)
+    {
+        return LoadJsonAsync(result.Stream, false);
+    }
 
-        public static Uri GetPackageBaseAddressUri(this ServiceIndexResourceV3 serviceIndex)
+    private static async Task<JsonObject> LoadJsonAsync(Stream stream, bool leaveOpen)
+    {
+        if (stream.CanSeek)
         {
-            return serviceIndex.GetServiceUri(PackageBaseAddressUrl);
+            stream.Position = 0;
         }
 
-        public static Uri GetServiceUri(this ServiceIndexResourceV3 serviceIndex, string[] types)
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 8192, leaveOpen: leaveOpen);
+        var options = new JsonDocumentOptions
         {
-            var uris = serviceIndex.GetServiceEntryUris(types);
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
 
-            if (uris.Count < 1)
-            {
-                throw new InvalidDataException($"Unable to find a service of type: {string.Join(", ", types)}. Verify the index.json file contains this entry.");
-            }
+        using var doc = await JsonDocument.ParseAsync(reader.BaseStream, options).ConfigureAwait(false);
+        var node = JsonNode.Parse(doc.RootElement.GetRawText());
 
-            return uris[0];
+        if (node is not JsonObject obj)
+        {
+            throw new InvalidDataException("Expected a JSON object.");
         }
+
+        return obj;
+    }
+
+    public static Uri GetPackageBaseAddressUri(this ServiceIndexResourceV3 serviceIndex)
+    {
+        return serviceIndex.GetServiceUri(PackageBaseAddressUrl);
+    }
+
+    public static Uri GetServiceUri(this ServiceIndexResourceV3 serviceIndex, string[] types)
+    {
+        var uris = serviceIndex.GetServiceEntryUris(types);
+
+        if (uris.Count < 1)
+        {
+            throw new InvalidDataException($"Unable to find a service of type: {string.Join(", ", types)}. Verify the index.json file contains this entry.");
+        }
+
+        return uris[0];
     }
 }

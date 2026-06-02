@@ -34,7 +34,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.x
+        dotnet-version: 10.x
 
     - name: Build
       run: dotnet build Smartstore.sln -c Release
@@ -59,7 +59,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: | 
         dotnet publish src/Smartstore.Web/Smartstore.Web.csproj -c Release -o ./.build/release --no-restore --no-build --no-self-contained
-        docker build --build-arg SOURCE=./.build/release -f NoBuild.Dockerfile -t ghcr.io/smartstore/smartstore-linux:nightly .
+        docker build --provenance=false --build-arg SOURCE=./.build/release -f NoBuild.Dockerfile -t ghcr.io/smartstore/smartstore-linux:nightly .
         docker push ghcr.io/smartstore/smartstore-linux:nightly
         #docker build --build-arg VERSION=nightly -f NoBuild.Dockerfile -t smartstore/smartstore-linux:nightly .
         #docker push smartstore/smartstore-linux:nightly
@@ -73,4 +73,42 @@ jobs:
         #docker build --build-arg VERSION=nightly -f NoBuild.Dockerfile -t smartstore/smartstore-windows:nightly .
         #docker push smartstore/smartstore-windows:nightly
 
+  cleanup-old-packages:
+    name: Delete untagged nightly package versions
+    needs: publish-nightly
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      matrix:
+        package: [smartstore-linux, smartstore-windows]
+    steps:
+    - name: Delete untagged versions of ${{ matrix.package }}
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.DELETE_PACKAGES_TOKEN }}
+        script: |
+          const versions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+            package_type: 'container',
+            package_name: '${{ matrix.package }}',
+            org: 'smartstore',
+            per_page: 100
+          });
+
+          const untagged = versions.data.filter(v => !v.metadata?.container?.tags?.length);
+          console.log(`Found ${untagged.length} untagged versions`);
+
+          for (const v of untagged) {
+            try {
+              await github.rest.packages.deletePackageVersionForOrg({
+                package_type: 'container',
+                package_name: '${{ matrix.package }}',
+                org: 'smartstore',
+                package_version_id: v.id
+              });
+              console.log(`Deleted: ${v.id} (${v.name})`);
+            } catch (err) {
+              console.log(`Failed to delete ${v.id}: ${err.message}`);
+            }
+          }
 

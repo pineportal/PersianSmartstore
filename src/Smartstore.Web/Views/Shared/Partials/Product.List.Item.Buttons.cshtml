@@ -8,10 +8,11 @@
     var price = Model.Price;
     var isLinesMode = list.ViewMode == ProductSummaryViewMode.List;
     string artDetailUrl = ViewBag.ArtDetailUrl;
+    var detailsTitle = T("Products.Details");
 
     void RenderBuyButton(bool blockStyle)
     {
-        var cssClasses = blockStyle ? "btn-block d-none d-md-block" : "btn-lg art-btn col";
+        var cssClasses = blockStyle ? "btn-block d-none d-md-block" : "btn-lg art-btn focus-inset col";
         if (!blockStyle && isLinesMode)
         {
             cssClasses += " d-md-none";
@@ -21,15 +22,18 @@
             var addToCartUrl = Url.Action("AddProductSimple", "ShoppingCart", new { productId = Model.Id, forceredirection = Model.Parent.ForceRedirectionAfterAddingToCart, area = "" });
             var title = (Model.Price.AvailableForPreOrder ? T("ShoppingCart.PreOrder") : T("ShoppingCart.AddToCart"));
 
-            <a data-href='@addToCartUrl'
-               href="#"
-               class="btn btn-primary ajax-cart-link px-sm-2 @cssClasses add-to-cart-button"
-               title="@title"
-               data-toggle='@(!blockStyle ? "tooltip" : "")' data-placement="bottom"
-               rel="nofollow"
-               data-type="cart"
-               data-action="add">
-                <i class="fa fa-cart-arrow-down"></i>
+            <button data-href='@addToCartUrl'
+                    type="button"
+                    class="btn btn-primary ajax-cart-link px-sm-2 @cssClasses add-to-cart-button"
+                    aria-label="@title - @Model.Name"
+                    title="@title" 
+                    data-toggle='@(!blockStyle ? "tooltip" : "")'
+                    data-placement="bottom"
+                    data-fallback-placement="clockwise"
+                    data-boundary="window"
+                    data-type="cart" 
+                    data-action="add">
+                <i class="fa fa-cart-arrow-down" aria-hidden="true"></i>
                 @if (blockStyle)
                 {
                     <span>@title</span>
@@ -38,24 +42,30 @@
                 {
                     <span class="d-none d-sm-inline">@title</span>
                 }
-            </a>
+            </button>
         }
         else
         {
+            var callForPriceTitle = T("Products.CallForPrice.GoToForm");
             <a href="@Url.Action("AskQuestion", "Product", new { id = Model.Id, area = "" })"
                class="btn @(blockStyle ? "btn-light" : "btn-gray") @cssClasses"
-               data-toggle='@(!blockStyle ? "tooltip" : "")' data-placement="bottom"
+               data-toggle='@(!blockStyle ? "tooltip" : "")' 
+               data-placement="bottom"
+               data-fallback-placement="clockwise"
+               data-boundary="window"
                rel="nofollow"
-               title="@T("Products.CallForPrice.GoToForm")">
-                <i class="fa fa-question"></i>
+               title="@callForPriceTitle"
+               aria-label="@callForPriceTitle - @Model.Name">
+                <i class="fa fa-question" aria-hidden="true"></i>
+
                 @if (blockStyle)
                 {
-                    <span>@T("Products.CallForPrice.GoToForm")</span>
+                    <span>@callForPriceTitle</span>
                 }
                 else if (isLinesMode)
                 {
                     @* Show "Call for price" label on sm-only (enough space!) *@
-                    <span class="d-none d-sm-inline">@T("Products.CallForPrice.GoToForm")</span>
+                    <span class="d-none d-sm-inline">@callForPriceTitle</span>
                 }
             </a>
         }
@@ -77,16 +87,20 @@
 
     @if (!price.DisableWishlistButton && list.WishlistEnabled)
     {
-        <a data-href='@Url.Action("AddProductSimple", "ShoppingCart", new { productId = Model.Id, shoppingCartTypeId = (int)ShoppingCartType.Wishlist , area = "" })'
-           href="#"
-           class="btn btn-secondary btn-lg art-btn col ajax-cart-link add-to-wishlist-button" 
-           title="@T("Categories.Wishlist")"
-           data-toggle="tooltip" data-placement="bottom"
-           rel="nofollow"
-           data-type="wishlist"
-           data-action="add">
-            <i class="fal fa-heart"></i>
-        </a>
+        var wishlistTitle = T("Categories.Wishlist");
+        <button data-href='@Url.Action("AddProductSimple", "ShoppingCart", new { productId = Model.Id, shoppingCartTypeId = (int)ShoppingCartType.Wishlist , area = "" })'
+                class="btn btn-secondary btn-lg art-btn col ajax-cart-link add-to-wishlist-button focus-inset" 
+                type="button"
+                aria-label="@wishlistTitle - @Model.Name"
+                title="@wishlistTitle"
+                data-toggle="tooltip" 
+                data-placement="bottom"
+                data-fallback-placement="clockwise"
+                data-boundary="window"
+                data-type="wishlist" 
+                data-action="add">
+            <i class="fal fa-heart" aria-hidden="true"></i>
+        </button>
     }
     else if (isLinesMode)
     {
@@ -95,16 +109,20 @@
 
     @if (list.CompareEnabled)
     {
-        <a data-href="@Url.Action("AddProductToCompare", "Catalog", new { id = Model.Id, area = "" })"
-           href="#"
-           class="btn btn-secondary btn-lg art-btn col ajax-cart-link add-to-compare-list-button"
-           title="@T("Categories.Compare")"
-           data-toggle="tooltip" data-placement="bottom"
-           rel="nofollow"
-           data-type="compare"
-           data-action="add">
-            <i class="fa fa-retweet"></i>
-        </a>
+        var compareTitle = T("Categories.Compare");
+        <button data-href="@Url.Action("AddProductToCompare", "Catalog", new { id = Model.Id, area = "" })"
+                class="btn btn-secondary btn-lg art-btn col ajax-cart-link add-to-compare-list-button focus-inset"
+                type="button"
+                aria-label="@compareTitle - @Model.Name"
+                title="@compareTitle" 
+                data-toggle="tooltip" 
+                data-placement="bottom"
+                data-fallback-placement="clockwise"
+                data-boundary="window"
+                data-type="compare" 
+                data-action="add">
+            <i class="fa fa-retweet" aria-hidden="true"></i>
+        </button>
     }
     else if (isLinesMode)
     {
@@ -112,9 +130,13 @@
     }
 
     <a href='@Model.DetailUrl'
-       class="btn btn-secondary btn-lg art-btn col product-details-button"
-       title="@T("Products.Details")"
-       data-toggle="tooltip" data-placement="bottom">
-        <i class="fa fa-info"></i>
+       class="btn btn-secondary btn-lg art-btn col product-details-button focus-inset"
+       title="@detailsTitle"
+       aria-label="@detailsTitle - @Model.Name"
+       data-toggle="tooltip" 
+       data-placement="bottom"
+       data-fallback-placement="clockwise"
+       data-boundary="window">
+        <i class="fa fa-info" aria-hidden="true"></i>
     </a>
 </div>

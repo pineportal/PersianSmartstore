@@ -1,10 +1,9 @@
 ﻿using Smartstore.Engine.Modularity;
 
-namespace Smartstore.Events
+namespace Smartstore.Events;
+
+public class EventConsumerMetadata
 {
-    public class EventConsumerMetadata
-    {
-        public Type ContainerType { get; set; }
-        public IModuleDescriptor ModuleDescriptor { get; set; }
-    }
+    public Type ContainerType { get; set; }
+    public IModuleDescriptor ModuleDescriptor { get; set; }
 }

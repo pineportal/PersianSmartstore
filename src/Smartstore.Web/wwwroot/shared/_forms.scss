@@ -211,8 +211,22 @@ fieldset.content-group {
 .toggle-pwd-group {
     position: relative;
 
+    // Edge / Chromium (Edge): built-in password reveal + clear
+    > input[type="password"]::-ms-reveal,
+    > input[type="password"]::-ms-clear {
+        display: none;
+    }
+
     > .form-control {
         padding-inline-end: 2rem;
+    }
+
+    @if $enable-validation-icons {
+        // Shift the validation indicator symbol to the left to give our reveal icon more space
+        > .form-control:is(.is-valid, .is-invalid) {
+            padding-inline-end: calc(1.5 * #{$input-height-inner}) !important;
+            background-position: var(--validation-icon-xpos) calc(3.5 * #{$input-height-inner-quarter}) center;
+        }
     }
 }
 
@@ -266,8 +280,7 @@ fieldset.content-group {
 // Validation
 // ------------------------------------------------------
 
-.validation-summary-valid,
-.validation-summary-errors {
+:is(.validation-summary-valid, .validation-summary-errors) {
     @extend .alert;
 }
 
@@ -280,8 +293,7 @@ fieldset.content-group {
     @extend .alert-danger;
 }
 
-.field-validation-error,
-.field-validation-valid {
+:is(.field-validation-valid, .field-validation-error) {
     display: block;
     font-size: $font-size-sm;
     width: 100%;
@@ -299,11 +311,8 @@ fieldset.content-group {
 	color: $form-feedback-valid-color;
 }
 
-.is-valid,
-.is-invalid {
-	&:focus {
-		box-shadow: none !important;
-	}
+:is(.is-valid, .is-invalid):focus {
+    box-shadow: none !important;
 }
 
 .input-validation-error {
@@ -324,12 +333,23 @@ fieldset.content-group {
 // Link Builder (maybe move to custom file later)
 // ------------------------------------------------------
 
-.link-control > .form-control,
-.link-control > .select2 {
-	border-color: $input-border-color !important;
+.link-control {
+    min-width: 0;
+}
+
+.link-control > :is(.form-control, .select2) {
+    border-color: $input-border-color !important;
 }
 
 .link-control > .form-control:focus {
 	outline: 1px solid $input-focus-border-color;
 	outline-offset: -2px;
+}
+
+
+// Google reCAPTCHA
+// ------------------------------------------------------
+
+.grecaptcha-badge-hidden .grecaptcha-badge {
+    display: none !important;
 }

@@ -25,8 +25,8 @@
 
     <div asp-validation-summary="All"></div>
 
-    <tabstrip id="generalsettings-edit" sm-nav-style="Material">
-        <tab sm-title="@T("Admin.Configuration.Settings.Order.OrderSettings")" sm-selected="true">
+    <tabstrip id="ordersettings-edit" sm-nav-style="Material" sm-smart-tab-selection="Restore">
+        <tab sm-title="@T("Common.General")" sm-selected="true">
             <div class="adminContent">
                 <div class="adminRow">
                     <div class="adminTitle">
@@ -141,11 +141,9 @@
                 </div>
             </div>
         </tab>
-        <tab sm-title="@T("Admin.Configuration.Settings.Order.ReturnRequestSettings")">
+        <tab id="ReturnCaseSettings" sm-title="@T("Admin.Configuration.Settings.Order.ReturnRequestSettings")">
             <div class="alert alert-info alert-dismissible">
                 @Html.Raw(T("Admin.Configuration.Settings.Order.ReturnRequestsDescription1"))
-                <br />
-                @Html.Raw(T("Admin.Configuration.Settings.Order.ReturnRequestsDescription2"))
                 <button type="button" class="btn-close" data-dismiss="alert"></button>
             </div>
 

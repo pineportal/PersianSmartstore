@@ -1,10 +1,11 @@
-﻿namespace Smartstore.Core.Identity
+﻿using Smartstore.Events;
+
+namespace Smartstore.Core.Identity;
+
+/// <summary>
+/// An event message, which will be published after customer has logged in.
+/// </summary>
+public class CustomerSignedInEvent : IEventMessage
 {
-    /// <summary>
-    /// An event message, which will be published after customer has logged in.
-    /// </summary>
-    public class CustomerSignedInEvent
-    {
-        public Customer Customer { get; set; }
-    }
+    public Customer Customer { get; set; }
 }

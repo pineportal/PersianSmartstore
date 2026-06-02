@@ -3,30 +3,29 @@ using FluentMigrator.Expressions;
 using FluentMigrator.Runner.Conventions;
 using Smartstore.Core.Data.Migrations;
 
-namespace Smartstore.Data.PostgreSql.Migration
+namespace Smartstore.Data.PostgreSql.Migration;
+
+internal class PostgreSqlConventionSource : IConventionSource
 {
-    internal class PostgreSqlConventionSource : IConventionSource
+    public void Configure(IConventionSet conventionSet)
     {
-        public void Configure(IConventionSet conventionSet)
-        {
-            conventionSet.ColumnsConventions.Add(new CitextColumnsConvention());
-        }
+        conventionSet.ColumnsConventions.Add(new CitextColumnsConvention());
     }
+}
 
-    internal class CitextColumnsConvention : IColumnsConvention
+internal class CitextColumnsConvention : IColumnsConvention
+{
+    public IColumnsExpression Apply(IColumnsExpression expression)
     {
-        public IColumnsExpression Apply(IColumnsExpression expression)
+        foreach (var column in expression.Columns)
         {
-            foreach (var column in expression.Columns)
+            if (column.Type == DbType.String)
             {
-                if (column.Type == DbType.String)
-                {
-                    column.Type = null;
-                    column.CustomType = "citext";
-                }
+                column.Type = null;
+                column.CustomType = "citext";
             }
-
-            return expression;
         }
+
+        return expression;
     }
 }

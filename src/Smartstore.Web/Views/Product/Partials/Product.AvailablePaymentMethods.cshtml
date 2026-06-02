@@ -6,7 +6,7 @@
 }
 
 <div class="mt-4">
-    <h4 class="pd-payment-icons-heading fs-h6 pb-2">@T("Products.PaymentOptions.Heading")</h4>
+    <h2 class="pd-payment-icons-heading fs-h6 pb-2">@T("Products.PaymentOptions.Heading")</h2>
     <p class="pd-payment-icons-intro fs-sm text-muted">@T("Products.PaymentOptions.Intro")</p>
 </div>
 
@@ -14,7 +14,7 @@
     @foreach (var brand in ViewBag.AvailablePaymentMethods)
     {
         <div class="payment-brand">
-            <img class="img-fluid" src="@Url.Content(brand.Item2)" title="@brand.Item1" />
+            <img class="img-fluid" src="@Url.Content(brand.Item2)" title="@brand.Item1" alt="@brand.Item1" />
         </div>
     }
 </div>

@@ -91,7 +91,6 @@ h6, .h6 {
         display: inline-block;
         background: var(--body-bg, #fff);
         padding-inline-end: 1rem;
-        font-weight: $font-weight-normal;
     }
 }
 
@@ -99,7 +98,7 @@ h6, .h6 {
     text-align: center;
 
     &:before {
-        background: radial-gradient(ellipse at center, $body-bg 25%, rgba(#000, 0.25) 100%) !important;
+        background: radial-gradient(ellipse at center, $body-bg 25%, rgba($black, 0.25) 100%) !important;
     }
 
     .heading-title {
@@ -109,6 +108,12 @@ h6, .h6 {
 
 .page-title {
     margin-bottom: 1.5rem;
+
+    > :where(h1, .h1) {
+        font-size: cssmin($h1-font-size, 46px);
+        line-height: 1.1;
+        letter-spacing: -.02em;
+    }
 }
 
 
@@ -148,6 +153,13 @@ a.pretty-link {
     }
 }
 
+a.link-overlay {
+    display: block;
+    pointer-events: initial;
+    position: absolute;
+    inset: 0 0 0 0;
+}
+
 
 // Bidi
 // ======================================
@@ -167,50 +179,163 @@ a.pretty-link {
 }
 
 
-// Long text
+// Blockquote
 // ======================================
 
-.long-text {
-    font-size: 1rem;
+.blockquote {
+    padding: 0.25rem 0 0.25rem 1rem;
+    border-inline-start: 0.25rem solid var(--gray-300);
+    color: var(--gray-700);
+}
 
-    @include media-breakpoint-up(lg) {
-        font-size: 1.0625rem;
-        line-height: 1.75rem;
-        letter-spacing: .015625rem;
+
+// Prose / long text
+// ======================================
+
+.prose-container {
+    max-width: cssmin(78ch, 640px);
+    margin-inline: auto;
+
+    .page-title {
+        margin-bottom: 3rem;
     }
 
-    h2, h3, h4 {
-        font-weight: $font-weight-bold;
+    &.prose-sm {
+        max-width: cssmin(70ch, 540px);
     }
 
-    h5, h6 {
-        font-weight: $font-weight-medium;
+    &.prose-lg {
+        max-width: cssmin(88ch, 720px);
     }
 
-    h2:not(:first-of-type) {
-        @include margin-top(4rem);
-    }
-
-    h2 {
-        @include font-size($h3-font-size);
-        @include margin-bottom(2rem);
-    }
-
-    h3 {
-        font-size: $h4-font-size;
-        @include margin-top(3rem);
-        margin-bottom: 1.5rem;
-    }
-
-    h4, h5, h6 {
-        font-size: inherit;
-        @include margin-top(2rem);
-    }
-
-    h3, h6 {
-        color: $gray-700;
+    &.prose-xl {
+        max-width: cssmin(98ch, 820px);
     }
 }
+
+.prose {
+    --prose-headings-lg-font-weight: #{$prose-headings-lg-font-weight};
+    --prose-headings-sm-font-weight: #{$prose-headings-sm-font-weight};
+    font-size: 1rem;
+    line-height: 1.55;
+    letter-spacing: normal;
+
+    // Longform polish (safe defaults)
+    hyphens: auto;
+    text-wrap: pretty;
+
+    // Vertical rhythm
+    :where(p, ul, ol, blockquote, pre, table, figure) {
+        margin-block: 0 1rem;
+    }
+
+    //  Headings
+    :where(h1, h2, h3, h4, h5, h6) {
+        letter-spacing: -.02em;
+        scroll-margin-top: 3rem;
+        margin-block: 2.25rem 0.75rem;
+
+        > span[style="font-size: medium;"] {
+            // Fix a common htmledit quirk to maintain font-size proportions
+            font-size: inherit !important;
+        }
+    }
+
+    :where(h1, h2, h3) {
+        font-weight: var(--prose-headings-lg-font-weight);
+    }
+
+    :where(h4, h5, h6) {
+        font-weight: var(--prose-headings-sm-font-weight);
+    }
+
+    :where(h2) {
+        margin-top: 2.5rem;
+    }
+
+    :where(h3) {
+        margin-top: 2.25rem;
+    }
+
+    :where(h4) {
+        margin-top: 2rem;
+    }
+
+    :where(h5) {
+        margin-top: 1.5rem;
+    }
+
+    :where(h6) {
+        font-size: 1em;
+        text-transform: none;
+        margin-top: 1.5rem;
+    }
+
+    > :where(h2, h3, h4, h5, h6):first-child,
+    > div > :where(h2, h3, h4, h5, h6):first-child {
+        margin-top: 0;
+    }
+
+    // Links
+    a {
+        text-decoration-thickness: from-font;
+        text-underline-offset: .18em;
+        text-decoration-skip-ink: auto;
+        overflow-wrap: anywhere;
+
+        &:hover {
+            text-decoration-thickness: cssmax(2px, .12em);
+        }
+    }
+
+    // Lists
+    :where(ul, ol) {
+        padding-inline-start: 1.25em; // bootstrap-like, but consistent
+    }
+
+    :where(ul, ol) > li {
+        margin-block: .35rem;
+    }
+
+    // Nested lists: tighter so they don't balloon
+    :where(ul, ol) :where(ul, ol) {
+        margin-block: .35rem .75rem;
+    }
+
+    // Tables (light touch)
+    table {
+        width: 100%;
+    }
+
+    // Media
+    :where(img, video) {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+
+// Line clamp
+// ======================================
+
+.line-clamp, 
+.line-clamp-1, 
+.line-clamp-2, 
+.line-clamp-3, 
+.line-clamp-4, 
+.line-clamp-5 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--line-clamp, 3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.line-clamp-1 { --line-clamp: 1; }
+.line-clamp-2 { --line-clamp: 2; }
+.line-clamp-3 { --line-clamp: 3; }
+.line-clamp-4 { --line-clamp: 4; }
+.line-clamp-5 { --line-clamp: 5; }
 
 
 // Misc typo stuff
@@ -221,9 +346,22 @@ a.pretty-link {
 }
 
 code {
-    padding-inline: 0.25rem;
-    background-color: rgba($black, 0.035);
-    border-radius: var(--border-radius-sm); 
+    white-space: break-spaces;
+    margin: 0;
+    padding: .2em .4em;
+    background-color: rgba($black, 0.055);
+    border-radius: var(--border-radius-md); 
+}
+
+pre {
+    padding: 1rem;
+    border-radius: var(--border-radius-md);
+    background: var(--gray-100);
+
+    code {
+        padding: 0;
+        background: transparent;
+    }
 }
 
 .html-editor-content {

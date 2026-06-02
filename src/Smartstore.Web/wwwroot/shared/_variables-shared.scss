@@ -53,11 +53,13 @@ $ease-in-out-back:      cubic-bezier(.68, -.55, .265, 1.55) !default;
 // Typo
 // --------------------------------------------------
 
-$enable-rfs:                false !default;
-$font-size-xs:				0.75rem !default;
-$font-weight-medium:        600 !default;
-$headings-lg-font-weight:   400 !default;
-$headings-sm-font-weight:   $font-weight-medium !default;
+$enable-rfs:                    false !default;
+$font-size-xs:				    0.75rem !default;
+$font-weight-medium:            600 !default;
+$headings-lg-font-weight:       $font-weight-medium !default;
+$headings-sm-font-weight:       $font-weight-medium !default;
+$prose-headings-lg-font-weight: $font-weight-medium !default;
+$prose-headings-sm-font-weight: $font-weight-medium !default;
 
 
 // Pagination Mini
@@ -164,9 +166,9 @@ $box-scale-factor:              1.12 !default;
 
 $fa-use-pro:                    false !default;
 
-$fa-font-family-free:           'Font Awesome 6 Free' !default;
-$fa-font-family-pro:            'Font Awesome 6 Pro' !default;
-$fa-font-family-brands:         'Font Awesome 6 Brands' !default;
+$fa-font-family-free:           'Font Awesome 7 Free' !default;
+$fa-font-family-pro:            'Font Awesome 7 Pro' !default;
+$fa-font-family-brands:         'Font Awesome 7 Brands' !default;
 
 //$icon-font-size-base:           16px !default; // for pixel perfection
 $icon-font-size-base:           inherit !default;

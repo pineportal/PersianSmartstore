@@ -29,7 +29,7 @@
             <siteMapNode id="orders" icon="bi:graph-up-arrow" title="Orders" resKey="Admin.Orders" permissionNames="order" controller="Order" action="List" area="Admin" />
             <siteMapNode id="shipments" icon="bi:truck" title="Shipments" resKey="Admin.Orders.Shipments.List" permissionNames="order" controller="Shipment" action="List" area="Admin" />
             <siteMapNode id="recurring-payments" icon="bi:arrow-repeat" title="Recurring payments" resKey="Admin.RecurringPayments" permissionNames="order" controller="RecurringPayment" action="List" area="Admin" />
-            <siteMapNode id="return-requests" icon="bi:truck" iconClass="flip-h" title="Return requests" resKey="Admin.ReturnRequests" permissionNames="order.returnrequest" controller="ReturnRequest" action="List" area="Admin" />
+            <siteMapNode id="return-cases" icon="bi:truck" iconClass="flip-h" title="Return cases" resKey="Admin.ReturnRequests" permissionNames="order.returncase" controller="ReturnCase" action="List" area="Admin" />
             <siteMapNode id="gift-cards" icon="bi:gift" title="Gift cards" resKey="Admin.GiftCards" permissionNames="order.giftcard" controller="GiftCard" action="List" area="Admin" />
             <siteMapNode id="sales-sep-1" isGroupHeader="true" title="[SKIP]" />
             <siteMapNode id="shopping-carts" icon="bi:cart-check" title="Current shopping carts" resKey="Admin.CurrentCarts" permissionNames="order" controller="ShoppingCart" action="CurrentCarts" area="Admin" />
@@ -105,12 +105,13 @@
 
             <siteMapNode id="payment-methods" icon="bi:credit-card" title="Payment methods" resKey="Admin.Configuration.Payment.Methods" permissionNames="configuration.paymentmethod" controller="Payment" action="Providers" area="Admin" />
 
-            <siteMapNode id="list-settings" icon="bi:view-list" title="Lists" resKey="Admin.Configuration.Lists" permissionNames="configuration.deliverytime, configuration.measure">
+            <siteMapNode id="list-settings" icon="bi:view-list" title="Lists" resKey="Admin.Configuration.Lists" permissionNames="configuration.deliverytime, configuration.measure, configuration.pricelabel, configuration.collectiongroup">
                 <siteMapNode id="delivery-times" xicon="calendar" title="Delivery Times" resKey="Admin.Configuration.DeliveryTimes" permissionNames="configuration.deliverytime" controller="DeliveryTime" action="List" area="Admin" />
                 <siteMapNode id="quantity-units" xicon="gift" title="Quantity Units" resKey="Admin.Configuration.QuantityUnit" permissionNames="configuration.measure" controller="QuantityUnit" action="List" area="Admin" />
                 <siteMapNode id="weights" title="Weights" resKey="Admin.Configuration.Measures.Weights" permissionNames="configuration.measure" controller="Measure" action="Weights" area="Admin" />
                 <siteMapNode id="dimensions" title="Dimensions" resKey="Admin.Configuration.Measures.Dimensions" permissionNames="configuration.measure" controller="Measure" action="Dimensions" area="Admin" />
                 <siteMapNode id="price-labels" title="Price Labels" resKey="Admin.Configuration.PriceLabels" permissionNames="configuration.pricelabel" controller="PriceLabel" action="List" area="Admin" />
+                <siteMapNode id="collection-groups" title="Collection Groups" resKey="Admin.Configuration.CollectionGroups" permissionNames="configuration.collectiongroup" controller="CollectionGroup" action="List" area="Admin" />
             </siteMapNode>
 
             <siteMapNode id="email-accounts" icon="bi:envelope" title="EmailAccounts" resKey="Admin.Configuration.EmailAccounts" permissionNames="configuration.emailaccount" controller="EmailAccount" action="List" area="Admin" />

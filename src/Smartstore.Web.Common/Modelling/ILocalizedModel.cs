@@ -1,19 +1,18 @@
 ﻿#nullable enable
 
-namespace Smartstore.Web.Modelling
+namespace Smartstore.Web.Modelling;
+
+public interface ILocalizedModel
 {
-    public interface ILocalizedModel
-    {
-        Type? GetEntityType() => null;
-    }
+    Type? GetEntityType() => null;
+}
 
-    public interface ILocalizedModel<T> : ILocalizedModel where T : ILocalizedLocaleModel
-    {
-        List<T> Locales { get; set; }
-    }
+public interface ILocalizedModel<T> : ILocalizedModel where T : ILocalizedLocaleModel
+{
+    List<T> Locales { get; set; }
+}
 
-    public interface ILocalizedLocaleModel
-    {
-        int LanguageId { get; set; }
-    }
+public interface ILocalizedLocaleModel
+{
+    int LanguageId { get; set; }
 }

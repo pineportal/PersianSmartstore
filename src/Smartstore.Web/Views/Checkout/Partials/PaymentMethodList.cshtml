@@ -8,99 +8,116 @@
 
 @if (Model.PaymentMethods.Count > 0)
 {
-    <ul class="list-group opt-list payment-methods" attr-class='(Model.DisplayPaymentMethodIcons, "opt-list-icons")'>
-        @for (int i = 0; i < Model.PaymentMethods.Count; i++)
-        {
-            var paymentMethod = Model.PaymentMethods[i];
-            var widgetInvoker = paymentMethod.InfoWidget;
-            var infoRendered = false;
-
-            var defaultPluginDescKey = "Plugins.PaymentInfo." + paymentMethod.PaymentMethodSystemName;
-            var defaultPluginDesc = LocalizationService.GetResource(defaultPluginDescKey, logIfNotFound: false, returnEmptyIfNotFound: true);
-            var description = paymentMethod.FullDescription?.Value ?? defaultPluginDesc;
-
-            async Task RenderPaymentMethod()
+    <fieldset>
+        <legend class="sr-only">
+            @T("Checkout.SelectPaymentMethod")
+        </legend>
+        <ul class="list-group opt-list payment-methods" attr-class='(Model.DisplayPaymentMethodIcons, "opt-list-icons")'>
+            @for (int i = 0; i < Model.PaymentMethods.Count; i++)
             {
-                <div class="opt-data">
-                    <div class="opt-control option-name radio" attr-class='(!Model.DisplayPaymentMethodIcons, "form-check")'>
+                var payWith = Model.PaymentMethods[i];
+                var hasFee = payWith.Fee != decimal.Zero;
+                var widgetInvoker = payWith.InfoWidget;
+                var infoRendered = false;
 
-                        <input id="paymentmethod_@(i)" type="radio" name="paymentmethod"
-                               attr-checked='(paymentMethod.Selected, "checked")'
-                               data-has-info='@(widgetInvoker != null ? "true" : "false")'
-                               data-lazy-info='@(paymentMethod.RequiresInteraction ? "true" : "false")'
-                               class="opt-radio form-check-input payment-selection"
-                               value="@(paymentMethod.PaymentMethodSystemName)" />
+                var defaultPluginDescKey = "Plugins.PaymentInfo." + payWith.PaymentMethodSystemName;
+                var defaultPluginDesc = LocalizationService.GetResource(defaultPluginDescKey, logIfNotFound: false, returnEmptyIfNotFound: true);
+                var description = payWith.FullDescription?.Value ?? defaultPluginDesc;
+                var describedBy = (payWith.Fee != 0 ? $"payment-fee-{i}" : null).Grow(description.HasValue() ? $"payment-desc-{i}" : null);
 
-                        <label class="form-check-label" for="paymentmethod_@(i)">
-                            <span class="opt-name">
-                                @paymentMethod.Name
-                            </span>
-                        </label>
-                    </div>
-
-                    <small sm-if="paymentMethod.Fee != decimal.Zero" class="badge badge-danger ml-2 opt-fee payment-fee">@paymentMethod.Fee</small>
-                </div>
-
-                @if (description.HasValue())
+                async Task RenderPaymentMethod()
                 {
-                    <div class="opt-info-item payment-method-description text-muted" sm-language-attributes-for="paymentMethod.FullDescription">
-                        @Html.Raw(description)
+                    <div class="opt-data">
+                        <div class="opt-control option-name radio" attr-class='(!Model.DisplayPaymentMethodIcons, "form-check")'>
+                            <input id="paymentmethod_@(i)" 
+                                   type="radio" 
+                                   name="paymentmethod"
+                                   attr-checked='(payWith.Selected, "checked")'
+                                   data-has-info='@(widgetInvoker != null ? "true" : "false")'
+                                   data-lazy-info='@(payWith.RequiresInteraction ? "true" : "false")'
+                                   class="opt-radio form-check-input payment-selection"
+                                   value="@(payWith.PaymentMethodSystemName)" 
+                                   aria-hidden="true"
+                                   tabindex="-1" />
+                            <label class="form-check-label" for="paymentmethod_@(i)">
+                                <span class="opt-name">@payWith.Name</span>
+                            </label>
+                        </div>
+                        <small sm-if="hasFee" 
+                               id="payment-fee-@i"
+                               class="badge badge-danger ml-2 opt-fee payment-fee"
+                               aria-describedby="footer-legal-info">
+                            <data asp-for="@payWith.Fee">@payWith.Fee</data>
+                        </small>
                     </div>
-                }
-
-                @if (!paymentMethod.RequiresInteraction)
-                {
-                    await RenderPaymentWidget(false);
-                }
-            }
-
-            async Task RenderPaymentWidget(bool isEmbedded)
-            {
-                infoRendered = true;
-                <div class="opt-info payment-method-info"
-                     attr-class='(isEmbedded, "opt-info-embedded")'
-                     attr-data-lazy-info='(paymentMethod.RequiresInteraction, "true")'
-                     data-system-name="@paymentMethod.PaymentMethodSystemName">
-
-                    <div sm-if="paymentMethod.Selected && !ViewData.ModelState.IsValid" id="payment-info-validation-summary">
-                        @Html.ValidationSummary(false)
-                    </div>
-
-                    @if (!(description.HasValue() && !paymentMethod.RequiresInteraction) && paymentMethod.InfoWidget != null)
+                    @if (description.HasValue())
                     {
-                        @await paymentMethod.InfoWidget.InvokeAsync(ViewContext);
+                        <div class="opt-info-item payment-method-description text-muted" 
+                             id="payment-desc-@i"
+                             sm-language-attributes-for="payWith.FullDescription">
+                            @Html.Raw(description)
+                        </div>
                     }
-                </div>
-            }
+                    @if (!payWith.RequiresInteraction)
+                    {
+                        await RenderPaymentWidget(false);
+                    }
+                }
 
-            <li class="list-group-item opt-list-item payment-method-item" attr-class='(paymentMethod.Selected, "active")'>
-                @if (Model.DisplayPaymentMethodIcons)
+                async Task RenderPaymentWidget(bool isEmbedded)
                 {
-                    <div class="row no-gutters">
-                        <div sm-if="paymentMethod.BrandUrl.HasValue()" class="col-auto payment-brand">
-                            <img class="img-fluid" src="@Url.Content(paymentMethod.BrandUrl)" />
-                        </div>
-                        <div class="col">
-                            @{ await RenderPaymentMethod(); }
-                        </div>
-                    </div>
+                    infoRendered = true;
+                    <div id="pw-@payWith.PaymentMethodSystemName" 
+                         class="opt-info payment-method-info"
+                         attr-class='(isEmbedded, "opt-info-embedded")'
+                         attr-data-lazy-info='(payWith.RequiresInteraction, "true")'
+                         data-system-name="@payWith.PaymentMethodSystemName">
 
-                    if (paymentMethod.Selected && widgetInvoker != null && !infoRendered)
+                        <div sm-if="payWith.Selected && !ViewData.ModelState.IsValid" id="payment-info-validation-summary">
+                            @Html.ValidationSummary(false)
+                        </div>
+
+                        @if (!(description.HasValue() && !payWith.RequiresInteraction) && payWith.InfoWidget != null)
+                        {
+                            @await payWith.InfoWidget.InvokeAsync(ViewContext);
+                        }
+                    </div>
+                }
+
+                <li class="list-group-item opt-list-item payment-method-item focus-inset" 
+                    attr-class='(payWith.Selected, "active")' 
+                    tabindex="0"
+                    attr-aria-expanded='(widgetInvoker != null, payWith.Selected.ToString().ToLower())' 
+                    attr-aria-controls='(widgetInvoker != null, "pw-" + payWith.PaymentMethodSystemName)'
+                    attr-data-target='(widgetInvoker != null, "#pw-" + payWith.PaymentMethodSystemName)'
+                    attr-aria-describedby='(describedBy.HasValue(), describedBy)'>
+                    @if (Model.DisplayPaymentMethodIcons)
+                    {
+                        <div class="row no-gutters">
+                            <div sm-if="payWith.BrandUrl.HasValue()" class="col-auto payment-brand">
+                                <img class="img-fluid" src="@Url.Content(payWith.BrandUrl)" alt="" />
+                            </div>
+                            <div class="col">
+                                @{ await RenderPaymentMethod(); }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        await RenderPaymentMethod();
+                    }
+                    @if (payWith.Selected && widgetInvoker != null && !infoRendered)
                     {
                         await RenderPaymentWidget(true);
                     }
-                }
-                else
-                {
-                    await RenderPaymentMethod();
-                }
-            </li>
-        }
-    </ul>
+                </li>
+            }
+        </ul>
+    </fieldset>
 }
 else
 {
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" role="alert">
         @T("Checkout.NoPaymentMethods")
     </div>
 }

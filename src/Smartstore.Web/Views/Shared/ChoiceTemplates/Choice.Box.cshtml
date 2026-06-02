@@ -3,9 +3,15 @@
 @{
     var controlId = Model.BuildControlId();
     var items = Model.Values ?? new List<ChoiceItemModel>();
+    var srLabelTemplate = T("Aria.Label.Choice");
 }
 
-<div class="choice-boxes" id="choice-boxes-@Model.Id">
+<div class="choice-boxes" 
+     id="choice-boxes-@Model.Id" 
+     role="radiogroup"      
+     data-manualselect="true"
+     aria-orientation="horizontal"  
+     attr-aria-required='(Model.IsRequired, "true")'>
     <ul class="choice-box-group">
         @foreach (var item in items)
         {
@@ -60,10 +66,16 @@
             }
 
             <li class="@boxClass">
-                <label class="choice-box-label">
-                    <input type="radio" class="choice-box-control-native" id="@(controlId)_@(item.Id)" name="@(controlId)" value="@item.Id" 
-                           attr-checked='(item.IsPreSelected, "checked")' attr-disabled='(item.IsDisabled, "disabled")' />
+                <input type="radio"
+                       class="choice-box-control-native"
+                       id="@(controlId)_@(item.Id)"
+                       name="@(controlId)"
+                       value="@item.Id"
+                       aria-label="@srLabelTemplate.Value.FormatInvariant(Model.Name, label)"
+                       attr-checked='(item.IsPreSelected, "checked")'
+                       attr-disabled='(item.IsDisabled, "disabled")' />
 
+                <label class="choice-box-label" for="@(controlId)_@(item.Id)">
                     <span class="choice-box-content tooltip-toggle tooltip-toggle-touch" title="@label">
                         <span class="@elClass" attr-style="(css.HasValue(), css)">
                             <span sm-if="!css.HasValue()" class="choice-box-text">@item.Name</span>

@@ -1,35 +1,54 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.Primitives;
 
-namespace Smartstore.ComponentModel.TypeConverters
+namespace Smartstore.ComponentModel.TypeConverters;
+
+internal class StringValuesConverter : DefaultTypeConverter
 {
-    internal class StringValuesConverter : DefaultTypeConverter
+    public StringValuesConverter()
+        : base(typeof(StringValues))
     {
-        public StringValuesConverter()
-            : base(typeof(StringValues))
+    }
+
+    public override bool CanConvertFrom(Type type)
+    {
+        // Fast-path the common cases without reflection-heavy checks.
+        if (type == typeof(string) || type == typeof(string[]))
+            return true;
+
+        // Keep compatibility with other string enumeration types.
+        if (typeof(IEnumerable<string>).IsAssignableFrom(type))
+            return true;
+
+        return base.CanConvertFrom(type);
+    }
+
+    public override object ConvertFrom(CultureInfo culture, object value)
+    {
+        if (value is string str)
+            return new StringValues(str);
+
+        // Avoid ToArray() allocation when we already have an array.
+        if (value is string[] arr)
+            return new StringValues(arr);
+
+        // If it's a concrete collection, size is known; copy directly (usually faster than LINQ's ToArray()).
+        if (value is ICollection<string> coll)
         {
+            if (coll.Count == 0)
+                return default(StringValues);
+
+            var buffer = new string[coll.Count];
+            coll.CopyTo(buffer, 0);
+            return new StringValues(buffer);
         }
 
-        public override bool CanConvertFrom(Type type)
+        if (value is IEnumerable<string> seq)
         {
-            return type == typeof(string)
-                || typeof(IEnumerable<string>).IsAssignableFrom(type)
-                || base.CanConvertFrom(type);
+            // Fallback for non-collection enumerables.
+            return new StringValues(seq.ToArray());
         }
 
-        public override object ConvertFrom(CultureInfo culture, object value)
-        {
-            if (value is string str)
-            {
-                return new StringValues(str);
-            }
-
-            if (value is IEnumerable<string> list)
-            {
-                return new StringValues(list.ToArray());
-            }
-
-            return base.ConvertFrom(culture, value);
-        }
+        return base.ConvertFrom(culture, value);
     }
 }

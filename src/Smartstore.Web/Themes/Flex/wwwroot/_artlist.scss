@@ -7,10 +7,11 @@
 .artlist {
     --art-padding: #{$grid-gutter-width / 2};
     --art-gutter: #{$grid-gutter-width / 2};
-    --art-line-height: 1.3;
+    --art-line-height: 1.25;
     --art-font-size: #{$font-size-sm};
     --art-font-size-sm: #{$font-size-xs};
     --art-font-size-xs: 0.75rem;
+    --art-font-size-lg: #{$font-size-base};
     --art-finalprice-font-size: 1rem;
     --art-finalprice-color: #{$product-price-color};
     --art-finalprice-offer-color: #{$product-price-color};
@@ -22,11 +23,13 @@
     --art-box-shadow: var(--box-shadow-sm);
     --art-active-bg-color: #{$art-active-bg-color};
     --art-active-border-color: #{$art-active-border-color};
+    --art-color-opt-size: 1rem;
 
     &.artlist-lines {
         --art-font-size: #{$font-size-base};
         --art-font-size-sm: #{$font-size-sm};
         --art-font-size-xs: #{$font-size-xs};
+        --art-font-size-lg: #{$font-size-lg};
         --art-finalprice-font-size: 1.25rem;
     }
 }
@@ -36,22 +39,22 @@
 // --------------------------------------------------
 
 @mixin make-art-row() {
-  --gutter-x: 0;
-  --gutter-y: 0;
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: calc(-1 * var(--gutter-y));
-  margin-right: calc(-.5 * var(--gutter-x));
-  margin-left: calc(-.5 * var(--gutter-x));
+    --gutter-x: 0;
+    --gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: calc(-1 * var(--gutter-y));
+    margin-right: calc(-.5 * var(--gutter-x));
+    margin-left: calc(-.5 * var(--gutter-x));
 }
 
 @mixin make-art-col-ready() {
-  box-sizing: border-box;
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 100%; // Prevent `.col-auto`, `.col` (& responsive variants) from breaking out the grid
-  margin-inline: calc(var(--gutter-x) * .5);
-  margin-top: var(--gutter-y);
+    box-sizing: border-box;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%; // Prevent `.col-auto`, `.col` (& responsive variants) from breaking out the grid
+    margin-inline: calc(var(--gutter-x) * .5);
+    margin-top: var(--gutter-y);
 }
 
 @mixin make-art-col($cols) {
@@ -152,17 +155,31 @@
 
     border-collapse: collapse;
 
+    .sr-toggle-info {
+        inset: 2px 2px auto 2px;
+        background-color: rgba(var(--primary-rgb), 0.85);
+        color: #fff;
+        @include border-top-radius(var(--border-radius-sm));
+    }
+
     &.active {
         background: var(--art-active-bg-color);
         border-color: var(--art-active-border-color) !important;
         box-shadow: var(--art-box-shadow);
+        border-end-start-radius: 0 !important;
+        border-end-end-radius: 0 !important;
+
+        .sr-toggle-info {
+            display: none !important;
+        }
     }
 }
 
 .art-picture-block {
     position: relative;
     margin-bottom: 0.8rem;
-    overflow: hidden;
+    // --art-picture-width is set via Product.List view
+    width: var(--art-picture-width, initial);
 }
 
 .art-picture.no-picture {
@@ -229,8 +246,12 @@
 .art-genericname {
     font-weight: $font-weight-medium;
     text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
+
+    > a.art-name-link {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 .art-description {
@@ -315,7 +336,8 @@
     padding-top: 1px;
     clip-path: inset(0 -20px -20px -20px);
     border-radius: 0 0 var(--art-border-radius) var(--art-border-radius);
-    overflow: hidden;
+    border: 1px solid transparent;
+    border-top-width: 0;
     opacity: 0;
     visibility: hidden;
     z-index: -1;
@@ -323,7 +345,13 @@
     .art.active & { 
         opacity: 1;
         visibility: visible;
+        border-color: var(--art-active-border-color);
         z-index: $zindex-popover - 1;
+    }
+
+    > .art-btn-group {
+        overflow: hidden;
+        @include border-bottom-radius(var(--art-border-radius));
     }
 }
 
@@ -338,8 +366,8 @@
         padding: 0.65rem 0;
         border-radius: 0;
 
-        &:focus:not(:active) {
-            box-shadow: none !important;
+        &:not(:active) {
+            box-shadow: none;
         }
 
         &.btn-secondary {
@@ -362,13 +390,17 @@
 
 .art-color-opt {
     display: block;
-    width: 1rem;
-    height: 1rem;
+    width: var(--art-color-opt-size);
+    height: var(--art-color-opt-size);
     text-decoration: none;
 
     &:hover {
-        outline: 1px solid rgba(#000, 0.3);
+        outline: 1px solid rgba($black, 0.3);
     }
+}
+
+.art-opt-plus {
+    height: var(--art-color-opt-size);
 }
 
 .art-more-opts {
@@ -393,15 +425,19 @@
 // Font sizes
 // ---------------------------------------------
 
-.art-name,
-.art-genericname {
-    font-size: var(--art-font-size);
-    > a { 
-        color: $body-color; 
-    }
+:is(.art-name, .art-genericname) {
+    font-size: var(--art-font-size-lg);
 
-    > a:not(:hover) {
-        text-decoration: none; 
+    > a.art-name-link {
+        display: block;
+        color: $body-color; 
+        text-decoration: none;
+        text-wrap: pretty;
+        border-radius: 2px;
+
+        &:hover {
+            color: $link-color;
+        }
     }
 }
 
@@ -477,8 +513,7 @@
         margin-bottom: 0.5rem;
     }
 
-    .art-brand,
-    .art-rating {
+    :is(art-brand, .art-rating) {
         font-size: var(--art-font-size-xs);
         position: relative;
         margin-bottom: 0;
@@ -506,10 +541,7 @@
         margin-bottom: 0.5em;
     }
 
-    .art-price,
-    .art-finalprice,
-    .art-compareprice-group,
-    .art-compareprice {
+    :is(.art-price, .art-finalprice, .art-compareprice-group, .art-compareprice) {
         display: block;
     }
 
@@ -549,8 +581,7 @@
         white-space: normal;
     }
 
-    .delivery-time, 
-    .delivery-date-block {
+    :is(.delivery-time, .delivery-date-block) {
         vertical-align: initial;
     }
 }
@@ -597,16 +628,16 @@
     @include make-art-col(2);
 
     // Ensure equal height for some elements in grid style lists
-    .art-name,
-    .art-description {
+    :is(.art-name-link, .art-description) {
         // At least 2 lines height for name & description
+        display: block;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    .art-name {
+    .art-name > .art-name-link {
         // At least 2 lines height for name
-        height: calc(var(--art-font-size) * var(--art-line-height) * 2);
+        height: calc(var(--art-font-size-lg) * var(--art-line-height) * 2);
     }
 
     .art-description {
@@ -619,18 +650,14 @@
         height: calc(var(--art-font-size-sm) * var(--art-line-height) * 2);
     }
 
-    .art-brand,
-    .art-delivery-info,
-    .art-more-opts {
+    :is(.art-brand, .art-delivery-info) {
         // Always 1 small line height, even if empty
         box-sizing: content-box;
         min-height: calc(var(--art-font-size-sm) * var(--art-line-height));
         @include text-truncate();
     }
 
-    .art-shipsurcharge,
-    .art-delivery-info,
-    .art-pangv {
+    :is(.art-shipsurcharge, .art-delivery-info, .art-pangv) {
         // Always 1 line height, even if empty
         box-sizing: content-box;
         min-height: calc(var(--art-font-size-xs) * var(--art-line-height));
@@ -649,9 +676,7 @@
     }
 
     @include media-breakpoint-up(sm) {
-        &.artlist-4-cols,
-        &.artlist-5-cols,
-        &.artlist-6-cols {
+        &:is(.artlist-4-cols, .artlist-5-cols, .artlist-6-cols) {
             @include make-art-col(3);
         }
         &.artlist-8-cols {
@@ -672,12 +697,10 @@
     }
 
     @include media-breakpoint-up(lg) {
-        &.artlist-3-cols,
-        &.artlist-4-cols {
+        &:is(.artlist-3-cols, .artlist-4-cols) {
             @include make-art-col(3);
         }
-        &.artlist-5-cols,
-        &.artlist-6-cols {
+        &:is(.artlist-5-cols, .artlist-6-cols) {
             @include make-art-col(4);
         }
         &.artlist-8-cols {
@@ -778,6 +801,7 @@
         justify-content: center;
         flex-grow: 1;
         text-align: center;
+        align-items: center;
         padding: 1rem;
         text-decoration: none !important;
         font-size: 1.25rem;

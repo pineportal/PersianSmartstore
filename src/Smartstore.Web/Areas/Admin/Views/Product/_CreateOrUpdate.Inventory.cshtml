@@ -147,7 +147,15 @@
             <span asp-validation-for="HideQuantityControl"></span>
         </div>
     </div>
-
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="QuantityPerParentUnit" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="QuantityPerParentUnit" />
+            <span asp-validation-for="QuantityPerParentUnit"></span>
+        </div>
+    </div>
 </div>
 
 <script>

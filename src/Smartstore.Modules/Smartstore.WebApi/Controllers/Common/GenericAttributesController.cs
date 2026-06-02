@@ -1,45 +1,95 @@
-﻿namespace Smartstore.Web.Api.Controllers
+﻿using Microsoft.OData;
+using Smartstore.Core.Identity;
+
+namespace Smartstore.Web.Api.Controllers;
+
+/// <summary>
+/// The endpoint for operations on GenericAttribute entity.
+/// </summary>
+/// <remarks>
+/// Most of the key "Generic Attributes" are assigned to customers. Therefore, permissions are checked at the customer level
+/// to ensure that only authorized users have access to these attributes.
+/// </remarks>
+[WebApiGroup(WebApiGroupNames.Common)]
+public class GenericAttributesController : WebApiController<GenericAttribute>
 {
-    /// <summary>
-    /// The endpoint for operations on GenericAttribute entity.
-    /// </summary>
-    [WebApiGroup(WebApiGroupNames.Common)]
-    public class GenericAttributesController : WebApiController<GenericAttribute>
+    private readonly string[] _forbiddenCustomerAttributes =
+    [
+        WebApiService.AttributeUserDataKey,
+        SystemCustomerAttributeNames.PasswordRecoveryToken,
+        SystemCustomerAttributeNames.AccountActivationToken,
+        SystemCustomerAttributeNames.ImpersonatedCustomerId
+    ];
+
+    [HttpGet("GenericAttributes"), ApiQueryable]
+    [Permission(Permissions.Customer.Read)]
+    public IQueryable<GenericAttribute> Get()
     {
-        [HttpGet("GenericAttributes"), ApiQueryable]
-        public IQueryable<GenericAttribute> Get()
-        {
-            return Entities.AsNoTracking();
-        }
+        return Entities.AsNoTracking();
+    }
 
-        [HttpGet("GenericAttributes({key})"), ApiQueryable]
-        public SingleResult<GenericAttribute> Get(int key)
-        {
-            return GetById(key);
-        }
+    [HttpGet("GenericAttributes({key})"), ApiQueryable]
+    [Permission(Permissions.Customer.Read)]
+    public SingleResult<GenericAttribute> Get(int key)
+    {
+        return GetById(key);
+    }
 
-        [HttpPost]
-        public Task<IActionResult> Post([FromBody] GenericAttribute model)
+    [HttpPost]
+    [Permission(Permissions.Customer.Create)]
+    [ProducesResponseType(Status403Forbidden)]
+    public async Task<IActionResult> Post([FromBody] GenericAttribute entity)
+    {
+        return await PostAsync(entity, async () =>
         {
-            return PostAsync(model);
-        }
+            CheckCustomerAttributes(entity);
+            await Db.SaveChangesAsync();
+        });
+    }
 
-        [HttpPut]
-        public Task<IActionResult> Put(int key, Delta<GenericAttribute> model)
+    [HttpPut]
+    [Permission(Permissions.Customer.Update)]
+    [ProducesResponseType(Status403Forbidden)]
+    public Task<IActionResult> Put(int key, Delta<GenericAttribute> model)
+    {
+        return PutAsync(key, model, async (entity) =>
         {
-            return PutAsync(key, model);
-        }
+            CheckCustomerAttributes(entity);
+            await Db.SaveChangesAsync();
+        });
+    }
 
-        [HttpPatch]
-        public Task<IActionResult> Patch(int key, Delta<GenericAttribute> model)
+    [HttpPatch]
+    [Permission(Permissions.Customer.Update)]
+    [ProducesResponseType(Status403Forbidden)]
+    public Task<IActionResult> Patch(int key, Delta<GenericAttribute> model)
+    {
+        return PatchAsync(key, model, async (entity) =>
         {
-            return PatchAsync(key, model);
-        }
+            CheckCustomerAttributes(entity);
+            await Db.SaveChangesAsync();
+        });
+    }
 
-        [HttpDelete]
-        public Task<IActionResult> Delete(int key)
+    [HttpDelete]
+    [Permission(Permissions.Customer.Delete)]
+    [ProducesResponseType(Status403Forbidden)]
+    public Task<IActionResult> Delete(int key)
+    {
+        return DeleteAsync(key, async (entity) =>
         {
-            return DeleteAsync(key);
+            CheckCustomerAttributes(entity);
+            await Db.SaveChangesAsync();
+        });
+    }
+
+    private void CheckCustomerAttributes(GenericAttribute entity)
+    {
+        if (entity != null
+            && entity.KeyGroup.EqualsNoCase(nameof(Customer))
+            && _forbiddenCustomerAttributes.Contains(entity.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new ODataErrorException(ODataHelper.CreateError($"It is not allowed to add, modify or delete a generic attribute of key '{entity.Key}'.", Status403Forbidden));
         }
     }
 }

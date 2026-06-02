@@ -4,7 +4,8 @@
 // InstantSearch Box & Drop Styles
 // --------------------------------------------------
 
-$facet-selection-color: inherit;
+$facet-selection-color:         inherit;
+$facet-selection-glyph-color:   darken($success, 10%);
 
 .instasearch-form {
     position: relative;
@@ -33,27 +34,41 @@ $facet-selection-color: inherit;
     transition-duration: 0.2s;
     transition-timing-function: cubic-bezier(.4, 0, .2, 1);
 
-    @if ($searchbox-shadow == true) {
-        &:hover, &:focus, &:active {
-            box-shadow: $box-shadow-sm;
-        }
-    }
-     &:focus, &:active {
+    &:is(.active) {
         background-color: $searchbox-bg-2;
         border-color: $searchbox-border-2;
         color: $searchbox-color-2;
     }
 
-     &::placeholder {
-         color: $searchbox-color-1;
-         opacity: 0.6;
-     }
-     &:focus::placeholder {
-         color: $searchbox-color-2;
-     }
-     &:active::placeholder {
-         color: $searchbox-color-2;
-     }
+    @if ($searchbox-shadow == true) {
+        &:is(#{unquote(":hover, .active")}) {
+            box-shadow: $box-shadow-sm;
+        }
+    }
+    @else {
+        &:is(.active) {
+            outline: $searchbox-outline-width solid $searchbox-outline-color;
+            outline-offset: -1px;
+            border-color: $searchbox-outline-color;
+        }
+    }
+
+    &::placeholder {
+        color: $searchbox-color-1;
+        opacity: 0.6;
+    }
+
+    &:focus::placeholder {
+        color: $searchbox-color-2;
+    }
+
+    &:active::placeholder {
+        color: $searchbox-color-2;
+    }
+
+    &::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+    }
 
     @include media-breakpoint-down(md) {
         background-color: $searchbox-bg-mobile;
@@ -118,6 +133,12 @@ $facet-selection-color: inherit;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
         background-color: $searchbox-bg-2 !important;
+
+        @if ($searchbox-shadow == false) {
+            box-shadow: $box-shadow-sm;
+            outline-width: 0;
+            border-color: $searchbox-border-2;
+        }
     }
 }
 
@@ -204,10 +225,7 @@ $facet-selection-color: inherit;
     text-decoration: none;
     border-radius: var(--border-radius-md);
 
-    &:focus, 
-    &:hover, 
-    &.active, 
-    &.key-hover {
+    &:is(#{unquote(":focus, :hover, .active, .key-hover")}) {
         color: $dropdown-link-hover-color;
         text-decoration: none;
         background-color: $dropdown-link-hover-bg;
@@ -257,7 +275,7 @@ $facet-selection-color: inherit;
 
 
 //
-// Facetes
+// Facettes
 // --------------------------------------------------
 
 .facet-group {
@@ -308,6 +326,7 @@ $facet-selection-color: inherit;
 
 .facet-body {
     font-size: 14px;
+    padding-top: 2px;
     padding-bottom: 1rem;
 
     .numberinput-group {
@@ -336,6 +355,13 @@ $facet-selection-color: inherit;
 // Facets (Check/Radio)
 // --------------------------------------------------
 
+.facet-control-native {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
 .facet-control-ui {
     position: absolute;
     display: block;
@@ -344,7 +370,7 @@ $facet-selection-color: inherit;
     height: $facet-control-size;
     line-height: $facet-control-size;
 
-    border: 1px solid rgba(#000, 0.2);
+    border: 1px solid rgba($black, 0.2);
     border-radius: 2px;
     box-shadow: none;
 
@@ -359,7 +385,11 @@ $facet-selection-color: inherit;
         text-align: center;
         vertical-align: middle;
         font-size: 14px;
-        color: $facet-selection-color;
+        color: $facet-selection-glyph-color;
+    }
+
+    *:focus-visible + & {
+        box-shadow: $focus-ring-box-shadow !important;
     }
 
     *:checked + & {
@@ -376,7 +406,7 @@ $facet-selection-color: inherit;
 
 .facet-item input:checked + .facet-control-ui,
 .facet-item:hover .facet-control-ui {
-    border-color: rgba(#000, 0.35);
+    border-color: rgba($black, 0.35);
 }
 
 .facet-check,
@@ -395,34 +425,27 @@ $facet-selection-color: inherit;
         padding-bottom: 0;
     }
 
-    input[type=checkbox],
-    input[type=radio] {
+    input:is(#{unquote("[type=checkbox], [type=radio]")}) {
         position: absolute;
         clip: rect(0, 0, 0, 0);
     }
 }
 
-.facet-check .facet-control-native {
-    + .facet-control-ui {
-        border-radius: 2px;
-    }
+.facet-check .facet-control-ui {
+    border-radius: 2px;
 }
+.facet-radio .facet-control-ui { 
+    border-radius: 50%;
 
-.facet-radio .facet-control-native {
-    + .facet-control-ui {
+    &:after {
+        content: "";
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-
-        &:after {
-            content: "";
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: $facet-selection-color;
-            margin: 3px 0 0 3px;
-        }
-    }
+        background: $facet-selection-glyph-color;
+        margin: 3px 0 0 3px;
+    }   
 }
-
 
 //
 // Facet Label
@@ -484,9 +507,7 @@ $facet-selection-color: inherit;
 // --------------------------------------------------
 
 .offcanvas {
-    .facet-toggle,
-    .facet-group-header,
-    .facet-body {
+    :is(.facet-toggle, .facet-group-header, .facet-body) {
         padding-inline: var(--offcanvas-padding-x, 1.5rem);
     }
 

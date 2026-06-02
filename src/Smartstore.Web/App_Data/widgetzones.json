@@ -19,6 +19,7 @@
       "name": "Admin.Common.Global",
       "zones": [
         "start",
+        "header_before",
         "main_column_before",
         "main_column_after",
         "content_before",
@@ -53,16 +54,6 @@
       ]
     },
     {
-      "name": "Admin.Common.News",
-      "zones": [
-        "newslist_page_before_items",
-        "newslist_page_after_items",
-        "newsitem_page_before_body",
-        "newsitem_page_before_comments",
-        "newsitem_page_after_comments"
-      ]
-    },
-    {
       "name": "Admin.Catalog.Categories",
       "zones": [
         "categorydetails_top",
@@ -93,7 +84,10 @@
         "productdetail_tabs_after",
         "productdetail_tags_after",
         "productdetail_related_products_after",
-        "productdetail_also_purchased_after"
+        "productdetail_also_purchased_after",
+        "productdetail_offer_after",
+        "productdetail_stockinfo_after",
+        "productdetail_fulldescription_after"
       ]
     },
     {

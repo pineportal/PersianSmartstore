@@ -1,147 +1,121 @@
 ﻿using Autofac;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Smartstore.ComponentModel;
 using Smartstore.Threading;
 
-namespace Smartstore.Events
-{
-    public class ConsumerInvoker : IConsumerInvoker
-    {
-        private readonly IConsumerResolver _resolver;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly AsyncRunner _asyncRunner;
+namespace Smartstore.Events;
 
-        public ConsumerInvoker(
-            IConsumerResolver resolver,
-            IHttpContextAccessor httpContextAccessor,
-            AsyncRunner asyncRunner)
+public class ConsumerInvoker : IConsumerInvoker
+{
+    private readonly IConsumerResolver _resolver;
+    private readonly AsyncRunner _asyncRunner;
+
+    public ConsumerInvoker(IConsumerResolver resolver, AsyncRunner asyncRunner)
+    {
+        _resolver = resolver;
+        _asyncRunner = asyncRunner;
+    }
+
+    public ILogger Logger { get; set; } = NullLogger.Instance;
+
+    public virtual Task InvokeAsync<TMessage>(
+        ConsumerDescriptor descriptor,
+        IConsumer consumer,
+        IConsumeContext<TMessage> envelope,
+        CancellationToken cancelToken = default) where TMessage : IEventMessage
+    {
+        var d = descriptor;
+        var p = descriptor.WithEnvelope ? (IEventMessage)envelope : envelope.Message;
+        var invoker = FastInvoker.GetInvoker(d.Method);
+        var ct = cancelToken;
+
+        Task task;
+
+        if (d.IsAsync && !d.FireForget)
         {
-            _resolver = resolver;
-            _httpContextAccessor = httpContextAccessor;
-            _asyncRunner = asyncRunner;
+            // The all async case.
+            ct = _asyncRunner.CreateCompositeCancellationToken(cancelToken);
+            task = ((Task)InvokeCore(null, ct));
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted) HandleException(t.Exception, d);
+            }, TaskContinuationOptions.None);
+        }
+        else if (d.FireForget)
+        {
+            // Sync or Async without await. Needs new dependency scope.
+            task = d.IsAsync
+                ? _asyncRunner.RunTask((scope, ct) => ((Task)InvokeCore(scope, ct)))
+                : _asyncRunner.Run(InvokeCore);
+            task.ConfigureAwait(false);
+        }
+        else
+        {
+            // The all sync case
+            try
+            {
+                InvokeCore(null, ct);
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex, d);
+            }
+
+            task = Task.CompletedTask;
         }
 
-        public ILogger Logger { get; set; } = NullLogger.Instance;
+        return task;
 
-        public virtual Task InvokeAsync<TMessage>(
-            ConsumerDescriptor descriptor,
-            IConsumer consumer,
-            TMessage message,
-            CancellationToken cancelToken = default) where TMessage : class
+        object InvokeCore(IComponentContext c = null, CancellationToken cancelToken = default)
         {
-            var d = descriptor;
-            var p = descriptor.WithEnvelope ? (object)CreateConsumeContext(message) : message;
-            var invoker = FastInvoker.GetInvoker(d.Method);
-            var ct = cancelToken;
-
-            Task task;
-
-            if (d.IsAsync && !d.FireForget)
+            if (d.Parameters.Length == 0)
             {
-                // The all async case.
-                ct = _asyncRunner.CreateCompositeCancellationToken(cancelToken);
-                task = ((Task)InvokeCore(null, ct));
-                task.ContinueWith(t =>
-                {
-                    if (t.IsFaulted) HandleException(t.Exception, d);
-                }, TaskContinuationOptions.None);
+                // Only one method param: the message!
+                return invoker.Invoke(consumer, p);
             }
-            else if (d.FireForget)
+
+            var parameters = new object[d.Parameters.Length + 1];
+            parameters[0] = p;
+
+            int i = 0;
+            foreach (var obj in ResolveParameters(c, d, cancelToken).ToArray())
             {
-                // Sync or Async without await. Needs new dependency scope.
-                task = d.IsAsync
-                    ? _asyncRunner.RunTask((scope, ct) => ((Task)InvokeCore(scope, ct)))
-                    : _asyncRunner.Run(InvokeCore);
-                task.ConfigureAwait(false);
+                i++;
+                parameters[i] = obj;
+            }
+
+            return invoker.Invoke(consumer, parameters);
+        }
+    }
+
+    protected internal virtual IEnumerable<object> ResolveParameters(
+        IComponentContext container,
+        ConsumerDescriptor descriptor,
+        CancellationToken cancelToken)
+    {
+        foreach (var p in descriptor.Parameters)
+        {
+            if (p.ParameterType == typeof(CancellationToken))
+            {
+                yield return cancelToken;
             }
             else
             {
-                // The all sync case
-                try
-                {
-                    InvokeCore(null, ct);
-                }
-                catch (Exception ex)
-                {
-                    HandleException(ex, d);
-                }
-
-                task = Task.CompletedTask;
-            }
-
-            return task;
-
-            object InvokeCore(IComponentContext c = null, CancellationToken cancelToken = default)
-            {
-                if (d.Parameters.Length == 0)
-                {
-                    // Only one method param: the message!
-                    return invoker.Invoke(consumer, p);
-                }
-
-                var parameters = new object[d.Parameters.Length + 1];
-                parameters[0] = p;
-
-                int i = 0;
-                foreach (var obj in ResolveParameters(c, d, cancelToken).ToArray())
-                {
-                    i++;
-                    parameters[i] = obj;
-                }
-
-                return invoker.Invoke(consumer, parameters);
+                yield return _resolver.ResolveParameter(p, container);
             }
         }
+    }
 
-        protected internal virtual IEnumerable<object> ResolveParameters(
-            IComponentContext container,
-            ConsumerDescriptor descriptor,
-            CancellationToken cancelToken)
+    protected virtual void HandleException(Exception ex, ConsumerDescriptor descriptor)
+    {
+        if (ex == null)
         {
-            foreach (var p in descriptor.Parameters)
-            {
-                if (p.ParameterType == typeof(CancellationToken))
-                {
-                    yield return cancelToken;
-                }
-                else
-                {
-                    yield return _resolver.ResolveParameter(p, container);
-                }
-            }
+            return;
         }
 
-        protected internal virtual ConsumeContext<TMessage> CreateConsumeContext<TMessage>(TMessage message)
+        if (descriptor.LogError)
         {
-            var envelope = new ConsumeContext<TMessage>(message);
-
-            if (_httpContextAccessor.HttpContext is HttpContext httpContext)
-            {
-                var req = httpContext.Request;
-
-                envelope.Endpoint = httpContext.GetEndpoint();
-
-                envelope.Scheme = req.Scheme;
-                envelope.Host = req.Host;
-                envelope.PathBase = req.PathBase;
-                envelope.Path = req.Path;
-                envelope.QueryString = req.QueryString;
-
-                envelope.RawUrl = req.RawUrl();
-            }
-
-            return envelope;
-        }
-
-        protected virtual void HandleException(Exception ex, ConsumerDescriptor descriptor)
-        {
-            if (ex == null)
-            {
-                return;
-            }
-
             if (ex is AggregateException ae)
             {
                 ae.Flatten().InnerExceptions.Each(x => Logger.Error(x));
@@ -150,68 +124,68 @@ namespace Smartstore.Events
             {
                 Logger.Error(ex);
             }
-
-            if (!descriptor.FireForget)
-            {
-                ex.ReThrow();
-            }
         }
 
-        #region APM > TPL pattern (obsolete, does not always work stable)
-
-        ///// <summary>
-        ///// Wraps a <see cref="Task"/> into the Begin method of an APM pattern.
-        ///// </summary>
-        ///// <param name="task">The task to wrap.</param>
-        ///// <param name="callback">The callback method passed into the Begin method of the APM pattern.</param>
-        ///// <param name="descriptor">The state passed into the Begin method of the APM pattern.</param>
-        ///// <returns>The asynchronous operation, to be returned by the Begin method of the APM pattern.</returns>
-        //protected IAsyncResult BeginInvoke(Task task, AsyncCallback callback, ConsumerDescriptor descriptor)
-        //{
-        //    var options = TaskCreationOptions.RunContinuationsAsynchronously;
-        //    var tcs = new TaskCompletionSource<object>(descriptor, options);
-
-        //    // "_ =" to discard 'async/await' compiler warning
-        //    _ = AwaitCompletionAsync(task, callback, tcs, descriptor);
-
-        //    return tcs.Task;
-        //}
-
-        //private async Task AwaitCompletionAsync(
-        //    Task task,
-        //    AsyncCallback callback,
-        //    TaskCompletionSource<object> tcs,
-        //    ConsumerDescriptor descriptor)
-        //{
-        //    try
-        //    {
-        //        await task;
-        //        tcs.TrySetResult(null);
-        //    }
-        //    catch (OperationCanceledException ex)
-        //    {
-        //        tcs.TrySetCanceled(ex.CancellationToken);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        tcs.TrySetException(ex);
-        //    }
-        //    finally
-        //    {
-        //        callback?.Invoke(tcs.Task);
-        //    }
-        //}
-
-        //protected virtual void EndInvoke(IAsyncResult asyncResult)
-        //{
-        //    var task = (Task)asyncResult;
-
-        //    if (task.IsFaulted && task.Exception != null)
-        //    {
-        //        HandleException(task.Exception, (ConsumerDescriptor)asyncResult.AsyncState);
-        //    }
-        //}
-
-        #endregion
+        if (descriptor.ThrowError && !descriptor.FireForget)
+        {
+            ex.ReThrow();
+        }
     }
+
+    #region APM > TPL pattern (obsolete, does not always work stable)
+
+    ///// <summary>
+    ///// Wraps a <see cref="Task"/> into the Begin method of an APM pattern.
+    ///// </summary>
+    ///// <param name="task">The task to wrap.</param>
+    ///// <param name="callback">The callback method passed into the Begin method of the APM pattern.</param>
+    ///// <param name="descriptor">The state passed into the Begin method of the APM pattern.</param>
+    ///// <returns>The asynchronous operation, to be returned by the Begin method of the APM pattern.</returns>
+    //protected IAsyncResult BeginInvoke(Task task, AsyncCallback callback, ConsumerDescriptor descriptor)
+    //{
+    //    var options = TaskCreationOptions.RunContinuationsAsynchronously;
+    //    var tcs = new TaskCompletionSource<object>(descriptor, options);
+
+    //    // "_ =" to discard 'async/await' compiler warning
+    //    _ = AwaitCompletionAsync(task, callback, tcs, descriptor);
+
+    //    return tcs.Task;
+    //}
+
+    //private async Task AwaitCompletionAsync(
+    //    Task task,
+    //    AsyncCallback callback,
+    //    TaskCompletionSource<object> tcs,
+    //    ConsumerDescriptor descriptor)
+    //{
+    //    try
+    //    {
+    //        await task;
+    //        tcs.TrySetResult(null);
+    //    }
+    //    catch (OperationCanceledException ex)
+    //    {
+    //        tcs.TrySetCanceled(ex.CancellationToken);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        tcs.TrySetException(ex);
+    //    }
+    //    finally
+    //    {
+    //        callback?.Invoke(tcs.Task);
+    //    }
+    //}
+
+    //protected virtual void EndInvoke(IAsyncResult asyncResult)
+    //{
+    //    var task = (Task)asyncResult;
+
+    //    if (task.IsFaulted && task.Exception != null)
+    //    {
+    //        HandleException(task.Exception, (ConsumerDescriptor)asyncResult.AsyncState);
+    //    }
+    //}
+
+    #endregion
 }

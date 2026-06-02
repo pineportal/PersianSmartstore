@@ -633,6 +633,15 @@
                 </div>
                 <div class="adminRow">
                     <div class="adminTitle">
+                        <smart-label asp-for="ShippingMetadataInProductDetail" />
+                    </div>
+                    <div class="adminData">
+                        <setting-editor asp-for="ShippingMetadataInProductDetail"></setting-editor>
+                        <span asp-validation-for="ShippingMetadataInProductDetail"></span>
+                    </div>
+                </div>
+                <div class="adminRow">
+                    <div class="adminTitle">
                         <smart-label asp-for="ShowLinkedAttributeValueQuantity" />
                     </div>
                     <div class="adminData">

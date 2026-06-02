@@ -1,14 +1,12 @@
 ﻿;
 $(function () {
     var orderSummary = $(".cart-content");
-    var isWishlist = orderSummary.is('.wishlist-content');
     var updatingCart = false;
 
     // Remove cart item and move to wishlist.
     orderSummary.on("click", ".ajax-action-link", function (e) {
         e.preventDefault();
         var link = $(this);
-        // What is "link.data"?
         var data = link.data('post-form') ? $(this).closest('form').serialize() : link.data;
         
         updateShoppingCartItems(link.data('href'), data);
@@ -23,9 +21,7 @@ $(function () {
 
         updateShoppingCartItems(url, {
             cartItemId,
-            active: this.checked,
-            isCartPage: true,
-            isWishlist
+            active: this.checked
         });
     });
 
@@ -36,11 +32,7 @@ $(function () {
         const activateAll = $(this).hasClass('select-cart-items');
         const url = orderSummary.data('update-item-url');
 
-        updateShoppingCartItems(url, {
-            activateAll,
-            isCartPage: true,
-            isWishlist
-        });
+        updateShoppingCartItems(url, { activateAll });
         
         return false;
     });
@@ -57,9 +49,7 @@ $(function () {
         var link = $(this);
         updateShoppingCartItems(link.data('href'), {
             cartItemId: link.data("sci-id"),
-            newQuantity: link.val(),
-            isCartPage: true,
-            isWishlist
+            newQuantity: link.val()
         });
 
         return false;
@@ -67,9 +57,15 @@ $(function () {
 
     orderSummary.on('change', '.qty-input .form-control', debouncedUpdate);
 
+    // Let SR initially read the order total summary.
+    $(window).on('load', () => {
+        AccessKit.refreshLiveRegion('sr-order-total-summary');
+    });
+
     function updateShoppingCartItems(url, data) {
-        if (updatingCart)
+        if (updatingCart) {
             return;
+        }
 
         updatingCart = true;
         showThrobber();
@@ -86,7 +82,7 @@ $(function () {
                 }
 
                 if (response.cartItemCount == 0) {
-                    orderSummary.html('<div class="alert alert-warning fade show">' + orderSummary.data('empty-text') + '</div>');
+                    orderSummary.html('<div class="alert alert-warning fade show" role="alert">' + orderSummary.data('empty-text') + '</div>');
                 }
 
                 var cartBody = $(".cart-body");
@@ -129,14 +125,20 @@ $(function () {
                 applyCommonPlugins(cartBody);
 
                 // Update shopbar.
-                ShopBar.loadSummary('cart', true);
-                ShopBar.loadSummary('wishlist', true);
-
+                if (typeof ShopBar !== 'undefined') {
+                    ShopBar.loadSummary('cart', true);
+                    ShopBar.loadSummary('wishlist', true);
+                }
+                
                 hideThrobber();
 
                 var cartRefreshEvent = jQuery.Event('shoppingCartRefresh');
                 cartRefreshEvent.success = response.success;
                 $(document).trigger(cartRefreshEvent);
+
+                if (response.success && response.cartItemCount > 0) {
+                    AccessKit.refreshLiveRegion('sr-order-total-summary');
+                }
             },
             complete: function () {
                 updatingCart = false;

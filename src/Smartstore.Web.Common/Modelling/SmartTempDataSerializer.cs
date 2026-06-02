@@ -1,40 +1,34 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewFeatures.Infrastructure;
-using Smartstore.ComponentModel;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.ViewFeatures.Infrastructure;
+using Smartstore.Json;
+using Smartstore.Json.Polymorphy;
 
-namespace Smartstore.Web.Modelling
+namespace Smartstore.Web.Modelling;
+
+internal class SmartTempDataSerializer : TempDataSerializer
 {
-    internal class SmartTempDataSerializer : TempDataSerializer
+    protected virtual JsonSerializerOptions CreateDefaultOptions()
+        => SmartJsonOptions.Default;
+
+    protected JsonSerializerOptions Options => field ??= CreateDefaultOptions();
+
+    public override bool CanSerializeType(Type type)
+        => true;
+
+    public override IDictionary<string, object> Deserialize(byte[] value)
     {
-        private readonly IJsonSerializer _serializer;
+        if (value is null || value.Length == 0)
+            return new Dictionary<string, object>();
 
-        public SmartTempDataSerializer(IJsonSerializer serializer)
-        {
-            _serializer = serializer;
-        }
+        return Options.DeserializePolymorphic<Dictionary<string, object>>(value);
+    }
 
-        public override bool CanSerializeType(Type type)
-        {
-            return _serializer.CanSerialize(type);
-        }
+    public override byte[] Serialize(IDictionary<string, object> values)
+    {
+        if (values == null || values.Count == 0)
+            return [];
 
-        public override IDictionary<string, object> Deserialize(byte[] unprotectedData)
-        {
-            if (_serializer.TryDeserialize(typeof(IDictionary<string, object>), unprotectedData, false, out var result))
-            {
-                return (IDictionary<string, object>)result;
-            }
-
-            return null;
-        }
-
-        public override byte[] Serialize(IDictionary<string, object> values)
-        {
-            if (_serializer.TrySerialize(values, false, out var result))
-            {
-                return result;
-            }
-
-            return Array.Empty<byte>();
-        }
+        var result = Options.SerializePolymorphicToUtf8Bytes(values);
+        return result;
     }
 }

@@ -58,73 +58,11 @@ browsers:
   - match: /OPR.*?(?<v>[0-9\.]+)/
     name: Opera
 
-  - match: /MSIE.*?(?<v>[0-9\.]+)/
-  - match: /Internet Explorer.*?(?<v>[0-9\.]+)/
-  - match: /Trident.* rv.*?(?<v>[0-9\.]+)/
-    name: Internet Explorer
-
   # Other browsers
   # ------------------------------------------
 
-  - match: /Vivaldi.*?(?<v>[0-9\.]+)/
-    name: Vivaldi
-
-  - match: /Flock.*?(?<v>[0-9\.]+)/
-    name: Flock
-
-  - match: /Shiira.*?(?<v>[0-9\.]+)/
-    name: Shiira
-
-  - match: /Chimera.*?(?<v>[0-9\.]+)/
-    name: Chimera
-
-  - match: /Phoenix.*?(?<v>[0-9\.]+)/
-    name: Phoenix
-
-  - match: /Firebird.*?(?<v>[0-9\.]+)/
-    name: Firebird
-
-  - match: /Camino.*?(?<v>[0-9\.]+)/
-    name: Camino
-
-  - match: /Netscape.*?(?<v>[0-9\.]+)/
-    name: Netscape
-
-  - match: /OmniWeb.*?(?<v>[0-9\.]+)/
-    name: OmniWeb
-
   - match: /Mozilla.*?(?<v>[0-9\.]+)/
     name: Mozilla
-
-  - match: /Konqueror.*?(?<v>[0-9\.]+)/
-    name: Konqueror
-
-  - match: /icab.*?(?<v>[0-9\.]+)/
-    name: iCab
-
-  - match: /Lynx.*?(?<v>[0-9\.]+)/
-    name: Lynx
-
-  - match: /Links.*?(?<v>[0-9\.]+)/
-    name: Links
-
-  - match: /hotjava.*?(?<v>[0-9\.]+)/
-    name: HotJava
-
-  - match: /amaya.*?(?<v>[0-9\.]+)/
-    name: Amaya
-
-  - match: /IBrowse.*?(?<v>[0-9\.]+)/
-    name: IBrowse
-
-  - match: /Maxthon.*?(?<v>[0-9\.]+)/
-    name: Maxthon
-
-  - match: /ipod touch.*?(?<v>[0-9\.]+)/
-    name: Apple iPod
-
-  - match: /Ubuntu.*?(?<v>[0-9\.]+)/
-    name: Ubuntu Web Browser
 
   - match: /Smartstore.*?(?<v>[0-9\.]+)/
     name: Smartstore
@@ -137,12 +75,6 @@ browsers:
 platforms:
   - match: windows nt 10.0
     name: Windows 10
-
-  - match: windows nt 6.3
-    name: Windows 8.1
-
-  - match: windows nt 6.2
-    name: Windows 8
     family: Windows
 
   - match: android
@@ -157,40 +89,20 @@ platforms:
 
   - match: os x
     name: Mac OS X
-  - match: ppc mac
-    name: Power PC Mac
     family: MacOS
 
-  - match: BlackBerry
-    name: BlackBerry
-    family: BlackBerry
+  - match: CrOS
+    name: Chrome OS
+    family: Linux
 
-  - match: FreeBSD
-    name: FreeBSD
-  - match: ppc
-    name: Macintosh
   - match: linux
     name: Linux
   - match: debian
     name: Debian
     family: Linux
 
-  - match: sunos
-    name: Sun Solaris
-  - match: beos
-    name: BeOS
   - match: apachebench
     name: ApacheBench
-  - match: aix
-    name: AIX
-  - match: irix
-    name: Irix
-  - match: osf
-    name: DEC OSF
-  - match: netbsd
-    name: NetBSD
-  - match: bsdi
-    name: BSDi
     family: Generic
 
   - match: hp-ux
@@ -215,37 +127,6 @@ platforms:
 
   - match: windows nt 6.1
     name: Windows 7
-
-  - match: windows nt 6.0
-    name: Windows Vista
-
-  - match: windows nt 5.2
-    name: Windows 2003
-
-  - match: windows nt 5.1
-    name: Windows XP
-
-  - match: windows nt 5.0
-    name: Windows 2000
-
-  - match: windows nt 4.0
-  - match: winnt4.0
-    name: Windows NT 4.0
-
-  - match: winnt 4.0
-  - match: winnt
-    name: Windows NT
-
-  - match: windows 98
-  - match: win98
-    name: Windows 98
-
-  - match: windows 95
-  - match: win95
-    name: Windows 95
-
-  - match: windows phone
-    name: Windows Phone
 
   - match: windows
     name: Unknown Windows OS
@@ -296,8 +177,6 @@ bots:
   - match: Google-Extended
   - match: Google-InspectionTool
   - match: Google-CloudVertexBot
-  - match: Google SketchUp
-  - match: StartmeBot
     name: $1
 
   - match: AdsBot-Google
@@ -320,14 +199,16 @@ bots:
   - match: AhrefsBot
     name: $1
 
-  - match: Owler
-    name: OWLer - Open Web Crawler
-  
   # AI Bots
   - match: GPTBot
+  - match: ChatGPT
+    name: OpenAI ChatGPT
   - match: OAI-SearchBot
-  - match: OAI-Bot/
+  - match: OAI-Bot
     name: OpenAI GPT Bot
+
+  - match: OpenAI
+    name: OpenAI
 
   - match: DeepSeek
     name: DeepSeek Chat Bot
@@ -345,8 +226,14 @@ bots:
   - match: PerplexityBot/
     name: Perplexity Bot
 
+  - match: Perplexity
+    name: Perplexity
+
   - match: anthropic-ai
     name: Anthropic AI
+
+  - match: Anthropic
+    name: Anthropic
 
   - match: /[cC]laude[bB]ot/
     name: Claude Bot
@@ -357,14 +244,57 @@ bots:
   - match: HuggingFace-Bot
     name: Hugging Face Transformers
 
-  - match: InflectionPi
-  - match: YouBot/
-  - match: CCBot/
-  - match: ScaleAI-Bot/
   - match: Diffbot/
     name: $1
-   
+
+  - match: Grok/
+    name: xAI Grok
+
+  - match: meta-externalagent
+    name: Meta External Agent
+
+  - match: MistralAI-crawler
+    name: Mistral AI Crawler
+
+  - match: Claude-Web
+    name: Claude Web
+
+  - match: Applebot-Extended
+    name: $1
+
+  # Automation frameworks / agentic browsing
+  - match: Playwright
+  - match: Puppeteer
+  - match: Selenium
+  - match: WebDriver
+  - match: Cypress
+  - match: k6/
+    name: $1
+
   # Common tools, readers & apps
+  - match: PostmanRuntime
+    name: Postman
+
+  - match: Insomnia
+    name: Insomnia
+
+  - match: node-fetch
+  - match: undici
+  - match: libwww-perl
+    name: $1
+
+  - match: Go-http-client
+    name: Go http client
+
+  - match: Java/
+    name: Java
+
+  - match: Apache-HttpClient
+    name: Apache HttpClient
+
+  - match: Wget/
+    name: Wget
+
   - match: python/
     name: Python
 
@@ -383,37 +313,48 @@ bots:
   - match: Chrome-Lighthouse
     name: Chrome Lighthouse
 
+  - match: Scrapy/
+    name: Scrapy
+
+  - match: httpx/
+    name: httpx
+
+  - match: aiohttp/
+    name: aiohttp
+
+  - match: Got/
+    name: got
+
+  # Social media bots
+  - match: Discordbot
+  - match: Slackbot
+    name: $1
+
+  - match: TelegramBot
+    name: Telegram Bot
+
+  - match: SkypeUriPreview
+    name: Skype Link Preview
+
+  - match: Redditbot
+    name: Reddit Bot
+
   - match: WhatsApp
   - match: Twitterbot
   - match: urlwatch
   - match: uptime-kuma
   - match: UptimeRobot
-  - match: PhxBot
-  - match: ImagesiftBot
-  - match: PaperLiBot
-  - match: GeedoBot
-  - match: Audisto Crawler
-  - match: Monsidobot
-  - match: GroupMeBot
   - match: DataForSeoBot
   - match: MetaInspector
   - match: Iframely
-  - match: Synapse
+
   - match: lua-restly-http
   - match: Nessus
   - match: Pingdom
-  - match: coccocbot-web
-  - match: MojeekBot
   - match: SiteAuditBot
   - match: AwarioBot
   - match: PinterestBot
-  - match: SurdotlyBot
-  - match: WebwikiBot
-  - match: ZumBot
-  - match: Newslitbot
   - match: Feedly
-  - match: Accoona
-  - match: altavista
     name: $1
 
   - match: WordPress/
@@ -422,11 +363,20 @@ bots:
   - match: axios/
     name: Axios
 
-  - match: kube-prob/
+  - match: kube-probe/
     name: Kube Probe
 
   - match: Prometheus/
     name: Prometheus
+
+  - match: Datadog/
+    name: Datadog Agent
+
+  - match: NewRelicPinger/
+    name: New Relic
+
+  - match: StatusCake
+    name: $1
 
   - match: GuzzleHttp/
     name: Guzzle Http
@@ -441,33 +391,14 @@ bots:
   - match: Storebot-Google
     name: Google Storebot
 
-  - match: msnbot
-    name: MSN Bot
-
-  - match: BW/1.1
-    name: BuiltWith
-
-  - match: W3C
-    name: W3C Validator/Checker
-
   - match: Wappalyzer
   - match: PayPal IPN
   - match: Amazonbot
   - match: ShopAlike
-  - match: ImageProxy
-  - match: FastCrawler
-  - match: Lycos
   - match: Cloudflare
-  - match: Curious George
   - match: BingPreview
   - match: LinkedInBot
     name: $1
-
-  - match: infoseek
-    name: InfoSeek Robot 1.0
-
-  - match: CRAZYWEBCRAWLER
-    name: Crazy Webcrawler
 
   - match: Google-Read-Aloud
     name: Google ReadAloud
@@ -481,17 +412,6 @@ bots:
   - match: ia_archiver
     name: Alexa Crawler
 
-  - match: MJ12bot
-    name: Majestic
-
-  - match: OmigiliBot
-    name: Webz.io (Omigili Bot)
-
-  - match: CheckMarkNetwork
-  - match: Uptimebot
-  - match: BLEXBot
-    name: $1
-
   - match: DotBot
     name: OpenSite
 
@@ -500,20 +420,13 @@ bots:
 
   - match: MegaIndex
   - match: SemrushBot
-  - match: SEOkicks
     name: $1
 
-  - match: seoscanners.net
-    name: SEO Scanners
-
-  - match: sistrix
-    name: Sistrix
+  - match: ScreamingFrogSEOSpider
+    name: Screaming Frog SEO Spider
 
   - match: check_http
     name: Check HTTP
-
-  - match: NetNewsWire
-    name: NetNewsWire RSS reader
 
   - match: iisbot
     name: IIS Bot
@@ -523,9 +436,6 @@ bots:
 
   - match: Yeti/
     name: Yeti bot
-
-  - match: yacybot
-    name: Yacy bot
 
   - match: crawler
   - match: spider
@@ -544,17 +454,6 @@ bots:
 # ===================================
 
 devices:
-  # Legacy
-  - match: mobileexplorer
-    name: Mobile Explorer
-
-  - match: palmsource
-  - match: palm
-    name: Palm
-
-  - match: Palmscape
-    name: $1 
-
   # Phones and Manufacturers
   - match: Motorola
   - match: Nokia
@@ -567,142 +466,61 @@ devices:
     name: Apple iPhone
 
   - match: ipod
-    name: Apple iPod 
+    name: Apple iPod
 
   - match: surface
-    name: Microsoft Surface 
+    name: Microsoft Surface
 
-  - match: sonyericsson
-  - match: ericsson
-    name: Sony Ericsson
-
-  - match: BlackBerry
-    name: $1 
-
-  - match: cocoon
-    name: O2 Cocoon
-
-  - match: blazer
-    name: Treo 
-
-  - match: LG
-  - match: Amoi
-  - match: XDA
-  - match: MDA
-  - match: Vario
-  - match: HTC
   - match: Samsung
   - match: Sharp
-    name: $1 
-
-  - match: sie-
-    name: Siemens 
-
-  - match: Alcatel
-  - match: BenQ
     name: $1
 
-  - match: ipaq
-    name: HP iPaq
+  - match: Xiaomi
+  - match: Redmi
+  - match: POCO
+    name: $1
 
-  - match: mot-
-    name: Motorola
+  - match: Huawei
+  - match: HONOR
+    name: $1
+
+  - match: OnePlus
+  - match: Realme
+  - match: OPPO
+  - match: vivo
+  - match: ZTE
+    name: $1
 
   - match: PlayStation Portable
   - match: PlayStation 3
   - match: PlayStation 4
   - match: PlayStation 5
   - match: PlayStation Vita
-    name: $1 
+    name: $1
 
-  - match: hiptop
-    name: Danger Hiptop
-
-  - match: nec-
-    name: NEC 
-
-  - match: Panasonic
-  - match: Philips
-  - match: Sagem
-  - match: Sanyo
-  - match: SPV
-  - match: ZTE
-  - match: Sendo
   - match: Nintendo DSi
   - match: Nintendo DS
   - match: Nintendo 3DS
     name: $1
 
-  - match: wii
-    name: Nintendo Wii
+  - match: Pixel
+    name: Google Pixel
 
-  - match: Open Web
-  - match: OpenWeb
-  - match: Nexus
-    name: $1
-
-  - match: XOOM
-    name: Motorola Xoom 
-
-  - match: Transformer
   - match: Kindle
     name: $1
 
   - match: silk
-    name: Kindle Fire 
+    name: Kindle Fire
 
-  - match: Playbook
   - match: Puffin
     name: $1
 
-  # Operating Systems
   - match: Android
-  - match: Symbian
-  - match: SymbianOS
     name: $1
-
-  - match: elaine
-    name: Palm
-
-  - match: series60
-    name: Symbian S60 
-
-  - match: Windows CE
-    name: $1
-
-  # Browsers
-  - match: Obigo
-    name: $1 
-
-  - match: netfront
-    name: Netfront Browser
-
-  - match: openwave
-    name: Openwave Browser
 
   - match: operamini
   - match: opera mini
     name: Opera Mini
-
-  - match: opera mobi
-    name: Opera Mobile
-
-  - match: fennec
-    name: Firefox Mobile
-
-  # Other
-  - match: Digital Paths
-  - match: AvantGo
-  - match: Xiino
-  - match: Vodafone
-  - match: O2
-    name: $1 
-
-  - match: novarra
-    name: Novarra Transcoder 
-
-  - match: docomo
-    name: NTT DoCoMo 
 
   # Fallback
   - match: mobile
@@ -722,4 +540,4 @@ devices:
 # ===================================
 
 tablets:
-  - match: /(ipad|tablet|surface|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/ 
+  - match: /(ipad|matepad|sm-t[0-9]|tablet|surface|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/ 

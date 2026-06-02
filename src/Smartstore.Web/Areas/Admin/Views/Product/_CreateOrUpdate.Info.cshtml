@@ -1,9 +1,15 @@
 ﻿@using Smartstore.Core.Catalog.Products
 @using Smartstore.Core.Checkout.GiftCards
+@using Smartstore.Engine.Modularity
 
 @inject ILanguageService languageService
+@inject IModuleCatalog moduleCatalog
 
 @model ProductModel
+
+@{
+    var withdrawalPeriodDays = await CommonServices.Settings.GetSettingByKeyAsync<string>("WithdrawalSettings.WithdrawalPeriodDays");
+}
 
 <script sm-target-zone="Scripts" data-origin="product-info">
 	$(function () {
@@ -344,6 +350,17 @@
         <div class="adminData">
             <select asp-for="ProductTagNames" asp-items="ViewBag.SelectedProductTags" class="noskin" multiple="multiple" data-tags="true"></select>
             <span asp-validation-for="ProductTagNames"></span>
+        </div>
+    </div>
+    <div class="adminRow" sm-if="@(moduleCatalog.GetModuleByName("Smartstore.Withdrawal") != null)">
+        <div class="adminTitle">
+            <smart-label asp-for="WithdrawalPeriodDays" />
+        </div>
+        <div class="adminData">
+            <editor asp-for="WithdrawalPeriodDays" 
+                    sm-postfix="@T("Time.Days")" 
+                    placeholder="@(withdrawalPeriodDays.NullEmpty() ?? T("Common.Unlimited"))" />
+            <span asp-validation-for="WithdrawalPeriodDays"></span>
         </div>
     </div>
     <div class="adminRow">

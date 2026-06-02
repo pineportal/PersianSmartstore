@@ -5,84 +5,90 @@ using Smartstore.Core;
 using Smartstore.Core.Checkout.Orders;
 using Smartstore.Core.Checkout.Payment;
 using Smartstore.Core.Logging;
+using Smartstore.Core.Stores;
 using Smartstore.Core.Widgets;
 using Smartstore.Web.Controllers;
 
-namespace Smartstore.AmazonPay.Filters
+namespace Smartstore.AmazonPay.Filters;
+
+public class CheckoutFilter : IAsyncActionFilter
 {
-    public class CheckoutFilter : IAsyncActionFilter
+    private readonly IStoreContext _storeContext;
+    private readonly IWorkContext _workContext;
+    private readonly INotifier _notifier;
+    private readonly Lazy<IPaymentService> _paymentService;
+    private readonly Lazy<IUrlHelper> _urlHelper;
+    private readonly Lazy<IWidgetProvider> _widgetProvider;
+    private readonly ICheckoutStateAccessor _checkoutStateAccessor;
+    private readonly OrderSettings _orderSettings;
+    private readonly Localizer T;
+
+    public CheckoutFilter(
+        IStoreContext storeContext,
+        IWorkContext workContext,
+        INotifier notifier,
+        Lazy<IPaymentService> paymentService,
+        Lazy<IUrlHelper> urlHelper,
+        Lazy<IWidgetProvider> widgetProvider,
+        ICheckoutStateAccessor checkoutStateAccessor,
+        OrderSettings orderSettings,
+        Localizer localizer)
     {
-        private readonly ICommonServices _services;
-        private readonly Lazy<IPaymentService> _paymentService;
-        private readonly Lazy<IUrlHelper> _urlHelper;
-        private readonly Lazy<IWidgetProvider> _widgetProvider;
-        private readonly ICheckoutStateAccessor _checkoutStateAccessor;
-        private readonly OrderSettings _orderSettings;
+        _storeContext = storeContext;
+        _workContext = workContext;
+        _notifier = notifier;
+        _paymentService = paymentService;
+        _urlHelper = urlHelper;
+        _widgetProvider = widgetProvider;
+        _checkoutStateAccessor = checkoutStateAccessor;
+        _orderSettings = orderSettings;
+        T = localizer;
+    }
 
-        public CheckoutFilter(
-            ICommonServices services,
-            Lazy<IPaymentService> paymentService,
-            Lazy<IUrlHelper> urlHelper,
-            Lazy<IWidgetProvider> widgetProvider,
-            ICheckoutStateAccessor checkoutStateAccessor,
-            OrderSettings orderSettings)
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        var action = context.RouteData.Values.GetActionName();
+
+        if (action.EqualsNoCase(nameof(CheckoutController.Completed)))
         {
-            _services = services;
-            _paymentService = paymentService;
-            _urlHelper = urlHelper;
-            _widgetProvider = widgetProvider;
-            _checkoutStateAccessor = checkoutStateAccessor;
-            _orderSettings = orderSettings;
-        }
-
-        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
-        {
-            var action = context.RouteData.Values.GetActionName();
-
-            if (action.EqualsNoCase(nameof(CheckoutController.Completed)))
+            var session = context.HttpContext.Session;
+            var responseStatus = session.GetString("AmazonPayResponseStatus");
+            if (responseStatus.HasValue())
             {
-                var session = context.HttpContext.Session;
-                var responseStatus = session.GetString("AmazonPayResponseStatus");
-                if (responseStatus.HasValue())
+                if (await IsAmazonPayActive())
                 {
-                    if (await IsAmazonPayActive())
+                    // 202 (Accepted): authorization is pending.
+                    string completedNote = responseStatus == "202"
+                        ? T("Plugins.Payments.AmazonPay.AsyncPaymentAuthorizationNote")
+                        : string.Empty;
+
+                    if (!_orderSettings.DisableOrderCompletedPage)
                     {
-                        // 202 (Accepted): authorization is pending.
-                        var completedNote = responseStatus == "202"
-                            ? _services.Localization.GetResource("Plugins.Payments.AmazonPay.AsyncPaymentAuthorizationNote")
-                            : string.Empty;
-
-                        if (!_orderSettings.DisableOrderCompletedPage)
-                        {
-                            _widgetProvider.Value.RegisterWidget("checkout_completed_top",
-                                new PartialViewWidget("_CheckoutCompleted", completedNote, "Smartstore.AmazonPay"));
-                        }
-                        else if (completedNote.HasValue())
-                        {
-                            _services.Notifier.Information(completedNote);
-                        }
+                        _widgetProvider.Value.RegisterWidget("checkout_completed_top",
+                            new PartialViewWidget("_CheckoutCompleted", completedNote, "Smartstore.AmazonPay"));
                     }
-
-                    session.TryRemove("AmazonPayResponseStatus");
+                    else if (completedNote.HasValue())
+                    {
+                        _notifier.Information(completedNote);
+                    }
                 }
 
-                await next();
-                return;
+                session.TryRemove("AmazonPayResponseStatus");
             }
 
-            var state = _checkoutStateAccessor.CheckoutState.GetCustomState<AmazonPayCheckoutState>();
+            await next();
+            return;
+        }
 
-            if (state.SessionId.HasValue() && IsAmazonPaySelected() && await IsAmazonPayActive())
+        if (IsAmazonPaySelected() && await IsAmazonPayActive())
+        {
+            var state = _checkoutStateAccessor.CheckoutState.GetCustomState<AmazonPayCheckoutState>();
+            if (state.SessionId.HasValue())
             {
                 if (action.EqualsNoCase(nameof(CheckoutController.PaymentMethod)))
                 {
                     context.Result = new RedirectResult(_urlHelper.Value.Action(nameof(CheckoutController.Confirm), "Checkout"));
                     return;
-                }
-                else if (action.EqualsNoCase(nameof(CheckoutController.Confirm)))
-                {
-                    _widgetProvider.Value.RegisterWidget("end",
-                        new PartialViewWidget("_CheckoutConfirm", state, "Smartstore.AmazonPay"));
                 }
                 else
                 {
@@ -90,14 +96,14 @@ namespace Smartstore.AmazonPay.Filters
                         new PartialViewWidget("_CheckoutNavigation", state, "Smartstore.AmazonPay"));
                 }
             }
-
-            await next();
         }
 
-        private bool IsAmazonPaySelected()
-            => _services.WorkContext.CurrentCustomer.GenericAttributes.SelectedPaymentMethod.EqualsNoCase(AmazonPayProvider.SystemName);
-
-        private Task<bool> IsAmazonPayActive()
-            => _paymentService.Value.IsPaymentProviderActiveAsync(AmazonPayProvider.SystemName, null, _services.StoreContext.CurrentStore.Id);
+        await next();
     }
+
+    private bool IsAmazonPaySelected()
+        => _workContext.CurrentCustomer.GenericAttributes.SelectedPaymentMethod.EqualsNoCase(AmazonPayProvider.SystemName);
+
+    private Task<bool> IsAmazonPayActive()
+        => _paymentService.Value.IsPaymentProviderActiveAsync(AmazonPayProvider.SystemName, null, _storeContext.CurrentStore.Id);
 }

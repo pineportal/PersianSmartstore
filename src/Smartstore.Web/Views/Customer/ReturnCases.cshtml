@@ -1,0 +1,93 @@
+﻿@using Smartstore.Web.Models.Customers
+@using Smartstore.Utilities.Html
+@using Smartstore.Core.Checkout.Orders
+
+@model CustomerReturnCasesModel
+
+@{
+    Layout = "_MyAccount";
+
+    Assets.AppendTitleParts(T("PageTitle.Account"));
+
+    ViewBag.PageClassToken = "returncases";
+    ViewBag.PageTitle = T("Account.CustomerReturnRequests").Value;
+}
+
+<ul class="return-cases-grid list-unstyled" aria-labelledby="myaccount-header">
+    @foreach (var item in Model.ReturnCases)
+    {
+        var rc = item.ReturnCase;
+        var complete = rc.Complete;
+        var isWithdrawal = rc.Kind == ReturnCaseKind.Withdrawal;
+        <li class="returncase-item mb-3" aria-labelledby="returncase-title@(rc.Id)">
+            <div class="card">
+                <div class="card-body">
+                    <h2 id="returncase-title@(rc.Id)" class="card-title h5 mb-4">
+                        <i class="fal fa-fw fal @(isWithdrawal ? "fa-reply-all" : "fa-truck") mr-1" aria-hidden="true"></i>
+                        <span>@(rc.KindStr) &middot; @T("ReturnCase.Case", rc.Id)</span>
+                    </h2>
+                    <dl class="row mb-0" role="presentation">
+                        <dt class="col-sm-4 fwn text-muted">@T("Common.Status")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(complete ? "badge-secondary" : "badge-warning") mr-1">
+                                @T(complete ? "ReturnCase.Complete" : "ReturnCase.Open")
+                            </span>
+                            <span>@(isWithdrawal? T("ReturnCase.ReceivedWithdrawal") : rc.ReturnCaseStatusStr)</span>
+                        </dd>
+                        @if(!isWithdrawal)
+                        {
+                            <dt class="col-sm-4 fwn text-muted">@T("ReturnCase.NextStep")</dt>
+                            <dd class="col-sm-8">@T($"ReturnCase.NextStep.{rc.ReturnCaseStatus}")</dd>
+                        }
+                        @if (!isWithdrawal && rc.ReasonForReturn.HasValue())
+                        {
+                            <dt class="col-sm-4 fwn text-muted">@T("Account.CustomerReturnRequests.Reason")</dt>
+                            <dd class="col-sm-8">@rc.ReasonForReturn</dd>
+                        }
+                        @if (!isWithdrawal && rc.RequestedAction.HasValue())
+                        {
+                            <dt class="col-sm-4 fwn text-muted">@T("Account.CustomerReturnRequests.Action")</dt>
+                            <dd class="col-sm-8">@rc.RequestedAction</dd>
+                        }
+                        <dt class="col-sm-4 fwn text-muted">@T("Order.Order#")</dt>
+                        <dd class="col-sm-8">
+                            <a href="@Url.Action("Details", "Order", new { id = rc.OrderId })" 
+                               rel="nofollow" 
+                               title="@T("Order.OrderDetails")" 
+                               class="link-body link-transition link-dnu">@rc.OrderNumber</a>
+                        </dd>
+                        <dt class="col-sm-4 fwn text-muted">@T("Account.CustomerReturnRequests.Item")</dt>
+                        <dd class="col-sm-8">
+                            <a href="@item.ProductUrl" 
+                               title="@T("Products.Details")" 
+                               sm-language-attributes-for="item.ProductName" 
+                               class="link-body link-transition link-dnu">@item.ProductName</a>
+                        </dd>
+                        <dt class="col-sm-4 fwn text-muted">@T(isWithdrawal ? "ReturnCase.WithdrawalQuantity" : "ReturnRequests.Products.Quantity")</dt>
+                        <dd class="col-sm-8">@rc.Quantity.ToString("N0")</dd>
+                        <dt class="col-sm-4 fwn text-muted">@T("Account.CustomerReturnRequests.Date")</dt>
+                        <dd class="col-sm-8">
+                            <time asp-for="@rc.CreatedOn" sm-format="g"></time>
+                        </dd>
+                        @if (rc.CustomerComments.HasValue())
+                        {
+                            <dt class="col-sm-4 fwn text-muted">@T("Account.CustomerReturnRequests.Comments")</dt>
+                            <dd class="col-sm-8" dir="auto">@Html.Raw(HtmlUtility.ConvertPlainTextToHtml(rc.CustomerComments))</dd>
+                        }
+                    </dl>
+                </div>
+                <div class="card-footer d-flex p-2">
+                    <a href="@Url.Action("Details", "Order", new { id = rc.OrderId })" class="btn btn-light btn-sm btn-flat" rel="nofollow">
+                        <i class="far fa-rectangle-list" aria-hidden="true"></i>
+                        <span>@T("Order.OrderDetails")</span>
+                        <span class="sr-only"> @rc.OrderNumber</span>
+                    </a>
+                </div>
+            </div>
+        </li>
+    }
+</ul>
+
+<div sm-if="Model.ReturnCases.TotalPages > 1" class="mt-1">
+    <pagination sm-list-items="Model.ReturnCases" sm-query-param="page" id="paginator" />
+</div>

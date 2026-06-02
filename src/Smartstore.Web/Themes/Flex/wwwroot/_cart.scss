@@ -157,7 +157,7 @@
 
     .heading-title {
         background-color: $offcanvas-cart-footer;
-        color: rgba(#fff, 0.8);
+        color: rgba($white, 0.8);
         margin-bottom: 0;
         text-transform: uppercase;
     }
@@ -271,7 +271,7 @@
     display: grid !important;
     grid-template-columns: fit-content(50%) fit-content(50%); 
     gap: 4px 12px;
-    line-height: 1.2;
+    line-height: 1.25;
 
     > span:nth-child(odd) {
         font-weight: $font-weight-medium;
@@ -343,9 +343,13 @@
     width: 100%;
     line-height: 1.3;
 
-    td {
+    :is(td, th) {
         padding: 0.4rem 0;
         vertical-align: top;
+    }
+
+    th {
+        font-weight: $font-weight-normal;
     }
 
     .cart-summary-label {
@@ -369,10 +373,11 @@
     }
 
     .cart-summary-total {
-        font-size: $font-size-lg;
-        font-weight: $font-weight-medium;
-
-        td { padding-top: 0.75rem; }
+        > :is(td, th) {
+            padding-top: 0.75rem;
+            font-size: $font-size-lg;
+            font-weight: $font-weight-medium;
+        }
     }
 
     .cart-summary-giftcard br {
@@ -400,9 +405,7 @@
 	}
 }
 
-.table-order-products .productpicture,
-.table-order-products .remove,
-.table-order-products .addtocart {
+.table-order-products :is(.productpicture, .remove, .addtocart) {
     text-align: center;
 }
 

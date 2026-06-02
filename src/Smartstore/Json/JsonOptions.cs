@@ -1,0 +1,270 @@
+﻿#nullable enable
+
+using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Smartstore.Json.Converters;
+using Smartstore.Json.Modifiers;
+using Smartstore.Json.Polymorphy;
+
+namespace Smartstore.Json;
+
+/// <summary>
+/// Provides preconfigured and utility options for System.Text.Json serialization that closely match Newtonsoft.Json
+/// (Json.NET) defaults, along with helpers for customizing and applying JSON serializer settings.
+/// </summary>
+/// <remarks>The SmartJsonOptions class supplies ready-to-use JsonSerializerOptions instances, such as Default and
+/// CamelCased, that emulate common Newtonsoft.Json behaviors for compatibility and ease of migration. It also includes
+/// extension methods for creating, modifying, and applying options, as well as support for DataContract attributes.
+/// These options are intended to simplify configuration and ensure consistent JSON serialization across
+/// applications.</remarks>
+public static class SmartJsonOptions
+{
+    /// <summary>
+    /// The default baseline JsonSerializerOptions configured to mimic Newtonsoft.Json (Json.NET) default behaviors.
+    /// </summary>
+    public static readonly JsonSerializerOptions Default = new(JsonSerializerDefaults.General)
+    {
+        // NSJ default
+        AllowTrailingCommas = true,
+
+        // Include public fields (default NSJ behaviour)
+        IncludeFields = true,
+
+        // NSJ default
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip,
+
+        // NSJ default
+        PropertyNameCaseInsensitive = false,
+
+        // Our previous NSJ naming policy was member-casing (which does nothing)
+        PropertyNamingPolicy = null,
+
+        // Cycles become null'd instead of throwing.
+        // NSJ: ReferenceLoopHandling.Ignore
+        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+
+        // STJ supports a global preference (net8+ / net10 docs shown here).
+        // Replace is the closest equivalent to "create new instance instead of populating existing".
+        // NSJ: ObjectCreationHandling.Replace
+        PreferredObjectCreationHandling = JsonObjectCreationHandling.Replace,
+
+        // NSJ: NullValueHandling.Ignore
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+
+        // NSJ: MaxDepth
+        MaxDepth = 32,
+
+        // NSJ default
+        ReadCommentHandling = JsonCommentHandling.Skip,
+
+        // NSJ default
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+
+        // Create a resolver early to allow adding modifiers
+        TypeInfoResolver = (JsonSerializer.IsReflectionEnabledByDefault ? new DefaultJsonTypeInfoResolver() : JsonTypeInfoResolver.Combine())
+            .WithPolymorphyModifier()
+            .WithDefaultValueModifier()
+            .WithDataContractModifier()
+            .WithDefaultImplementationModifier(),
+
+        Converters =
+        {
+            // Read and write "Type" as assembly-qualified name without version info.
+            new TypeJsonConverter(),
+            // Serialize enums as strings, not as ints.
+            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true),
+            // RouteValueDictionary: write/read via IDictionary<string, object?>.
+            new RouteValueDictionaryJsonConverter()
+        }
+    };
+
+    /// <summary>
+    /// Gets a default set of JsonSerializerOptions configured to ignore properties with default values when serializing
+    /// objects to JSON.
+    /// </summary>
+    public static readonly JsonSerializerOptions DefaultIgnoreDefaults = Default.Create(o =>
+    {
+        o.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+    });
+
+    /// <summary>
+    /// Gets a preconfigured instance of <see cref="JsonSerializerOptions"/> that uses camel case for property names
+    /// during serialization and deserialization.
+    /// </summary>
+    public static readonly JsonSerializerOptions CamelCased = Default.Create(o =>
+    {
+        o.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        o.PropertyNameCaseInsensitive = true;
+    });
+
+    /// <summary>
+    /// Provides a preconfigured <see cref="JsonSerializerOptions"/> instance that uses camel case property naming and
+    /// ignores properties with default values during serialization.
+    /// </summary>
+    public static readonly JsonSerializerOptions CamelCasedIgnoreDefaults = CamelCased.Create(o =>
+    {
+        o.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+    });
+
+    /// <summary>
+    /// Provides a preconfigured <see cref="JsonSerializerOptions"/> instance that uses snake_case naming for JSON
+    /// properties and enables case-insensitive property name matching.
+    /// </summary>
+    public static readonly JsonSerializerOptions SnakeCased = Default.Create(o =>
+    {
+        o.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        o.PropertyNameCaseInsensitive = true;
+    });
+
+    /// <summary>
+    /// Provides a set of JsonSerializerOptions configured to use snake_case property naming and to ignore properties
+    /// with default values when serializing JSON.
+    /// </summary>
+    public static readonly JsonSerializerOptions SnakeCasedIgnoreDefaults = SnakeCased.Create(o =>
+    {
+        o.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+    });
+
+    #region DataContract & polymorphy support modifiers
+
+    /// <summary>
+    /// Returns a JSON type info resolver that applies polymorphic serialization and deserialization modifiers to
+    /// types and members that opt into polymorphy support by using the <see cref="PolymorphicAttribute"/>.
+    /// </summary>
+    /// <remarks>Use this method to enable polymorphic type handling in System.Text.Json serialization
+    /// like Newtonsoft.Json does with the $type discriminator.</remarks>
+    public static IJsonTypeInfoResolver WithPolymorphyModifier(this IJsonTypeInfoResolver typeInfoResolver)
+    {
+        return Guard.NotNull(typeInfoResolver)
+            .WithAddedModifier(PolymorphyModifier.Apply);
+    }
+
+    /// <summary>
+    /// Returns a JSON type info resolver that uses <see cref="DefaultImplementationAttribute"/> to provide
+    /// a concrete default implementation when deserializing interface/abstract declared types.
+    /// </summary>
+    public static IJsonTypeInfoResolver WithDefaultImplementationModifier(this IJsonTypeInfoResolver typeInfoResolver)
+    {
+        return Guard.NotNull(typeInfoResolver)
+            .WithAddedModifier(DefaultImplementationModifier.Apply);
+    }
+
+    /// <summary>
+    /// Returns a JSON type info resolver that applies DataContract-related modifiers, enabling support for DataContract
+    /// attributes during serialization and deserialization.
+    /// </summary>
+    /// <remarks>The returned resolver will honor <see
+    /// cref="System.Runtime.Serialization.IgnoreDataMemberAttribute"/> and ignore the member completely.</remarks>
+    public static IJsonTypeInfoResolver WithDataContractModifier(this IJsonTypeInfoResolver typeInfoResolver)
+    {
+        return Guard.NotNull(typeInfoResolver)
+            .WithAddedModifier(IgnoreDataMemberModifier.Apply);
+    }
+
+    /// <summary>
+    /// Returns a new JSON type info resolver that applies a modifier to handle default values from the [DefaultValue] 
+    /// attribute during serialization.
+    /// </summary>
+    /// <remarks>The returned resolver will honor the <see cref="DefaultValueAttribute"/> annotation, allowing for customized
+    /// default values during serialization.</remarks>
+    public static IJsonTypeInfoResolver WithDefaultValueModifier(this IJsonTypeInfoResolver typeInfoResolver)
+    {
+        return Guard.NotNull(typeInfoResolver)
+            .WithAddedModifier(DefaultValueModifier.Apply);
+    }
+
+    #endregion
+
+    extension(JsonSerializerOptions options)
+    {
+        /// <summary>
+        /// Creates a new instance of <see cref="JsonSerializerOptions"/> based on the current options, allowing
+        /// additional configuration through the specified delegate.
+        /// </summary>
+        /// <remarks>The returned options are independent of the original options and can be modified
+        /// without affecting the source instance.</remarks>
+        /// <param name="configure">A delegate that receives the new <see cref="JsonSerializerOptions"/> instance for further customization.
+        /// Cannot be null.</param>
+        /// <returns>A new <see cref="JsonSerializerOptions"/> instance configured with the specified delegate.</returns>
+        public JsonSerializerOptions Create(Action<JsonSerializerOptions> configure)
+        {
+            Guard.NotNull(options);
+            Guard.NotNull(configure);
+
+            var opts = new JsonSerializerOptions(options);
+            configure(opts);
+            return opts;
+        }
+
+        /// <summary>
+        /// Applies the current set of JSON serializer options to the specified target <see
+        /// cref="JsonSerializerOptions"/> instance.
+        /// </summary>
+        /// <remarks>This method copies all relevant option values and converters from the current options
+        /// to the specified target. Existing converters on the target that match by type are not duplicated. The method
+        /// does not create a new <see cref="JsonSerializerOptions"/> instance; it modifies and returns the provided
+        /// target instance.</remarks>
+        /// <param name="target">The <see cref="JsonSerializerOptions"/> instance to which the options will be applied. Cannot be null.</param>
+        /// <returns>The <paramref name="target"/> instance with the updated serializer options applied.</returns>
+        public JsonSerializerOptions ApplyTo(JsonSerializerOptions target)
+        {
+            Guard.NotNull(options);
+            Guard.NotNull(target);
+
+            target.AllowOutOfOrderMetadataProperties = options.AllowOutOfOrderMetadataProperties;
+            target.AllowTrailingCommas = options.AllowTrailingCommas;
+            target.DefaultIgnoreCondition = options.DefaultIgnoreCondition;
+            target.DefaultBufferSize = options.DefaultBufferSize;
+            target.DictionaryKeyPolicy = options.DictionaryKeyPolicy;
+            target.Encoder = options.Encoder;
+            target.IgnoreReadOnlyFields = options.IgnoreReadOnlyFields;
+            target.IgnoreReadOnlyProperties = options.IgnoreReadOnlyProperties;
+            target.IncludeFields = options.IncludeFields;
+            target.IndentCharacter = options.IndentCharacter;
+            target.IndentSize = options.IndentSize;
+            target.MaxDepth = options.MaxDepth;
+            target.NewLine = options.NewLine;
+            target.NumberHandling = options.NumberHandling;
+            target.PreferredObjectCreationHandling = options.PreferredObjectCreationHandling;
+            target.PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive;
+            target.PropertyNamingPolicy = options.PropertyNamingPolicy;
+            target.ReadCommentHandling = options.ReadCommentHandling;
+            target.ReferenceHandler = options.ReferenceHandler;
+            target.RespectNullableAnnotations = options.RespectNullableAnnotations;
+            target.RespectRequiredConstructorParameters = options.RespectRequiredConstructorParameters;
+            target.UnknownTypeHandling = options.UnknownTypeHandling;
+            target.UnmappedMemberHandling = options.UnmappedMemberHandling;
+            target.WriteIndented = options.WriteIndented;
+
+            if (options.TypeInfoResolver != null)
+            {
+                target.TypeInfoResolver = options.TypeInfoResolver;
+            }
+
+            foreach (var converter in options.Converters)
+            {
+                if (target.Converters.Contains(converter))
+                    continue;
+
+                if (target.Converters.Any(c => c.Type == converter.Type))
+                    continue;
+
+                target.Converters.Add(converter);
+            }
+
+            return target;
+        }
+
+        /// <summary>
+        /// Applies the target's serializer options to the current options and returns the result.
+        /// </summary>
+        /// <param name="target">The target <see cref="JsonSerializerOptions"/> instance from which the current options will be applied. Cannot
+        /// be null.</param>
+        /// <returns>A <see cref="JsonSerializerOptions"/> instance representing the target options with the current options
+        /// applied.</returns>
+        public JsonSerializerOptions ApplyFrom(JsonSerializerOptions target)
+            => target.ApplyTo(options);
+    }
+}

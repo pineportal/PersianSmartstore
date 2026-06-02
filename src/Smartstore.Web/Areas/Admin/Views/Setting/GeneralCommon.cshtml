@@ -416,8 +416,8 @@
                     </div>
                 </div>
                 <div class="adminRow">
-                    <div class="alert alert-info">
-                        @T("Admin.Configuration.Settings.General.Common.Captcha.Hint")
+                    <div class="alert alert-info mb-0 mt-3 w-100">
+                        @Html.Raw(T("Admin.Configuration.Settings.General.Common.Captcha.Hint"))
                     </div>
                 </div>
                 <div class="adminRow">
@@ -432,131 +432,47 @@
                 <div id="pnlCaptchaSettings">
                     <div class="adminRow">
                         <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.UseInvisibleReCaptcha" />
+                            <smart-label asp-for="CaptchaSettings.ProviderSystemName" />
                         </div>
-                        <div class="adminData wide">
-                            <setting-editor asp-for="CaptchaSettings.UseInvisibleReCaptcha"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.UseInvisibleReCaptcha"></span>
-                            <span id="UseInvisibleReCaptchaWarning" class="d-none ml-2 text-warning">
-                                @T("Admin.Configuration.Settings.GeneralCommon.ReCaptchaTypeChangeWarning")
-                            </span>
+                        <div class="adminData">
+                            <div class="row g-2">
+                                <div class="col">
+                                    <select asp-for="CaptchaSettings.ProviderSystemName">
+                                        @foreach (var cpm in Model.CaptchaSettings.AvailableProviders)
+                                        {
+                                            <option value="@cpm.SystemName"
+                                                    data-imageurl="@Url.Content(cpm.IconUrl)"
+                                                    data-item-style="--choice-item-border-width: 0"
+                                                    data-hint="@T("Admin.Common." + (cpm.IsConfigured ? "Configured" : "NotConfigured"))"
+                                                    data-hint-class="badge badge-pill @(cpm.IsConfigured ? "badge-success" : "badge-warning badge-outline")"
+                                                    data-configure-url="@cpm.ConfigureUrl"
+                                                    attr-selected='(cpm.SystemName == Model.CaptchaSettings.ProviderSystemName, "selected")'>
+                                                @cpm.FriendlyName
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="d-none" id="btn-refresh-captcha"></button>
+                                    <button type="button" id="btn-configure-captcha" class="btn btn-secondary">
+                                        <bootstrap-icon name="gear" />
+                                        <span>@T("Admin.Common.Configure")...</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <span asp-validation-for="CaptchaSettings.ProviderSystemName"></span>
                         </div>
                     </div>
                     <div class="adminRow">
                         <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ReCaptchaPublicKey" />
+                            <smart-label asp-for="CaptchaSettings.ShowOn" />
                         </div>
                         <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ReCaptchaPublicKey"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ReCaptchaPublicKey"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ReCaptchaPrivateKey" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ReCaptchaPrivateKey"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ReCaptchaPrivateKey"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnLoginPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnLoginPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnLoginPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnRegistrationPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnRegistrationPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnRegistrationPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnPasswordRecoveryPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnPasswordRecoveryPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnPasswordRecoveryPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnContactUsPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnContactUsPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnContactUsPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnEmailWishlistToFriendPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnEmailWishlistToFriendPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnEmailWishlistToFriendPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnEmailProductToFriendPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnEmailProductToFriendPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnEmailProductToFriendPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnAskQuestionPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnAskQuestionPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnAskQuestionPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnBlogCommentPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnBlogCommentPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnBlogCommentPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnNewsCommentPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnNewsCommentPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnNewsCommentPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnForumPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnForumPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnForumPage"></span>
-                        </div>
-                    </div>
-                    <div class="adminRow">
-                        <div class="adminTitle">
-                            <smart-label asp-for="CaptchaSettings.ShowOnProductReviewPage" />
-                        </div>
-                        <div class="adminData">
-                            <setting-editor asp-for="CaptchaSettings.ShowOnProductReviewPage"></setting-editor>
-                            <span asp-validation-for="CaptchaSettings.ShowOnProductReviewPage"></span>
+                            <setting-editor asp-for="CaptchaSettings.ShowOn">
+                                <select asp-for="CaptchaSettings.ShowOn" asp-items="ViewBag.CaptchaShowOnOptions" multiple="multiple"></select>
+                            </setting-editor>
+                            <span asp-validation-for="CaptchaSettings.ShowOn"></span>
                         </div>
                     </div>
                 </div>
@@ -1162,7 +1078,36 @@
 </form>
 
 <script sm-target-zone="scripts" data-origin="settings-general-common">
-    $(function() {
+    $(function () {
+        const selectCaptchaProvider = $('#@Html.IdFor(model => model.CaptchaSettings.ProviderSystemName)');
+
+        // Open CAPTCHA configuration dialog
+        $('#btn-configure-captcha').on('click', (e) => {
+            e.preventDefault();
+            let configureUrl = selectCaptchaProvider.find(':selected').data('configure-url');
+            if (configureUrl) {
+                configureUrl = modifyUrl(configureUrl, 'btnId', 'btn-refresh-captcha');
+                configureUrl = modifyUrl(configureUrl, 'popup', 'true');
+                openPopup(configureUrl);
+            }
+        });
+
+        $('#btn-refresh-captcha').on('click', (e) => {
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: '@Url.Action("CheckCaptchaConfigured", "Security")',
+                dataType: 'json',
+                data: { systemName: selectCaptchaProvider.val() },
+                success: function (data) {
+                    selectCaptchaProvider.find(':selected')
+                        .attr('data-hint', data.configured ? @T("Admin.Common.Configured").JsValue : @T("Admin.Common.NotConfigured").JsValue)
+                        .attr('data-hint-class', 'badge badge-pill ' + (data.configured ? 'badge-success' : 'badge-warning badge-outline'));
+                    selectCaptchaProvider.trigger('change');
+                }
+            });
+        });
+
 		// Test creation of SEO names.
 		$('#TestSeoNameCreationButton').click(function () {
             $(this).closest('form').ajax({
@@ -1171,16 +1116,6 @@
 					$('#TestSeoNameCreationResult').html('<p class="alert alert-info">' + resp + '</p>');
 				}
 			});
-        });
-
-        // Show warning when ReCaptcha type changed.
-        $('#@(Html.IdFor(x => x.CaptchaSettings.UseInvisibleReCaptcha))').change(function () {
-            var publicKey = $('#@(Html.IdFor(x => x.CaptchaSettings.ReCaptchaPublicKey))').val();
-            var privateKey = $('#@(Html.IdFor(x => x.CaptchaSettings.ReCaptchaPrivateKey))').val();
-
-            if (!_.isEmpty(publicKey) && !_.isEmpty(privateKey)) {
-                $('#UseInvisibleReCaptchaWarning').removeClass('d-none');
-            }
         });
 	});
 </script>

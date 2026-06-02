@@ -1,113 +1,76 @@
 ﻿using System.Globalization;
 
-namespace Smartstore.ComponentModel.TypeConverters
+namespace Smartstore.ComponentModel.TypeConverters;
+
+internal class NullableConverter : DefaultTypeConverter
 {
-    internal class NullableConverter : DefaultTypeConverter
+    private readonly bool _elementTypeIsConvertible;
+    private readonly Type _elementType;
+
+    internal NullableConverter(Type type, Type elementType)
+        : base(type)
     {
-        private readonly bool _elementTypeIsConvertible;
+        NullableType = type;
+        _elementType = elementType ?? Nullable.GetUnderlyingType(type)
+            ?? throw Error.Argument("type", "Type is not a nullable type.");
 
-        internal NullableConverter(Type type, Type elementType)
-            : base(type)
-        {
-            NullableType = type;
-            ElementType = elementType ?? Nullable.GetUnderlyingType(type);
+        ElementType = _elementType;
 
-            if (ElementType == null)
-            {
-                throw Error.Argument("type", "Type is not a nullable type.");
-            }
+        _elementTypeIsConvertible = typeof(IConvertible).IsAssignableFrom(_elementType) && !_elementType.IsEnum;
+        ElementTypeConverter = TypeConverterFactory.GetConverter(_elementType);
+    }
 
-            _elementTypeIsConvertible = typeof(IConvertible).IsAssignableFrom(ElementType) && !ElementType.IsEnum;
-            ElementTypeConverter = TypeConverterFactory.GetConverter(ElementType);
-        }
+    public Type NullableType { get; }
 
-        public Type NullableType
-        {
-            get;
-            private set;
-        }
+    public Type ElementType { get; }
 
-        public Type ElementType
-        {
-            get;
-            private set;
-        }
+    public ITypeConverter ElementTypeConverter { get; }
 
-        public ITypeConverter ElementTypeConverter
-        {
-            get;
-            private set;
-        }
+    public override bool CanConvertFrom(Type type)
+    {
+        // order in likelihood: exact match, converter says yes, numeric convertible fast-path
+        if (type == _elementType)
+            return true;
 
-        public override bool CanConvertFrom(Type type)
-        {
-            if (type == this.ElementType)
-            {
-                return true;
-            }
+        if (ElementTypeConverter.CanConvertFrom(type))
+            return true;
 
-            if (ElementTypeConverter.CanConvertFrom(type))
-            {
-                return true;
-            }
+        return _elementTypeIsConvertible
+            && type != typeof(string)
+            && typeof(IConvertible).IsAssignableFrom(type);
+    }
 
-            if (_elementTypeIsConvertible && type != typeof(string) && typeof(IConvertible).IsAssignableFrom(type))
-            {
-                return true;
-            }
+    public override bool CanConvertTo(Type type)
+        => type == _elementType || ElementTypeConverter.CanConvertTo(type);
 
-            return false;
-        }
+    public override object ConvertFrom(CultureInfo culture, object value)
+    {
+        if (value is null)
+            return null;
 
-        public override bool CanConvertTo(Type type)
-        {
-            //Console.WriteLine("NullableConverter can convert to {0}: {1}".FormatInvariant(type.Name, UnderlyingTypeConverter.CanConvertTo(type)));
+        var valueType = value.GetType();
+        if (valueType == _elementType)
+            return value;
 
-            if (type == this.ElementType)
-            {
-                return true;
-            }
+        // Common: empty string => null
+        if (value is string s)
+            return s.Length == 0 ? null : ElementTypeConverter.ConvertFrom(culture, s);
 
-            return ElementTypeConverter.CanConvertTo(type);
-        }
+        // num -> num?
+        if (_elementTypeIsConvertible && value is IConvertible)
+            return Convert.ChangeType(value, _elementType, culture);
 
-        public override object ConvertFrom(CultureInfo culture, object value)
-        {
-            if ((value == null) || (value.GetType() == this.ElementType))
-            {
-                return value;
-            }
+        return ElementTypeConverter.ConvertFrom(culture, value);
+    }
 
-            if ((value is string) && string.IsNullOrEmpty(value as string))
-            {
-                return null;
-            }
+    public override object ConvertTo(CultureInfo culture, string format, object value, Type to)
+    {
+        if (to == _elementType && value is not null && NullableType.IsInstanceOfType(value))
+            return value;
 
-            if (_elementTypeIsConvertible && !(value is string) && value is IConvertible)
-            {
-                // num > num?
-                return Convert.ChangeType(value, ElementType, culture);
-            }
+        if (value is null && to == typeof(string))
+            return string.Empty;
 
-            return ElementTypeConverter.ConvertFrom(culture, value);
-        }
-
-        public override object ConvertTo(CultureInfo culture, string format, object value, Type to)
-        {
-            if ((to == this.ElementType) && this.NullableType.IsInstanceOfType(value))
-            {
-                return value;
-            }
-
-            if (value == null)
-            {
-                if (to == typeof(string))
-                {
-                    return string.Empty;
-                }
-            }
-
-            return ElementTypeConverter.ConvertTo(culture, format, value, to);
-        }
+        return ElementTypeConverter.ConvertTo(culture, format, value, to);
     }
 }

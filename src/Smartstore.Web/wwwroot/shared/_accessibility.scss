@@ -1,0 +1,74 @@
+/// <reference path="references.scss" />
+
+:is(#{unquote("a, button, .form-check-input, [tabindex=0]")}):is(#{unquote(":focus-visible")}) {
+    outline: 0;
+    box-shadow: $focus-ring-box-shadow;
+}
+
+.focus-inset:focus-visible {
+    box-shadow: inset 0 0 $focus-ring-blur $focus-ring-width $focus-ring-color, inset 0 0 0 ($focus-ring-width * 2) hsla(0,0%,100%, 0.92) !important;
+}
+
+.sr-toggle {
+    position: absolute;
+    inset: 0;
+    z-index: $zindex-popover;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    // Visible for AT, visually hidden
+    clip-path: inset(50%);
+    clip: rect(1px, 1px, 1px, 1px);
+    overflow: hidden;
+    white-space: nowrap;
+    border-radius: var(--border-radius-sm);
+
+    > .sr-toggle-info {
+        position: absolute;
+        inset: 0 0 auto 0;
+        display: block;
+        background-color: #fff;
+        white-space: normal;
+        padding: 0.5rem;
+    }
+}
+
+// Visible as soon as keyboard focus or open status is present
+.sr-toggle:focus-visible,
+.sr-toggle[aria-expanded="true"] {
+    clip-path: none;
+    clip: auto;
+    overflow: visible;
+}
+
+.skip-content-container {
+    position: relative;
+    transform: scale(0);
+    opacity: 0;
+
+    &:focus-within {
+        transform: scale(1);
+        opacity: 1;
+        z-index: 999;
+    }
+}
+
+.btn-skip-content {
+    --btn-padding-x: 1.25rem;
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    transform: scale(0);
+    opacity: 0;
+    margin: .5rem;
+    z-index: 10000;
+
+    &:focus-visible {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

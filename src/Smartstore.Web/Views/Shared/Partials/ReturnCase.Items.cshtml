@@ -1,0 +1,174 @@
+﻿@using Smartstore.Core.Checkout.Orders
+@using Smartstore.Web.Models.Customers
+@using Smartstore.Web.Models.Orders
+
+@model ReturnCaseItemsModel
+
+@{
+    var returnAll = Model.ReturnAllItems;
+    var isEditable = Model.IsEditable;
+    var hasItemsToReturn = Model.HasItemsToReturn;
+    var hasSingleItemToReturn = Model.HasSingleItemToReturn;
+}
+
+@if (isEditable)
+{
+    <div sm-if="hasItemsToReturn && !hasSingleItemToReturn" class="btn-group btn-group-toggle mb-3" data-toggle="buttons">
+        <label class="btn btn-secondary active">
+            <input type="radio" 
+                   asp-for="ReturnAllItems" 
+                   sm-ignore-label="true" 
+                   id="ReturnAllItems" 
+                   value="true" 
+                   attr-checked='(returnAll, "checked")'
+                   class="form-check-input">
+            @T("ReturnCase.EntireOrder")
+        </label>
+        <label class="btn btn-secondary">
+            <input type="radio" 
+                   asp-for="ReturnAllItems" 
+                   sm-ignore-label="true" 
+                   id="ReturnSelectedItems" 
+                   value="false" 
+                   attr-checked='(!returnAll, "checked")'
+                   class="form-check-input">
+            @T("ReturnCase.CertainItems")
+        </label>
+    </div>
+    <div sm-if="Model.Warning.HasValue()" class="alert alert-info" role="status" aria-live="polite">
+        @Html.Raw(Model.Warning)
+    </div>
+}
+else
+{
+    <div>
+        @T(returnAll && !hasSingleItemToReturn ? "ReturnCase.WithdrawEntireOrder" : "ReturnCase.WithdrawItems")
+    </div>
+}
+
+<div id="cart-items" class="cart mt-2">
+    <div class="cart-body">
+        @foreach (var item in Model.Items)
+        {
+            if (!isEditable && (!item.Selected || item.MaxReturnQuantity <= 0))
+            {
+                continue;
+            }
+            var selectId = $"orderitem-select{item.Id}";
+            var quantityId = $"orderitem-quantity{item.Id}";
+            var maxQuantity = item.MaxReturnQuantity;
+            var hasWarning = item.Warning.HasValue();
+            <div class="cart-row return-item">
+                <div class="row">
+                    <div sm-if="isEditable && hasItemsToReturn && !hasSingleItemToReturn" class="select-cart-item col-auto">
+                        <input id="@selectId"
+                               name="@selectId"
+                               type="checkbox"
+                               class="form-check-input select-cart-item-checkbox return-item-checkbox"
+                               attr-class='(!item.CanReturnItem, "invisible")'
+                               attr-checked='(returnAll || item.Selected, "checked")'
+                               attr-aria-disabled='(returnAll, "true")'
+                               attr-disabled='(returnAll, "disabled")' />
+                        <label for="@selectId" class="sr-only"></label>
+                    </div>
+                    <div class="cart-item-img col-2" sm-if="item.Image != null && item.Image.HasImage()">
+                        <img sm-model="item.Image" class="img-fluid" attr-alt='(item.Image.Alt.IsEmpty(), item.ProductName)' />
+                    </div>
+                    <div class="cart-item-data col">
+                        <div class="cart-item-group cart-item-title" role="heading" aria-level="3">
+                            @if (item.ProductUrl.HasValue())
+                            {
+                                <a href="@item.ProductUrl" class="cart-item-link" sm-language-attributes-for="item.ProductName">
+                                    @item.ProductName
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="product-name" sm-language-attributes-for="item.ProductName">@item.ProductName</span>
+                            }
+                        </div>
+                        <div sm-if="item.AttributeInfo.HasValue()" class="cart-item-attrs cart-item-group fs-sm">
+                            @Html.Raw(item.AttributeInfo)
+                        </div>
+                        <div class="cart-item-price-group mt-2">
+                            <span>@T("ReturnRequests.Products.Price"):</span>
+                            <data asp-for="@item.UnitPrice" class="pd-finalprice-amount"></data>
+                        </div>
+                        <div class="cart-item-qty pd-muted">
+                            <span>@T("Order.Product(s).OrderedQuantity"):</span> <span>@item.Quantity.ToString("N0") @item.QuantityUnit</span>
+                        </div>
+                        <div class="cart-item-return-qty mt-2">
+                            @if (!isEditable)
+                            {
+                                <span>@T("ReturnRequests.Products.Quantity"):</span> <span>@item.SelectedReturnQuantity.ToString("N0")</span>
+                            }
+                            else if (item.CanReturnItem)
+                            {
+                                var qtyDisabled = returnAll || (!returnAll && !item.Selected);
+                                <label for="@quantityId" class="mr-2">@T("ReturnRequests.Products.Quantity"):</label>
+                                <select id="@quantityId" 
+                                        name="@quantityId" 
+                                        class="form-control form-control-sm return-item-quantity noskin" 
+                                        style="max-width: 120px;"
+                                        data-max-quantity="@maxQuantity"
+                                        attr-aria-disabled='(qtyDisabled, "true")'
+                                        attr-disabled='(qtyDisabled, "disabled")'>
+                                    @for (var i = 0; i <= maxQuantity; i++)
+                                    {
+                                        var selected = (returnAll && i == maxQuantity) || (!returnAll && i == item.SelectedReturnQuantity);
+                                        <option value="@(i)" attr-selected='(selected, "selected")'>@(i)</option>
+                                    }
+                                </select>
+                            }
+
+                            <div sm-if="isEditable && (hasWarning || item.ReturnCases.Count > 0)" 
+                                class="alert alert-info small mt-2 mb-0" 
+                                role="status" 
+                                aria-live="polite">
+                                <div sm-if="hasWarning">@Html.Raw(item.Warning)</div>
+                                <partial name="ReturnCase.Infos" model="item.ReturnCases" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if(!isEditable)
+{
+    return;
+}
+
+<script sm-target-zone="scripts" data-origin="returncase-items">
+    $(function () {
+        $('input[name="@(Html.NameFor(x => x.ReturnAllItems))"]').on('change', (e) => {
+            const returnAll = toBool($(e.currentTarget).val());
+            const $elContainer = $('#cart-items');
+
+            $elContainer.find('.return-item-checkbox')
+                .prop('checked', returnAll)
+                .prop('disabled', returnAll)
+                .aria('disabled', returnAll);
+
+            $elContainer.find('.return-item-quantity')
+                .prop('disabled', true)
+                .aria('disabled', true)
+                .each((_, el) => {
+                    $(el).val(returnAll ? $(el).data('max-quantity') : 0);
+                });
+        });
+
+        $('.return-item-checkbox').on('change', (e) => {
+            const $el = $(e.currentTarget);
+            const $sel = $el.closest('.return-item').find('.return-item-quantity');
+            const selected = $el.is(':checked');
+
+            $sel.prop('disabled', !selected);
+            if (!selected) {
+                $sel.val(0);
+            }
+        });
+    });
+</script>

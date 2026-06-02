@@ -1,49 +1,62 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Smartstore.ComponentModel;
 
-namespace Smartstore.Events
+namespace Smartstore.Events;
+
+public class EventPublisher : IEventPublisher
 {
-    public class EventPublisher : IEventPublisher
-    {
-        private readonly IConsumerRegistry _registry;
-        private readonly IConsumerResolver _resolver;
-        private readonly IConsumerInvoker _invoker;
+    private readonly IConsumerRegistry _registry;
+    private readonly IConsumerResolver _resolver;
+    private readonly IConsumerInvoker _invoker;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public EventPublisher(IConsumerRegistry registry, IConsumerResolver resolver, IConsumerInvoker invoker)
+    public EventPublisher(
+        IConsumerRegistry registry,
+        IConsumerResolver resolver,
+        IConsumerInvoker invoker,
+        IHttpContextAccessor httpContextAccessor)
+    {
+        _registry = registry;
+        _resolver = resolver;
+        _invoker = invoker;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public ILogger Logger { get; set; } = NullLogger.Instance;
+
+    public virtual async Task PublishAsync<T>(T message, CancellationToken cancelToken = default) where T : IEventMessage
+    {
+        var descriptors = _registry.GetConsumers(message);
+
+        if (descriptors.Length == 0)
         {
-            _registry = registry;
-            _resolver = resolver;
-            _invoker = invoker;
+            return;
         }
 
-        public ILogger Logger { get; set; } = NullLogger.Instance;
-
-        public virtual async Task PublishAsync<T>(T message, CancellationToken cancelToken = default) where T : class
+        var envelope = new ConsumeContext<T>(message);
+        if (descriptors.Any(x => x.WithEnvelope))
         {
-            var descriptors = _registry.GetConsumers(message);
+            envelope.Initialize(_httpContextAccessor.HttpContext);
+        }
 
-            if (!descriptors.Any())
-            {
-                return;
-            }
+        for (var i = 0; i < descriptors.Length; i++)
+        {
+            var d = descriptors[i];
+            var consumer = _resolver.Resolve(d);
 
-            foreach (var d in descriptors)
+            if (consumer != null)
             {
-                var consumer = _resolver.Resolve(d);
-                if (consumer != null)
+                if (d.FireForget)
                 {
-                    if (d.FireForget)
-                    {
-                        // No await
-                        // "_ =" to discard 'async/await' compiler warning
-                        _ = _invoker.InvokeAsync(d, consumer, message, cancelToken);
-                    }
-                    else
-                    {
-                        // Await the task
-                        await _invoker.InvokeAsync(d, consumer, message, cancelToken);
-                    }
+                    // No await
+                    // "_ =" to discard 'async/await' compiler warning
+                    _ = _invoker.InvokeAsync(d, consumer, envelope, cancelToken);
+                }
+                else
+                {
+                    // Await the task
+                    await _invoker.InvokeAsync(d, consumer, envelope, cancelToken);
                 }
             }
         }

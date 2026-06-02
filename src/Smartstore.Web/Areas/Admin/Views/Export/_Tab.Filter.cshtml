@@ -176,6 +176,7 @@
                         asp-items="@selectedCategoryIds"
                         asp-placeholder="@allString"
                         multiple="multiple"
+                        data-tags="true"
                         data-select="True"
                         data-select-lazy="True"
                         data-select-url="@Url.Action("AllCategories", "Category", new { selectedIds = string.Join(",", selectedCategoryIds.Select(x => x.Value)) })">

@@ -7,6 +7,7 @@ $note-bg: #8080801d;
 $img-margin-left: 10px;
 $img-margin-right: 10px;
 
+
 // Wrapper & Preview
 // ------------------------------------------
 
@@ -103,6 +104,8 @@ $img-margin-right: 10px;
 .note-editing-area {
     position: relative;
     overflow: hidden;
+    background: #f5f5f5;
+    background: var(--gray-400);
 }
 
 
@@ -115,6 +118,11 @@ $img-margin-right: 10px;
     overflow: auto;
     word-wrap: break-word;
     height: auto;
+    background: #fff;
+    display: block;
+    margin-inline: auto;
+    will-change: width;
+    box-shadow: 0px 0px 5px 1px rgba(50,50,93, 0.15), 0 0 1rem 0px rgba($black, 0.1);
     // Reset
     font-weight: normal;
     font-style: normal;
@@ -149,11 +157,11 @@ $img-margin-right: 10px;
     img.note-float-right {
         margin-left: $img-margin-left;
     }
-    // Alignment does not work with or without sequences
-    ul li,
-    ol li {
-        list-style-position: inside;
-    }
+    // // Alignment does not work with or without sequences
+    // ul li,
+    // ol li {
+    //   list-style-position: inside;
+    // }
 
     table:not(.table-bordered):not([border]),
     table:not(.table-bordered)[border='0'] {
@@ -319,7 +327,7 @@ $img-margin-right: 10px;
     padding-top: 1px;
     height: 9px;
     width: 100%;
-    cursor: ns-resize;
+    cursor: row-resize;
 
     > .note-icon-bar {
         width: 20px;
@@ -462,6 +470,12 @@ $img-margin-right: 10px;
 
     .modal-footer > .btn {
         min-width: 80px;
+
+        > svg {
+            height: 16px;
+            color: currentColor;
+            fill: currentColor;
+        }
     }
 }
 
@@ -866,6 +880,9 @@ $img-margin-right: 10px;
     }
 }
 
+.note-video-clip {
+    max-width: 100%;
+}
 
 // Emojis
 // ------------------------------------------
@@ -996,4 +1013,47 @@ $img-margin-right: 10px;
             }
         }
     }
+}
+
+// Horizontal resize handle
+.note-hresize-handle {
+    position: absolute;
+    // top/left/height set dynamically to follow .note-editable
+    width: 5px;
+    cursor: col-resize;
+    background: rgba($black, .1);
+    background: $note-bg;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background: rgba($black, .12);
+    }
+
+    &:before,
+    &:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 1px;
+        height: 20px;
+        transform: translate(0, -50%);
+        background: rgba($black, 0.2);
+        pointer-events: none;
+    }
+
+    &:before {
+        left: 1px;
+    }
+
+    &:after {
+        left: 3px;
+    }
+}
+
+// Cursor and selection state during resize
+.note-editor.resizing {
+    user-select: none;
 }

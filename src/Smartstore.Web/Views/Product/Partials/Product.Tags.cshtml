@@ -2,26 +2,27 @@
 
 @model IList<ProductTagModel>
 
-@{
-    if (Model == null || Model.Count == 0)
-    {
-        return;
-    }
+@if (Model == null || Model.Count == 0)
+{
+    return;
 }
 
-<div class="pd-tags block">
+<nav class="pd-tags block position-relative" aria-labelledby="pd-tags-title">
+    <a sm-if="Model.Count > 1" href="javascript:;" class="btn-skip-content btn btn-primary rounded-pill">
+        @T("Common.SkipList")
+    </a>
     <div class="block-title">
-        <h4>@T("Products.Tags")</h4>
+        <h4 id="pd-tags-title">@T("Products.Tags")</h4>
     </div>
-    <div class="block-body pt-3 hstack flex-wrap gap-1">
-        @for (int i = 0; i < Model.Count; i++)
+    <ul class="block-body pt-3 hstack flex-wrap gap-1 list-unstyled" aria-labelledby="pd-tags-title" role="menu" aria-orientation="horizontal">
+        @foreach (var tag in Model)
         {
-            var tag = Model[i];
-
-            <a asp-route="ProductsByTag" asp-route-productTagId="@tag.Id" asp-route-path="@tag.Slug" class="pd-tag badge badge-lg badge-pill badge-light">
-                <span sm-language-attributes-for="tag.Name">@tag.Name</span>
-                <span class="pd-tag-count pl-1 fwn text-muted">@tag.ProductCount</span>
-            </a>
+            <li role="none">
+                <a asp-route="ProductsByTag" asp-route-productTagId="@tag.Id" asp-route-path="@tag.Slug" class="pd-tag badge badge-lg badge-pill badge-light" role="menuitem">
+                    <span sm-language-attributes-for="tag.Name">@tag.Name</span>
+                    <span class="pd-tag-count pl-1 fwn text-muted">@tag.ProductCount</span>
+                </a>
+            </li>
         }
-    </div>
-</div>
+    </ul>
+</nav>

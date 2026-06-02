@@ -5,7 +5,7 @@
 @{
     Layout = "_Checkout";
     Assets.AppendTitleParts(T("PageTitle.Checkout.PaymentMethod"));
-    Assets.BodyAttributes.AppendCssClass("no-offcanvas-cart content-overflow-initial");
+    Assets.BodyAttributes.AppendCssClass("no-offcanvas-cart");
     Assets.AddMetaRobots();
 }
 
@@ -48,6 +48,15 @@
         $('.payment-method-next-step-button').on('click', function () {
             $('#nextstep').trigger('click');
             return false;
+        });
+
+        // TODO: (wcag) (mh) The payment page must be implemented with accordeon (see facets), when TAB from inside a panel can go to the next collapsible which it currently doesn't.
+        // That why we do it the short and easy way for now.
+        $(".list-group-item").on("keydown", function (e) {
+            if (e.key == "Enter") {
+                $(e.target).trigger('click');
+                return false;
+            }
         });
 
         @if (Model.DisplayPaymentMethodIcons)

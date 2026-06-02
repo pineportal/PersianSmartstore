@@ -4,7 +4,6 @@
     var galPluginName = "smartGallery";
 
     function ProductDetail(element, options) {
-
         var self = this;
 
         this.element = element;
@@ -39,11 +38,12 @@
                     return;
                 }
 
-                var inputCtrl = $(this);
-                var isNumberInput = inputCtrl.parent(".numberinput-group").length > 0;
-                var isFileUpload = inputCtrl.data("fileupload");
-                var isDateTime = inputCtrl.hasClass("date-part");
-                var ctx = inputCtrl.closest('.update-container');
+                let inputCtrl = $(this);
+                let inputId = inputCtrl.attr('id');
+                let isNumberInput = inputCtrl.parent(".numberinput-group").length > 0;
+                let isFileUpload = inputCtrl.data("fileupload");
+                let isDateTime = inputCtrl.hasClass("date-part");
+                let ctx = inputCtrl.closest('.update-container');
 
                 if (ctx.length === 0) {
                     // It's an associated product or a bundle item.
@@ -65,7 +65,13 @@
                                 }
                             });
                         }
+
                         updating = false;
+
+                        if (inputId) {
+                            inputCtrl = ctx.find('#' + inputId);
+                            inputCtrl.trigger('focus');
+                        }
                     }
                 });
             });
@@ -99,6 +105,11 @@
                     // Toggle 'collapsed' class to display correct chevron.
                     $(e.target).prev().toggleClass('collapsed', e.type === 'hide');
                 }
+            });
+
+            $('#pd-assoc-search-btn').on('click', function (e) {
+                e.preventDefault();
+                return false;
             });
 
             EventBroker.subscribe('ajaxcart.error', function (msg, data) {
@@ -163,8 +174,13 @@
             }
 
             if (!_.isEmpty(data.ProductUrl) && location.hostname !== "localhost") {
-                // Replace state to not flood history when variant changed.
-                history.replaceState(null, '', data.ProductUrl);
+                try {
+                    // Replace state to not flood history when variant changed.
+                    history.replaceState(null, '', data.ProductUrl);
+                }
+                catch (ex) {
+                    console.log(ex);
+                }
             }
 
             // Trigger event for plugins devs to subscribe.

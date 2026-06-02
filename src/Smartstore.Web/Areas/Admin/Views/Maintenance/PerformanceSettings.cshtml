@@ -61,7 +61,7 @@
                             <div class="title mt-0 pt-0">
                                 @T("Admin.Configuration.Settings.Resiliency.LongTraffic")
                             </div>
-                            <div class="text-muted">
+                            <div class="info adminContainer">
                                 @T("Admin.Configuration.Settings.Resiliency.LongTrafficNotes")
                             </div>
                         </div>
@@ -108,7 +108,7 @@
                             <div class="title">
                                 @T("Admin.Configuration.Settings.Resiliency.PeakTraffic")
                             </div>
-                            <div class="text-muted">
+                            <div class="info adminContainer">
                                 @T("Admin.Configuration.Settings.Resiliency.PeakTrafficNotes")
                             </div>
                         </div>
@@ -147,6 +147,35 @@
                         <div class="adminData">
                             <editor asp-for="ResiliencySettings.PeakTrafficLimitGlobal" />
                             <span asp-validation-for="ResiliencySettings.PeakTrafficLimitGlobal"></span>
+                        </div>
+                    </div>
+
+                    <div class="adminRow">
+                        <div class="admin-config-group">
+                            <div class="title">
+                                @T("Admin.Configuration.Settings.Resiliency.QueuedMailSending")
+                            </div>
+                            <div class="info adminContainer">
+                                @T("Admin.Configuration.Settings.Resiliency.QueuedMailSendingNotes")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="adminRow">
+                        <div class="adminTitle">
+                            <smart-label asp-for="ResiliencySettings.MailSendRateWindow" />
+                        </div>
+                        <div class="adminData">
+                            <input type="time" step="1" asp-for="ResiliencySettings.MailSendRateWindow" />
+                            <span asp-validation-for="ResiliencySettings.MailSendRateWindow"></span>
+                        </div>
+                    </div>
+                    <div class="adminRow">
+                        <div class="adminTitle">
+                            <smart-label asp-for="ResiliencySettings.MailSendRateLimit" />
+                        </div>
+                        <div class="adminData">
+                            <editor asp-for="ResiliencySettings.MailSendRateLimit" />
+                            <span asp-validation-for="ResiliencySettings.MailSendRateLimit"></span>
                         </div>
                     </div>
                 </div>

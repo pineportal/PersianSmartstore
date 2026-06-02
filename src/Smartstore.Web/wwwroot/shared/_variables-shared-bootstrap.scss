@@ -105,8 +105,15 @@ $embed-responsive-aspect-ratios: (
     (16 9), 
     (16 10), 
     (4 3), 
-    (1 1) 
+    (1 1),
+    (9 16)
 );
+
+$focus-ring-width:            2px !default;
+$focus-ring-opacity:          1 !default;
+$focus-ring-color:            rgba(var(--link-color-rgb), $focus-ring-opacity) !default;
+$focus-ring-blur:             0 !default;
+$focus-ring-box-shadow:       0 0 $focus-ring-blur $focus-ring-width $focus-ring-color, inset 0 0 0 $focus-ring-width hsla(0,0%,100%, 0.92) !default;
 
 $transition-base:             all 0.125s ease-in-out !default;
 
@@ -134,6 +141,9 @@ $display1-size:               null !default;
 $display2-size:               null !default;
 $display3-size:               null !default;
 $display4-size:               null !default;
+
+$code-font-size:              85% !default;
+$code-color:                  inherit !default;
 
 $hr-opacity:                  .12 !default;
 
@@ -167,7 +177,8 @@ $input-transition:            none !default;
 
 // Buttons
 
-$btn-active-box-shadow:			inset 0 3px 5px rgba($black, .125);
+$btn-active-box-shadow:			inset 0 3px 5px rgba($black, .125) !default;
+$btn-focus-box-shadow:          $focus-ring-box-shadow !default;
 $btn-transition:                color .1s ease-in-out, background-color .1s ease-in-out, border-color .1s ease-in-out, box-shadow .1s ease-in-out !default;
 $btn-disabled-opacity:          0.5 !default;
 
@@ -211,6 +222,7 @@ $form-switch-checked-bg-image:          $form-switch-bg-image;
 $badge-padding-y:               (1 / 6) * 1em !default;
 $badge-padding-x:               0.5em !default;
 $badge-pill-padding-x:          0.85em !default;
+$badge-content-shift:           0px !default;
 
 
 // Dropdown
